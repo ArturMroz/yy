@@ -50,7 +50,6 @@ type LetStatement struct {
 
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
-
 func (ls *LetStatement) String() string {
 	var b strings.Builder
 
@@ -62,13 +61,6 @@ func (ls *LetStatement) String() string {
 	}
 	b.WriteString(";")
 
-	// out.WriteString(ls.TokenLiteral() + " ")
-	// out.WriteString(ls.Name.String())
-	// out.WriteString(" = ")
-	// if ls.Value != nil {
-	// 	out.WriteString(ls.Value.String())
-	// }
-	// out.WriteString(";")
 	return b.String()
 }
 
@@ -110,4 +102,31 @@ func (es *ExpressionStatement) String() string {
 		return es.Expression.String()
 	}
 	return ""
+}
+
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) expressionNode()      {}
+func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
+func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+
+type PrefixExpression struct {
+	Token    token.Token // prefix token e.g. !
+	Operator string      // '-' or '!' TODO could be byte?
+	Right    Expression
+}
+
+func (pe *PrefixExpression) expressionNode()      {}
+func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
+func (pe *PrefixExpression) String() string {
+	// var b strings.Builder
+	// b.WriteString("(")
+	// b.WriteString(pe.Operator)
+	// b.WriteString(pe.Right.String())
+	// b.WriteString(")")
+	// return b.String()
+	return fmt.Sprintf("(%s%s)", pe.Operator, pe.Right.String())
 }
