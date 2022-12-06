@@ -67,12 +67,14 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.IDENT: p.parseIdentifier,
-		token.INT:   p.parseIntegerLiteral,
-		token.MINUS: p.parsePrefixExpression,
-		token.BANG:  p.parsePrefixExpression,
-		token.TRUE:  p.parseBoolean,
-		token.FALSE: p.parseBoolean,
+		token.IDENT:  p.parseIdentifier,
+		token.INT:    p.parseIntegerLiteral,
+		token.MINUS:  p.parsePrefixExpression,
+		token.BANG:   p.parsePrefixExpression,
+		token.TRUE:   p.parseBoolean,
+		token.FALSE:  p.parseBoolean,
+		token.LPAREN: p.parseGroupedExpression,
+		token.IF:     p.parseIfExpression,
 	}
 
 	p.infixParseFns = map[token.TokenType]infixParseFn{
@@ -135,8 +137,7 @@ func (p *Parser) parseYeetStatement() *ast.YeetStatement {
 	stmt := &ast.YeetStatement{Token: p.curToken}
 	p.nextToken()
 
-	// TODO: We're skipping the expressions until we
-	// encounter a semicolon
+	// TODO: We're skipping the expressions until we encounter a semicolon
 	for !p.curTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
@@ -215,6 +216,58 @@ func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
 
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	p.nextToken()
+	exp := p.parseExpression(LOWEST)
+	if !p.match(token.RPAREN) {
+		return nil
+	}
+	return exp
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expr := &ast.IfExpression{Token: p.curToken}
+	if !p.match(token.LPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+	expr.Condition = p.parseExpression(LOWEST)
+	if !p.match(token.RPAREN) {
+		return nil
+	}
+
+	if !p.match(token.LBRACE) {
+		return nil
+	}
+
+	expr.Consequence = p.parseBlockStatement()
+
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+		if !p.match(token.LBRACE) {
+			return nil
+		}
+		expr.Alternative = p.parseBlockStatement()
+	}
+
+	return expr
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: p.curToken}
+	block.Statements = []ast.Statement{}
+	p.nextToken()
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+	return block
+}
+
 // utils
 
 func (p *Parser) nextToken() {
@@ -231,6 +284,7 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 }
 
 func (p *Parser) match(t token.TokenType) bool {
+	// TODO return error instead of bool?
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
@@ -246,11 +300,11 @@ func (p *Parser) Errors() []string {
 
 func (p *Parser) peekError(t token.TokenType) {
 	// TODO allow custom error msg to be passed
-	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	msg := fmt.Sprintf("parse error: expected next token to be %s, got %s instead", t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	msg := fmt.Sprintf("[!] no prefix parse function for %s found", t)
 	p.errors = append(p.errors, msg)
 }
