@@ -7,17 +7,13 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-	type lexerTestCase struct {
+	testCases := []struct {
 		input    string
 		expected []token.Token
-	}
-
-	testCases := []lexerTestCase{
-		// {input: "+", result: []testInner{testInner{expectedType: token.PLUS, expectedLiteral: "+"}}},
-		// {input: "+", result: []testInner{{expectedType: token.PLUS, expectedLiteral: "+"}}},
-		// {"+", []testInner{{expectedType: token.PLUS, expectedLiteral: "+"}}},
+	}{
 		{
-			"+,(){}", []token.Token{
+			"+,(){}",
+			[]token.Token{
 				{token.PLUS, "+"},
 				{token.COMMA, ","},
 				{token.LPAREN, "("},
@@ -28,7 +24,8 @@ func TestNextToken(t *testing.T) {
 			},
 		},
 		{
-			"yo dawg = 5;", []token.Token{
+			"yo dawg = 5;",
+			[]token.Token{
 				{token.YO, "yo"},
 				{token.IDENT, "dawg"},
 				{token.ASSIGN, "="},

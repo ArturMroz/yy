@@ -67,14 +67,15 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.IDENT:  p.parseIdentifier,
-		token.INT:    p.parseIntegerLiteral,
-		token.MINUS:  p.parsePrefixExpression,
-		token.BANG:   p.parsePrefixExpression,
-		token.TRUE:   p.parseBoolean,
-		token.FALSE:  p.parseBoolean,
-		token.LPAREN: p.parseGroupedExpression,
-		token.IF:     p.parseIfExpression,
+		token.IDENT:    p.parseIdentifier,
+		token.INT:      p.parseIntegerLiteral,
+		token.MINUS:    p.parsePrefixExpression,
+		token.BANG:     p.parsePrefixExpression,
+		token.TRUE:     p.parseBoolean,
+		token.FALSE:    p.parseBoolean,
+		token.LPAREN:   p.parseGroupedExpression,
+		token.IF:       p.parseIfExpression,
+		token.FUNCTION: p.parseFunctionLiteral,
 	}
 
 	p.infixParseFns = map[token.TokenType]infixParseFn{
@@ -122,6 +123,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	if !p.match(token.IDENT) {
 		return nil // TODO return error
 	}
+
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	if !p.match(token.ASSIGN) {
 		return nil
@@ -254,13 +256,43 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return expr
 }
 
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
+	if !p.match(token.LPAREN) {
+		return nil
+	}
+
+	for !p.peekTokenIs(token.RPAREN) && !p.peekTokenIs(token.EOF) {
+		p.nextToken()
+
+		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		fn.Parameters = append(fn.Parameters, param)
+
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+	}
+
+	if !p.match(token.RPAREN) {
+		return nil
+	}
+
+	if !p.match(token.LBRACE) {
+		return nil
+	}
+
+	fn.Body = p.parseBlockStatement()
+
+	return fn
+}
+
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	block := &ast.BlockStatement{Token: p.curToken}
 	block.Statements = []ast.Statement{}
 	p.nextToken()
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
-		if stmt != nil {
+		if stmt != nil { // TODO this will always be true
 			block.Statements = append(block.Statements, stmt)
 		}
 		p.nextToken()
