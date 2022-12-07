@@ -33,7 +33,7 @@ let z = 69;
 // 	tests := []struct {
 // 		input              string
 // 		expectedIdentifier string
-// 		expectedValue      interface{}
+// 		expectedValue      any
 // 	}{
 // 		{"let x = 5;", "x", 5},
 // 		{"let y = true;", "y", true},
@@ -112,7 +112,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
 		operator string
-		expected interface{}
+		expected any
 	}{
 		{"!5;", "!", 5},
 		{"-15;", "-", 15},
@@ -131,9 +131,9 @@ func TestParsingPrefixExpressions(t *testing.T) {
 func TestParsingInfixExpressions(t *testing.T) {
 	infixTests := []struct {
 		input      string
-		leftValue  interface{}
+		leftValue  any
 		operator   string
-		rightValue interface{}
+		rightValue any
 	}{
 		{"5 + 5;", 5, "+", 5},
 		{"5 - 5;", 5, "-", 5},
@@ -402,7 +402,11 @@ func singleStmtProgram(t *testing.T, input string) *ast.ExpressionStatement {
 	return stmt
 }
 
-func testLiteralExpression(expr ast.Expression, expected interface{}) error {
+// type YeetValue interface {
+// 	int | int64 | string | bool
+// }
+
+func testLiteralExpression(expr ast.Expression, expected any) error {
 	switch v := expected.(type) {
 	case int:
 		return testIntegerLiteral(expr, int64(v))
@@ -459,7 +463,7 @@ func testBooleanLiteral(expr ast.Expression, value bool) error {
 	return nil
 }
 
-func testInfixExpression(expr ast.Expression, left interface{}, operator string, right interface{}) error {
+func testInfixExpression(expr ast.Expression, left any, operator string, right any) error {
 	infixExpr, ok := expr.(*ast.InfixExpression)
 	if !ok {
 		return fmt.Errorf("expr not ast.InfixExpression. got=%T(%s)", expr, expr)
@@ -474,7 +478,7 @@ func testInfixExpression(expr ast.Expression, left interface{}, operator string,
 	return testLiteralExpression(infixExpr.Right, right)
 }
 
-func testPrefixExpression(expr ast.Expression, expectedRight interface{}, operator string) error {
+func testPrefixExpression(expr ast.Expression, expectedRight any, operator string) error {
 	prefixExpr, ok := expr.(*ast.PrefixExpression)
 	if !ok {
 		return fmt.Errorf("expr not ast.PrefixExpression. got=%T(%s)", expr, expr)
