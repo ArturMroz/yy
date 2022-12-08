@@ -123,12 +123,12 @@ func (p *Parser) parseStatement() ast.Statement {
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	letStmt := &ast.LetStatement{Token: p.curToken}
-	if !p.match(token.IDENT) {
+	if !p.consume(token.IDENT, "missing identfier after 'let' keyword") {
 		return nil // TODO return error
 	}
 
 	letStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-	if !p.match(token.ASSIGN) {
+	if !p.consume(token.ASSIGN, "missing '=' after identifier in assignment") {
 		return nil
 	}
 
@@ -236,7 +236,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 
 	expr := p.parseExpression(LOWEST)
-	if !p.match(token.RPAREN) {
+	if !p.consume(token.RPAREN, "missing closing ')' in grouped expression") {
 		return nil
 	}
 
@@ -245,17 +245,17 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 
 func (p *Parser) parseIfExpression() ast.Expression {
 	ifExpr := &ast.IfExpression{Token: p.curToken}
-	if !p.match(token.LPAREN) {
+	if !p.consume(token.LPAREN, "missing opening '(' after 'if'") {
 		return nil
 	}
 
 	p.nextToken()
 	ifExpr.Condition = p.parseExpression(LOWEST)
-	if !p.match(token.RPAREN) {
+	if !p.consume(token.RPAREN, "missing closing ')' after condition") {
 		return nil
 	}
 
-	if !p.match(token.LBRACE) {
+	if !p.consume(token.LBRACE, "missing opening '{' after condition") {
 		return nil
 	}
 
@@ -263,7 +263,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	if p.peekTokenIs(token.ELSE) {
 		p.nextToken()
-		if !p.match(token.LBRACE) {
+		if !p.consume(token.LBRACE, "missing opening '{' after 'else'") {
 			return nil
 		}
 		ifExpr.Alternative = p.parseBlockStatement()
@@ -274,7 +274,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
-	if !p.match(token.LPAREN) {
+	if !p.consume(token.LPAREN, "missing opening '(' after function") {
 		return nil
 	}
 
@@ -289,11 +289,11 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 		}
 	}
 
-	if !p.match(token.RPAREN) {
+	if !p.consume(token.RPAREN, "missing closing ')' after function parameters") {
 		return nil
 	}
 
-	if !p.match(token.LBRACE) {
+	if !p.consume(token.LBRACE, "missing opening '{' before function body") {
 		return nil
 	}
 
@@ -354,13 +354,13 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
-func (p *Parser) match(t token.TokenType) bool {
+func (p *Parser) consume(t token.TokenType, errMsg string) bool {
 	// TODO return error instead of bool?
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
 	} else {
-		p.peekError(t) // TODO move this up?
+		p.peekError(t, errMsg) // TODO move this up?
 		return false
 	}
 }
@@ -369,13 +369,13 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) peekError(t token.TokenType) {
+func (p *Parser) peekError(t token.TokenType, errMsg string) {
 	// TODO allow custom error msg to be passed
-	msg := fmt.Sprintf("parse error: expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	msg := fmt.Sprintf("parse error: %s (expected next token to be '%s', got '%s' instead)", errMsg, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("[!] no prefix parse function for %s found", t)
+	msg := fmt.Sprintf("[!] no prefix parse function for '%s' found", t)
 	p.errors = append(p.errors, msg)
 }
