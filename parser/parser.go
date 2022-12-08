@@ -47,6 +47,7 @@ var precedences = map[token.TokenType]Precedence{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 func (p *Parser) peekPrecedence() Precedence {
@@ -87,9 +88,10 @@ func New(l *lexer.Lexer) *Parser {
 		token.NOT_EQ:   p.parseInfixExpression,
 		token.LT:       p.parseInfixExpression,
 		token.GT:       p.parseInfixExpression,
+		token.LPAREN:   p.parseCallExpression,
 	}
 
-	// Read two tokens, so curToken and peekToken are both set
+	// read two tokens, so curToken and peekToken are both set
 	p.nextToken()
 	p.nextToken()
 
@@ -104,6 +106,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 		program.Statements = append(program.Statements, stmt)
 		p.nextToken()
 	}
+
 	return program
 }
 
@@ -119,41 +122,51 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
-	stmt := &ast.LetStatement{Token: p.curToken}
+	letStmt := &ast.LetStatement{Token: p.curToken}
 	if !p.match(token.IDENT) {
 		return nil // TODO return error
 	}
 
-	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	letStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	if !p.match(token.ASSIGN) {
 		return nil
 	}
-	// TODO: We're skipping the expressions until we encounter a semicolon
-	for !p.curTokenIs(token.SEMICOLON) {
-		p.nextToken()
-	}
-	return stmt
-}
 
-func (p *Parser) parseYeetStatement() *ast.YeetStatement {
-	stmt := &ast.YeetStatement{Token: p.curToken}
 	p.nextToken()
 
-	// TODO: We're skipping the expressions until we encounter a semicolon
-	for !p.curTokenIs(token.SEMICOLON) {
-		p.nextToken()
-	}
+	letStmt.Value = p.parseExpression(LOWEST)
 
-	return stmt
-}
-
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	stmt.Expression = p.parseExpression(LOWEST)
 	if p.peekTokenIs(token.SEMICOLON) { // optional semicolon
 		p.nextToken()
 	}
-	return stmt
+
+	return letStmt
+}
+
+func (p *Parser) parseYeetStatement() *ast.YeetStatement {
+	yeetStmt := &ast.YeetStatement{Token: p.curToken}
+	p.nextToken()
+
+	yeetStmt.ReturnValue = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) { // optional semicolon
+		p.nextToken()
+	}
+
+	return yeetStmt
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	exprStmt := &ast.ExpressionStatement{
+		Token:      p.curToken,
+		Expression: p.parseExpression(LOWEST),
+	}
+
+	if p.peekTokenIs(token.SEMICOLON) { // optional semicolon
+		p.nextToken()
+	}
+
+	return exprStmt
 }
 
 func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
@@ -193,6 +206,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 		Operator: p.curToken.Literal,
 		Left:     left,
 	}
+
 	precedence := p.curPrecedence()
 	p.nextToken()
 	expr.Right = p.parseExpression(precedence)
@@ -220,21 +234,23 @@ func (p *Parser) parseBoolean() ast.Expression {
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
-	exp := p.parseExpression(LOWEST)
+
+	expr := p.parseExpression(LOWEST)
 	if !p.match(token.RPAREN) {
 		return nil
 	}
-	return exp
+
+	return expr
 }
 
 func (p *Parser) parseIfExpression() ast.Expression {
-	expr := &ast.IfExpression{Token: p.curToken}
+	ifExpr := &ast.IfExpression{Token: p.curToken}
 	if !p.match(token.LPAREN) {
 		return nil
 	}
 
 	p.nextToken()
-	expr.Condition = p.parseExpression(LOWEST)
+	ifExpr.Condition = p.parseExpression(LOWEST)
 	if !p.match(token.RPAREN) {
 		return nil
 	}
@@ -243,17 +259,17 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		return nil
 	}
 
-	expr.Consequence = p.parseBlockStatement()
+	ifExpr.Consequence = p.parseBlockStatement()
 
 	if p.peekTokenIs(token.ELSE) {
 		p.nextToken()
 		if !p.match(token.LBRACE) {
 			return nil
 		}
-		expr.Alternative = p.parseBlockStatement()
+		ifExpr.Alternative = p.parseBlockStatement()
 	}
 
-	return expr
+	return ifExpr
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
@@ -286,15 +302,38 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	return fn
 }
 
+func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
+	callExpr := &ast.CallExpression{
+		Token:     p.curToken,
+		Function:  fn,
+		Arguments: []ast.Expression{},
+	}
+
+	p.nextToken()
+
+	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
+		callExpr.Arguments = append(callExpr.Arguments, p.parseExpression(LOWEST))
+
+		p.nextToken()
+
+		if p.curTokenIs(token.COMMA) { // TODO has to be more strict
+			p.nextToken()
+		}
+	}
+
+	return callExpr
+}
+
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
-	block := &ast.BlockStatement{Token: p.curToken}
-	block.Statements = []ast.Statement{}
+	block := &ast.BlockStatement{Token: p.curToken, Statements: []ast.Statement{}}
+
 	p.nextToken()
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
-		if stmt != nil { // TODO this will always be true
-			block.Statements = append(block.Statements, stmt)
-		}
+		// if stmt != nil { // TODO this will always be true
+		// 	block.Statements = append(block.Statements, stmt)
+		// }
+		block.Statements = append(block.Statements, stmt)
 		p.nextToken()
 	}
 	return block
