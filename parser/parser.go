@@ -245,15 +245,15 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 
 func (p *Parser) parseIfExpression() ast.Expression {
 	ifExpr := &ast.IfExpression{Token: p.curToken}
-	if !p.consume(token.LPAREN, "missing opening '(' after 'if'") {
-		return nil
-	}
+	// if !p.consume(token.LPAREN, "missing opening '(' after 'if'") {
+	// 	return nil
+	// }
 
 	p.nextToken()
 	ifExpr.Condition = p.parseExpression(LOWEST)
-	if !p.consume(token.RPAREN, "missing closing ')' after condition") {
-		return nil
-	}
+	// if !p.consume(token.RPAREN, "missing closing ')' after condition") {
+	// 	return nil
+	// }
 
 	if !p.consume(token.LBRACE, "missing opening '{' after condition") {
 		return nil

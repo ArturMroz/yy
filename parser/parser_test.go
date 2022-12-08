@@ -252,6 +252,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 }
 
 func TestIfExpression(t *testing.T) {
+	// TODO add more test cases
 	input := `if (x < y) { x }`
 	stmt := parseSingleStmt(t, input)
 
