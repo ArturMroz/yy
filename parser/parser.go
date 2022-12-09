@@ -245,15 +245,9 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 
 func (p *Parser) parseIfExpression() ast.Expression {
 	ifExpr := &ast.IfExpression{Token: p.curToken}
-	// if !p.consume(token.LPAREN, "missing opening '(' after 'if'") {
-	// 	return nil
-	// }
 
 	p.nextToken()
 	ifExpr.Condition = p.parseExpression(LOWEST)
-	// if !p.consume(token.RPAREN, "missing closing ')' after condition") {
-	// 	return nil
-	// }
 
 	if !p.consume(token.LBRACE, "missing opening '{' after condition") {
 		return nil
@@ -330,9 +324,6 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	p.nextToken()
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
-		// if stmt != nil { // TODO this will always be true
-		// 	block.Statements = append(block.Statements, stmt)
-		// }
 		block.Statements = append(block.Statements, stmt)
 		p.nextToken()
 	}
@@ -370,8 +361,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	// TODO allow custom error msg to be passed
-	msg := fmt.Sprintf("parse error: %s (expected next token to be '%s', got '%s' instead)", errMsg, t, p.peekToken.Type)
+	msg := fmt.Sprintf("parse error: %s (expected '%s', got '%s')", errMsg, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
 

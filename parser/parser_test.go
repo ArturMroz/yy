@@ -312,6 +312,67 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestParseIfExpressions(t *testing.T) {
+	tests := []struct {
+		input               string
+		expectedCondition   string
+		expectedConsequence string
+		expectedAlternative string
+	}{
+		{
+			"if x < y { x }",
+			"(x < y)",
+			"{ x }",
+			"",
+		},
+		{
+			"if (x < y) { x }",
+			"(x < y)",
+			"{ x }",
+			"",
+		},
+		{
+			"if x < y { x } else { y }",
+			"(x < y)",
+			"{ x }",
+			"{ y }",
+		},
+		{
+			"if (x < y) { if (x > y) { x } }",
+			"(x < y)",
+			"{ if (x > y) { x } }",
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+
+		ifExpr, ok := stmt.Expression.(*ast.IfExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
+		}
+
+		if ifExpr.Condition.String() != tt.expectedCondition {
+			t.Errorf("condition.String() is not %q. got=%q", tt.expectedCondition, ifExpr.Condition.String())
+		}
+
+		if ifExpr.Consequence.String() != tt.expectedConsequence {
+			t.Errorf("consequence.String() is not %q. got=%q", tt.expectedConsequence, ifExpr.Consequence.String())
+		}
+
+		if ifExpr.Alternative == nil {
+			if tt.expectedAlternative != "" {
+				t.Errorf("exp.Alternative is nil. want=%q", tt.expectedAlternative)
+			}
+		} else {
+			if ifExpr.Alternative.String() != tt.expectedAlternative {
+				t.Errorf("exp.Alternative.String() is not %q. got=%q", tt.expectedAlternative, ifExpr.Alternative.String())
+			}
+		}
+	}
+}
+
 func TestFunctionLiteralParsing(t *testing.T) {
 	input := `fun(x, y) { x + y; }`
 	stmt := parseSingleStmt(t, input)

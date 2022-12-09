@@ -158,7 +158,7 @@ func (ie *IfExpression) expressionNode()      {}
 func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *IfExpression) String() string {
 	var b strings.Builder
-	b.WriteString("if")
+	b.WriteString("if ")
 	b.WriteString(ie.Condition.String())
 	b.WriteString(" ")
 	b.WriteString(ie.Consequence.String())
@@ -177,15 +177,24 @@ type BlockStatement struct {
 func (bs *BlockStatement) statementNode()       {}
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
-	var b strings.Builder
-	for _, s := range bs.Statements {
-		b.WriteString(s.String())
+	stmts := []string{}
+	for _, p := range bs.Statements {
+		stmts = append(stmts, p.String())
 	}
+
+	var b strings.Builder
+	b.WriteString("{ ")
+	// for _, s := range bs.Statements {
+	// 	b.WriteString(s.String())
+	// }
+
+	b.WriteString(strings.Join(stmts, "; "))
+	b.WriteString(" }")
 	return b.String()
 }
 
 type FunctionLiteral struct {
-	Token      token.Token // The 'fn' token
+	Token      token.Token // 'fun' token
 	Parameters []*Identifier
 	Body       *BlockStatement
 }
