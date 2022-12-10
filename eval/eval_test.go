@@ -125,11 +125,32 @@ func TestIfElseExpressions(t *testing.T) {
 	}
 }
 
-func testNullObject(obj object.Object) error {
-	if obj != NULL {
-		return fmt.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+func TestYeetStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"yeet 10;", 10},
+		{"yeet 10; 9;", 10},
+		{"yeet 2 * 5; 9;", 10},
+		{"9; yeet 2 * 5; 9;", 10},
+		{
+			`
+if 10 > 1 {
+	if 10 > 1 {
+		yeet 10;
 	}
-	return nil
+	yeet 1;
+}`,
+			10,
+		},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		if err := testIntegerObject(evaluated, tt.expected); err != nil {
+			t.Error(err)
+		}
+	}
 }
 
 //
@@ -141,6 +162,13 @@ func testEval(input string) object.Object {
 	p := parser.New(l)
 	program := p.ParseProgram()
 	return Eval(program)
+}
+
+func testNullObject(obj object.Object) error {
+	if obj != NULL {
+		return fmt.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+	}
+	return nil
 }
 
 func testIntegerObject(obj object.Object, expected int64) error {

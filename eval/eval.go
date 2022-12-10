@@ -14,10 +14,14 @@ var (
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalProgram(node.Statements)
 
 	case *ast.BlockStatement:
-		return evalStatements(node.Statements)
+		return evalBlockStatement(node.Statements)
+
+	case *ast.YeetStatement:
+		val := Eval(node.ReturnValue)
+		return &object.ReturnValue{Value: val}
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
@@ -52,11 +56,30 @@ func Eval(node ast.Node) object.Object {
 	}
 }
 
-func evalStatements(statements []ast.Statement) object.Object {
+func evalProgram(statements []ast.Statement) object.Object {
 	var result object.Object
 	for _, stmt := range statements {
 		result = Eval(stmt)
+
+		if retVal, ok := result.(*object.ReturnValue); ok {
+			return retVal.Value
+		}
 	}
+
+	return result
+}
+
+func evalBlockStatement(statements []ast.Statement) object.Object {
+	var result object.Object
+	for _, stmt := range statements {
+		result = Eval(stmt)
+
+		if _, ok := result.(*object.ReturnValue); ok {
+			// don't unwrap return value and let it bubble so it stops execution in outer block statement
+			return result
+		}
+	}
+
 	return result
 }
 
