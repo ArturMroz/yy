@@ -14,11 +14,10 @@ var (
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		var result object.Object
-		for _, stmt := range node.Statements {
-			result = Eval(stmt)
-		}
-		return result
+		return evalStatements(node.Statements)
+
+	case *ast.BlockStatement:
+		return evalStatements(node.Statements)
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
@@ -32,6 +31,16 @@ func Eval(node ast.Node) object.Object {
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
 
+	case *ast.IfExpression:
+		condition := Eval(node.Condition)
+		if isTruthy(condition) {
+			return Eval(node.Consequence)
+		} else if node.Alternative != nil {
+			return Eval(node.Alternative)
+		} else {
+			return NULL
+		}
+
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 
@@ -43,17 +52,35 @@ func Eval(node ast.Node) object.Object {
 	}
 }
 
-func evalPrefixExpression(operator string, right object.Object) object.Object {
-	switch operator {
+func evalStatements(statements []ast.Statement) object.Object {
+	var result object.Object
+	for _, stmt := range statements {
+		result = Eval(stmt)
+	}
+	return result
+}
+
+func isTruthy(o object.Object) bool {
+	// Ruby's truthiness rules: nil & false are falsy, everything else is truthy
+	switch o {
+	case NULL, FALSE:
+		return false
+	default:
+		return true
+	}
+}
+
+func toYeetBool(v bool) object.Object {
+	if v {
+		return TRUE
+	}
+	return FALSE
+}
+
+func evalPrefixExpression(op string, right object.Object) object.Object {
+	switch op {
 	case "!":
-		switch right {
-		case TRUE:
-			return FALSE
-		case FALSE, NULL:
-			return TRUE
-		default:
-			return FALSE
-		}
+		return toYeetBool(!isTruthy(right))
 
 	case "-":
 		right, ok := right.(*object.Integer)
@@ -110,27 +137,20 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 	}
 }
 
-func toYeetBool(v bool) object.Object {
-	if v {
-		return TRUE
-	}
-	return FALSE
-}
+// func evalInfixExpression_old(operator string, left, right object.Object) object.Object {
+// 	switch operator {
+// 	case "+":
+// 		right, ok := right.(*object.Integer)
+// 		if !ok {
+// 			return NULL // TODO handle errors better than just returning null
+// 		}
+// 		left, ok := left.(*object.Integer)
+// 		if !ok {
+// 			return NULL // TODO handle errors better than just returning null
+// 		}
+// 		return &object.Integer{Value: left.Value + right.Value}
 
-func evalInfixExpression_old(operator string, left, right object.Object) object.Object {
-	switch operator {
-	case "+":
-		right, ok := right.(*object.Integer)
-		if !ok {
-			return NULL // TODO handle errors better than just returning null
-		}
-		left, ok := left.(*object.Integer)
-		if !ok {
-			return NULL // TODO handle errors better than just returning null
-		}
-		return &object.Integer{Value: left.Value + right.Value}
-
-	default:
-		return NULL
-	}
-}
+// 	default:
+// 		return NULL
+// 	}
+// }
