@@ -2,6 +2,8 @@ package eval
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"ylang/lexer"
@@ -153,6 +155,61 @@ if 10 > 1 {
 	}
 }
 
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{
+			"5 + true;",
+			"type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"5 + true; 5;",
+			"type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"-true",
+			"unknown operator: -BOOLEAN",
+		},
+		{
+			"true + false;",
+			"unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"5; true + false; 5",
+			"unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			"if (10 > 1) { true + false; }",
+			"unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			`
+if (10 > 1) {
+	if (10 > 1) {
+		yeet true + false;
+	}
+	yeet 1;
+}
+`,
+			"unknown operator: BOOLEAN + BOOLEAN",
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("no error object returned. got=%T(%+v)", evaluated, evaluated)
+			continue
+		}
+		if errObj.Msg != tt.expectedMessage {
+			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Msg)
+		}
+	}
+}
+
 //
 // HELPERS
 //
@@ -191,4 +248,32 @@ func testBooleanObject(obj object.Object, expected bool) error {
 		return fmt.Errorf("object has wrong value. got=%t, want=%t", result.Value, expected)
 	}
 	return nil
+}
+
+//
+// BENCHMARKS
+//
+
+func BenchmarkEval(b *testing.B) {
+	for _, f := range []string{
+		"first.yeet",
+	} {
+		b.Run(f, func(b *testing.B) {
+			b.StopTimer()
+			filename := filepath.Join("../examples", f)
+			src, err := os.ReadFile(filename)
+			if err != nil {
+				b.Fatalf("couldn't read test file: %s", err)
+			}
+			sSrc := string(src)
+			l := lexer.New(sSrc)
+			p := parser.New(l)
+			program := p.ParseProgram()
+
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				_ = Eval(program)
+			}
+		})
+	}
 }

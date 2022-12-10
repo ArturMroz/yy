@@ -1,6 +1,8 @@
 package eval
 
 import (
+	"fmt"
+
 	"ylang/ast"
 	"ylang/object"
 )
@@ -21,6 +23,9 @@ func Eval(node ast.Node) object.Object {
 
 	case *ast.YeetStatement:
 		val := Eval(node.ReturnValue)
+		if isError(val) {
+			return val
+		}
 		return &object.ReturnValue{Value: val}
 
 	case *ast.ExpressionStatement:
@@ -28,15 +33,29 @@ func Eval(node ast.Node) object.Object {
 
 	case *ast.PrefixExpression:
 		right := Eval(node.Right)
+		if isError(right) {
+			return right
+		}
 		return evalPrefixExpression(node.Operator, right)
 
 	case *ast.InfixExpression:
 		left := Eval(node.Left)
+		if isError(left) {
+			return left
+		}
+
 		right := Eval(node.Right)
+		if isError(right) {
+			return right
+		}
 		return evalInfixExpression(node.Operator, left, right)
 
 	case *ast.IfExpression:
 		condition := Eval(node.Condition)
+		if isError(condition) {
+			return condition
+		}
+
 		if isTruthy(condition) {
 			return Eval(node.Consequence)
 		} else if node.Alternative != nil {
@@ -61,8 +80,11 @@ func evalProgram(statements []ast.Statement) object.Object {
 	for _, stmt := range statements {
 		result = Eval(stmt)
 
-		if retVal, ok := result.(*object.ReturnValue); ok {
-			return retVal.Value
+		switch result := result.(type) {
+		case *object.ReturnValue:
+			return result.Value
+		case *object.Error:
+			return result
 		}
 	}
 
@@ -74,13 +96,76 @@ func evalBlockStatement(statements []ast.Statement) object.Object {
 	for _, stmt := range statements {
 		result = Eval(stmt)
 
-		if _, ok := result.(*object.ReturnValue); ok {
-			// don't unwrap return value and let it bubble so it stops execution in outer block statement
-			return result
+		if result != nil {
+			rtype := result.Type()
+			if rtype == object.RETURN_VALUE_OBJ || rtype == object.ERROR_OBJ {
+				// don't unwrap return value and let it bubble so it stops execution in outer block statement
+				return result
+			}
 		}
 	}
 
 	return result
+}
+
+func evalPrefixExpression(op string, right object.Object) object.Object {
+	switch op {
+	case "!":
+		return toYeetBool(!isTruthy(right))
+
+	case "-":
+		if right.Type() != object.INTEGER_OBJ {
+			return errorEval("unknown operator: %s%s", op, right.Type())
+		}
+		right := right.(*object.Integer)
+		return &object.Integer{Value: -right.Value}
+
+	default:
+		return errorEval("unknown operator: %s%s", op, right.Type())
+	}
+}
+
+func evalInfixExpression(operator string, left, right object.Object) object.Object {
+	switch {
+	case left.Type() != right.Type():
+		return errorEval("type mismatch: %s %s %s", left.Type(), operator, right.Type())
+
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
+		right := right.(*object.Integer)
+		left := left.(*object.Integer)
+
+		switch operator {
+		case "+":
+			return &object.Integer{Value: left.Value + right.Value}
+		case "-":
+			return &object.Integer{Value: left.Value - right.Value}
+		case "*":
+			return &object.Integer{Value: left.Value * right.Value}
+		case "/":
+			return &object.Integer{Value: left.Value / right.Value}
+		case "<":
+			return toYeetBool(left.Value < right.Value)
+		case ">":
+			return toYeetBool(left.Value > right.Value)
+		case "==":
+			return toYeetBool(left.Value == right.Value)
+		case "!=":
+			return toYeetBool(left.Value != right.Value)
+		}
+
+	case left.Type() == object.BOOLEAN_OBJ && right.Type() == object.BOOLEAN_OBJ:
+		right := right.(*object.Boolean)
+		left := left.(*object.Boolean)
+
+		switch operator {
+		case "==":
+			return toYeetBool(left.Value == right.Value)
+		case "!=":
+			return toYeetBool(left.Value != right.Value)
+		}
+	}
+
+	return errorEval("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 }
 
 func isTruthy(o object.Object) bool {
@@ -100,80 +185,10 @@ func toYeetBool(v bool) object.Object {
 	return FALSE
 }
 
-func evalPrefixExpression(op string, right object.Object) object.Object {
-	switch op {
-	case "!":
-		return toYeetBool(!isTruthy(right))
-
-	case "-":
-		right, ok := right.(*object.Integer)
-		if !ok {
-			return NULL // TODO handle errors better than just returning null
-		}
-		return &object.Integer{Value: -right.Value}
-
-	default:
-		return NULL
-	}
+func isError(obj object.Object) bool {
+	return obj != nil && obj.Type() == object.ERROR_OBJ
 }
 
-func evalInfixExpression(operator string, left, right object.Object) object.Object {
-	switch {
-	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
-		right := right.(*object.Integer)
-		left := left.(*object.Integer)
-		switch operator {
-		case "+":
-			return &object.Integer{Value: left.Value + right.Value}
-		case "-":
-			return &object.Integer{Value: left.Value - right.Value}
-		case "*":
-			return &object.Integer{Value: left.Value * right.Value}
-		case "/":
-			return &object.Integer{Value: left.Value / right.Value}
-		case "<":
-			return toYeetBool(left.Value < right.Value)
-		case ">":
-			return toYeetBool(left.Value > right.Value)
-		case "==":
-			return toYeetBool(left.Value == right.Value)
-		case "!=":
-			return toYeetBool(left.Value != right.Value)
-		default:
-			return NULL
-		}
-
-	case left.Type() == object.BOOLEAN_OBJ && right.Type() == object.BOOLEAN_OBJ:
-		right := right.(*object.Boolean)
-		left := left.(*object.Boolean)
-		switch operator {
-		case "==":
-			return toYeetBool(left.Value == right.Value)
-		case "!=":
-			return toYeetBool(left.Value != right.Value)
-		default:
-			return NULL
-		}
-
-	default:
-		return NULL
-	}
+func errorEval(format string, args ...any) *object.Error {
+	return &object.Error{Msg: fmt.Sprintf(format, args...)}
 }
-
-// func evalInfixExpression_old(operator string, left, right object.Object) object.Object {
-// 	switch operator {
-// 	case "+":
-// 		right, ok := right.(*object.Integer)
-// 		if !ok {
-// 			return NULL // TODO handle errors better than just returning null
-// 		}
-// 		left, ok := left.(*object.Integer)
-// 		if !ok {
-// 			return NULL // TODO handle errors better than just returning null
-// 		}
-// 		return &object.Integer{Value: left.Value + right.Value}
-
-// 	default:
-// 		return NULL
-// 	}
-// }
