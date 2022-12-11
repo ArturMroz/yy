@@ -2,6 +2,8 @@ package parser
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"ylang/ast"
@@ -338,6 +340,12 @@ func TestParseIfExpressions(t *testing.T) {
 			"{ y }",
 		},
 		{
+			"if null { x } else { y }",
+			"null",
+			"{ x }",
+			"{ y }",
+		},
+		{
 			"if (x < y) { if (x > y) { x } }",
 			"(x < y)",
 			"{ if (x > y) { x } }",
@@ -492,7 +500,7 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		return
 	}
 
-	t.Errorf("parser has %d errors", len(errors))
+	t.Errorf("parser has %d error(s)", len(errors))
 	for _, msg := range errors {
 		t.Errorf("parser error: %q", msg)
 	}
@@ -510,10 +518,6 @@ func parseSingleStmt(t *testing.T, input string) *ast.ExpressionStatement {
 	}
 	return stmt
 }
-
-// type YeetValue interface {
-// 	int | int64 | string | bool
-// }
 
 func testLiteralExpression(expr ast.Expression, expected any) error {
 	switch v := expected.(type) {
@@ -616,4 +620,44 @@ func testLetStatement(stmt ast.Statement, name string) error {
 	}
 
 	return nil
+}
+
+var testFiles = []string{
+	"fun.yeet",
+	"first.yeet",
+}
+
+func TestParseFiles(t *testing.T) {
+	for _, f := range testFiles {
+		t.Run(f, func(t *testing.T) {
+			filename := filepath.Join("..", "examples", f)
+			src, err := os.ReadFile(filename)
+			if err != nil {
+				t.Fatalf("couldn't read test file: %s", err)
+			}
+
+			_ = parse(t, string(src))
+		})
+	}
+}
+
+func BenchmarkParse(b *testing.B) {
+	for _, f := range testFiles {
+		b.Run(f, func(b *testing.B) {
+			b.StopTimer()
+			filename := filepath.Join("..", "examples", f)
+			src, err := os.ReadFile(filename)
+			if err != nil {
+				b.Fatalf("couldn't read test file: %s", err)
+			}
+			sSrc := string(src)
+
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				l := lexer.New(sSrc)
+				parser := New(l)
+				_ = parser.ParseProgram()
+			}
+		})
+	}
 }

@@ -104,13 +104,15 @@ func TestIfElseExpressions(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{"if (true) { 10 }", 10},
-		{"if (false) { 10 }", nil},
-		{"if (1) { 10 }", 10},
-		{"if (1 < 2) { 10 }", 10},
-		{"if (1 > 2) { 10 }", nil},
-		{"if (1 > 2) { 10 } else { 20 }", 20},
-		{"if (1 < 2) { 10 } else { 20 }", 10},
+		{"if true { 10 }", 10},
+		{"if false { 10 }", nil},
+		{"if null { 10 }", nil},
+		{"if 1 { 10 }", 10},
+		{"if 1 < 2 { 10 }", 10},
+		{"if 1 > 2 { 10 }", nil},
+		{"if 1 > 2 { 10 } else { 20 }", 20},
+		{"if 1 < 2 { 10 } else { 20 }", 10},
+		{"if null { 10 } else { 20 }", 20},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
@@ -195,6 +197,10 @@ if (10 > 1) {
 `,
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
+		{
+			"foobar",
+			"identifier not found: foobar",
+		},
 	}
 
 	for _, tt := range tests {
@@ -210,6 +216,24 @@ if (10 > 1) {
 	}
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let a = 5; a;", 5},
+		{"let a = 5 * 5; a;", 25},
+		{"let a = 5; let b = a; b;", 5},
+		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+	}
+
+	for _, tt := range tests {
+		if err := testIntegerObject(testEval(tt.input), tt.expected); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 //
 // HELPERS
 //
@@ -218,7 +242,9 @@ func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
-	return Eval(program)
+	env := object.NewEnvironment()
+
+	return Eval(program, env)
 }
 
 func testNullObject(obj object.Object) error {
@@ -254,8 +280,49 @@ func testBooleanObject(obj object.Object, expected bool) error {
 // BENCHMARKS
 //
 
+func TestFiles(t *testing.T) {
+	for _, f := range []string{
+		"first.yeet",
+		// "fib.yeet",
+	} {
+		t.Run(f, func(t *testing.T) {
+			filename := filepath.Join("../examples", f)
+			src, err := os.ReadFile(filename)
+			if err != nil {
+				t.Fatalf("couldn't read test file: %s", err)
+			}
+			sSrc := string(src)
+			// l := lexer.New(sSrc)
+			// p := parser.New(l)
+			// program := p.ParseProgram()
+			// checkParserErrors(t, p)
+			result := testEval(sSrc)
+
+			if evalError, ok := result.(*object.Error); ok {
+				t.Errorf("evaluated to error: %q", evalError.Msg)
+			}
+		})
+	}
+}
+
+func checkParserErrors(t *testing.T, p *parser.Parser) {
+	t.Helper()
+
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
+}
+
 func BenchmarkEval(b *testing.B) {
 	for _, f := range []string{
+		"fun.yeet",
 		"first.yeet",
 	} {
 		b.Run(f, func(b *testing.B) {
@@ -269,10 +336,11 @@ func BenchmarkEval(b *testing.B) {
 			l := lexer.New(sSrc)
 			p := parser.New(l)
 			program := p.ParseProgram()
+			env := object.NewEnvironment()
 
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
-				_ = Eval(program)
+				_ = Eval(program, env)
 			}
 		})
 	}

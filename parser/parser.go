@@ -74,6 +74,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.BANG:     p.parsePrefixExpression,
 		token.TRUE:     p.parseBoolean,
 		token.FALSE:    p.parseBoolean,
+		token.NULL:     p.parseNull,
 		token.LPAREN:   p.parseGroupedExpression,
 		token.IF:       p.parseIfExpression,
 		token.FUNCTION: p.parseFunctionLiteral,
@@ -232,6 +233,10 @@ func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
 
+func (p *Parser) parseNull() ast.Expression {
+	return &ast.Null{Token: p.curToken}
+}
+
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 
@@ -361,7 +366,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("parse error: %s (expected '%s', got '%s')", errMsg, t, p.peekToken.Type)
+	msg := fmt.Sprintf("%s (expected '%s', got '%s')", errMsg, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
 

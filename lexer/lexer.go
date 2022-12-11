@@ -126,8 +126,24 @@ func (l *Lexer) readNumber() string {
 }
 
 func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
-		l.advance()
+	for {
+		switch l.ch {
+		case ' ', '\t', '\n', '\r':
+			l.advance()
+
+		case '/':
+			if l.peekChar() == '/' {
+				// treating comments as whitespace, sue me
+				for l.ch != '\n' && l.ch != 0 {
+					l.advance()
+				}
+			} else {
+				return
+			}
+
+		default:
+			return
+		}
 	}
 }
 
