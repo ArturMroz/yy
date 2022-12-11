@@ -366,7 +366,14 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("%s (expected '%s', got '%s')", errMsg, t, p.peekToken.Type)
+	// got := string(p.peekToken.Type)
+	// switch p.peekToken.Type {
+	// // TODO add more token types that have Literal
+	// case token.IDENT, token.INT, token.FUNCTION:
+	// 	got += ": " + p.peekToken.Literal
+	// }
+
+	msg := fmt.Sprintf("%s (expected '%s', got '%s')", errMsg, t, p.peekToken.Literal)
 	p.errors = append(p.errors, msg)
 }
 
