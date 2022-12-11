@@ -113,6 +113,32 @@ func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode()      {}
+func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
+func (b *Boolean) String() string       { return b.Token.Literal }
+
+type Null struct {
+	Token token.Token
+}
+
+func (n *Null) expressionNode()      {}
+func (n *Null) TokenLiteral() string { return n.Token.Literal }
+func (n *Null) String() string       { return n.Token.Literal }
+
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (sl *StringLiteral) expressionNode()      {}
+func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
+func (sl *StringLiteral) String() string       { return sl.Token.Literal }
+
 type PrefixExpression struct {
 	Token    token.Token // prefix token e.g. !
 	Operator string      // '-' or '!' TODO could be byte?
@@ -137,23 +163,6 @@ func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *InfixExpression) String() string {
 	return fmt.Sprintf("(%s %s %s)", ie.Left.String(), ie.Operator, ie.Right.String())
 }
-
-type Boolean struct {
-	Token token.Token
-	Value bool
-}
-
-func (b *Boolean) expressionNode()      {}
-func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
-func (b *Boolean) String() string       { return b.Token.Literal }
-
-type Null struct {
-	Token token.Token
-}
-
-func (n *Null) expressionNode()      {}
-func (n *Null) TokenLiteral() string { return n.Token.Literal }
-func (n *Null) String() string       { return n.Token.Literal }
 
 type IfExpression struct {
 	Token       token.Token // The 'if' token

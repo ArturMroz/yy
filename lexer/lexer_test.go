@@ -34,6 +34,18 @@ func TestNextToken(t *testing.T) {
 				{token.EOF, ""},
 			},
 		},
+		{
+			`yo myString = "testy guy"; "other string"`,
+			[]token.Token{
+				{token.YO, "yo"},
+				{token.IDENT, "myString"},
+				{token.ASSIGN, "="},
+				{token.STRING, "testy guy"},
+				{token.SEMICOLON, ";"},
+				{token.STRING, "other string"},
+				{token.EOF, ""},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

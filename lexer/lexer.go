@@ -61,6 +61,10 @@ func (l *Lexer) NextToken() token.Token {
 	case '}':
 		tok = newToken(token.RBRACE, ch)
 
+	case '"':
+		literal := l.readString()
+		tok = token.Token{Type: token.STRING, Literal: literal}
+
 	case 0:
 		tok = token.Token{Type: token.EOF, Literal: ""}
 
@@ -122,6 +126,17 @@ func (l *Lexer) readNumber() string {
 	for isDigit(l.ch) {
 		l.advance()
 	}
+	return l.input[start:l.position]
+}
+
+func (l *Lexer) readString() string {
+	l.advance() // consume opening '"'
+
+	start := l.position
+	for l.ch != '"' && l.ch != 0 {
+		l.advance()
+	}
+	// TODO handle unterminated strings
 	return l.input[start:l.position]
 }
 

@@ -71,7 +71,6 @@ func TestIdentifierExpression(t *testing.T) {
 	expected := "foobar"
 
 	stmt := parseSingleStmt(t, input)
-
 	ident, ok := stmt.Expression.(*ast.Identifier)
 	if !ok {
 		t.Fatalf("expr not *ast.Identifier. got=%T", stmt.Expression)
@@ -90,6 +89,20 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	stmt := parseSingleStmt(t, input)
 	if err := testIntegerLiteral(stmt.Expression, expected); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"Yo, world!";`
+	expected := "Yo, world!"
+
+	stmt := parseSingleStmt(t, input)
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+	}
+	if literal.Value != expected {
+		t.Errorf("literal.Value not %q. got=%q", expected, literal.Value)
 	}
 }
 

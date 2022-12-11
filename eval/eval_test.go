@@ -41,6 +41,44 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	input := `"Hello World!"`
+	expected := "Hello World!"
+	evaluated := testEval(input)
+
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+	}
+	if str.Value != expected {
+		t.Errorf("String has wrong value. want=%q, got=%q", expected, str.Value)
+	}
+}
+
+func TestStringConcatenation(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"con" + "cat"`, "concat"},
+		{`"" + "cat"`, "cat"},
+		{`"" + ""`, ""},
+		{`"con" + "cat" + "enation"`, "concatenation"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		str, ok := evaluated.(*object.String)
+		if !ok {
+			t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+		}
+		if str.Value != tt.expected {
+			t.Errorf("String has wrong value. want=%q, got=%q", tt.expected, str.Value)
+		}
+	}
+}
+
 func TestEvalBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -65,6 +103,10 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"(1 < 2) == false", false},
 		{"(1 > 2) == true", false},
 		{"(1 > 2) == false", true},
+		{`"yolo" == "yolo"`, true},
+		{`"yolo" == "yeet"`, false},
+		{`"yolo" != "yolo"`, false},
+		{`"yolo" != "yeet"`, true},
 	}
 
 	for _, tt := range tests {
@@ -198,8 +240,20 @@ if (10 > 1) {
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
+			`"Hello" - "World"`,
+			"unknown operator: STRING - STRING",
+		},
+		{
 			"foobar",
 			"identifier not found: foobar",
+		},
+		{
+			"foobar()",
+			"identifier not found: foobar",
+		},
+		{
+			"foobar2(x, y)",
+			"identifier not found: foobar2",
 		},
 	}
 
@@ -211,7 +265,7 @@ if (10 > 1) {
 			continue
 		}
 		if errObj.Msg != tt.expectedMessage {
-			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Msg)
+			t.Errorf("wrong error message. want=%q, got=%q", tt.expectedMessage, errObj.Msg)
 		}
 	}
 }

@@ -102,6 +102,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
+
 	case *ast.Boolean:
 		return toYeetBool(node.Value)
 
@@ -216,6 +219,19 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		left := left.(*object.Boolean)
 
 		switch operator {
+		case "==":
+			return toYeetBool(left.Value == right.Value)
+		case "!=":
+			return toYeetBool(left.Value != right.Value)
+		}
+
+	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
+		right := right.(*object.String)
+		left := left.(*object.String)
+
+		switch operator {
+		case "+":
+			return &object.String{Value: left.Value + right.Value}
 		case "==":
 			return toYeetBool(left.Value == right.Value)
 		case "!=":
