@@ -113,45 +113,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	}
 }
 
-func evalExpressions(exps []ast.Expression, env *object.Environment) []object.Object {
-	var result []object.Object
-	for _, e := range exps {
-		evaluated := Eval(e, env)
-		if isError(evaluated) {
-			return []object.Object{evaluated}
-		}
-		result = append(result, evaluated)
-	}
-	return result
-}
-
-func applyFunction(function object.Object, args []object.Object) object.Object {
-	fn, ok := function.(*object.Function)
-	if !ok {
-		return newError("not a function: %s", fn.Type())
-	}
-
-	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-	for paramIdx, param := range fn.Parameters {
-		extendedEnv.Set(param.Value, args[paramIdx])
-	}
-
-	evaluated := Eval(fn.Body, extendedEnv)
-
-	// unwrap return value so it doesn't stop eval in outer scope
-	if returnValue, ok := evaluated.(*object.ReturnValue); ok {
-		return returnValue.Value
-	}
-	return evaluated
-}
-
-// func unwrapReturnValue(obj object.Object) object.Object {
-// 	if returnValue, ok := obj.(*object.ReturnValue); ok {
-// 		return returnValue.Value
-// 	}
-// 	return obj
-// }
-
 func evalProgram(statements []ast.Statement, env *object.Environment) object.Object {
 	var result object.Object
 	for _, stmt := range statements {
@@ -183,6 +144,26 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 	}
 
 	return result
+}
+
+func applyFunction(function object.Object, args []object.Object) object.Object {
+	fn, ok := function.(*object.Function)
+	if !ok {
+		return newError("not a function: %s", fn.Type())
+	}
+
+	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+	for paramIdx, param := range fn.Parameters {
+		extendedEnv.Set(param.Value, args[paramIdx])
+	}
+
+	evaluated := Eval(fn.Body, extendedEnv)
+
+	// unwrap return value so it doesn't stop eval in outer scope
+	if returnValue, ok := evaluated.(*object.ReturnValue); ok {
+		return returnValue.Value
+	}
+	return evaluated
 }
 
 func evalPrefixExpression(op string, right object.Object) object.Object {

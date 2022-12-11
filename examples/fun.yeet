@@ -1,0 +1,49 @@
+// recursion
+
+let fib = fun(n) {
+    if n < 2 {
+        yeet n;
+    }
+    yeet fib(n-1) + fib(n-2);
+}
+
+fib(20);
+ 
+let fib2 = fun(n) {
+    if n < 2 {
+        n;
+    } else {
+        fib(n-1) + fib(n-2);
+    }
+}
+
+fib2(20);
+
+// assert(fib(5) == fib2(5))
+
+let factorial = fun(n) { 
+    if n == 0 { 1 } else { n * factorial(n-1) };
+};
+
+factorial(5);
+
+
+// higher-order functions
+
+let addThree     = fun(x) { yeet x + 3 };
+let callTwoTimes = fun(x, func) { func(func(x)) }
+callTwoTimes(3, addThree);
+
+
+let add       = fun(a, b) { a + b };
+let sub       = fun(a, b) { a - b };
+let applyFunc = fun(a, b, func) { func(a, b) };
+
+applyFunc(2, 2, add); // 4
+applyFunc(10, 2, sub); // 8
+
+// closures 
+
+let newAdder = fun(x) { fun(n) { x + n } };
+let addTwo   = newAdder(2);
+addTwo(2);
