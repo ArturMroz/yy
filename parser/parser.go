@@ -34,8 +34,9 @@ const (
 	LESSGREATER // > or <
 	SUM         // +
 	PRODUCT     // *
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
+	PREFIX      // -x or !x
+	CALL        // myFunction(x)
+	INDEX       // myArray[idx]
 )
 
 var precedences = map[token.TokenType]Precedence{
@@ -48,6 +49,7 @@ var precedences = map[token.TokenType]Precedence{
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPAREN:   CALL,
+	token.LBRACKET: INDEX,
 }
 
 func (p *Parser) peekPrecedence() Precedence {
@@ -77,6 +79,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.FALSE:    p.parseBoolean,
 		token.NULL:     p.parseNull,
 		token.LPAREN:   p.parseGroupedExpression,
+		token.LBRACKET: p.parseArrayLiteral,
 		token.IF:       p.parseIfExpression,
 		token.FUNCTION: p.parseFunctionLiteral,
 	}
@@ -91,6 +94,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LT:       p.parseInfixExpression,
 		token.GT:       p.parseInfixExpression,
 		token.LPAREN:   p.parseCallExpression,
+		token.LBRACKET: p.parseIndexExpression,
 	}
 
 	// read two tokens, so curToken and peekToken are both set
@@ -276,6 +280,42 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return ifExpr
 }
 
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	arr := &ast.ArrayLiteral{Token: p.curToken}
+
+	for !p.peekTokenIs(token.RBRACKET) && !p.peekTokenIs(token.EOF) {
+		p.nextToken()
+
+		arr.Elements = append(arr.Elements, p.parseExpression(LOWEST))
+
+		if p.peekTokenIs(token.COMMA) { // TODO tighten up after writing more unit tests
+			p.nextToken()
+		}
+	}
+
+	if !p.consume(token.RBRACKET, "missing closing ']' in array literal") {
+		return nil
+	}
+
+	return arr
+}
+
+func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
+	indexExpr := &ast.IndexExpression{
+		Token: p.curToken,
+		Left:  array,
+	}
+
+	p.nextToken()
+	indexExpr.Index = p.parseExpression(LOWEST)
+
+	if !p.consume(token.RBRACKET, "missing closing ']' when indexing an array") {
+		return nil
+	}
+
+	return indexExpr
+}
+
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
 	if !p.consume(token.LPAREN, "missing opening '(' after function") {
@@ -324,6 +364,11 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 			p.nextToken()
 		}
 	}
+
+	// TODO check this
+	// if !p.consume(token.RPAREN, "missing closing ')' after call expression") {
+	// 	return nil
+	// }
 
 	return callExpr
 }

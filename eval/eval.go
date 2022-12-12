@@ -110,6 +110,38 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.Boolean:
 		return toYeetBool(node.Value)
 
+	case *ast.ArrayLiteral:
+		var elts []object.Object
+		for _, elt := range node.Elements {
+			evaluated := Eval(elt, env)
+			if isError(evaluated) {
+				return evaluated
+			}
+			elts = append(elts, evaluated)
+		}
+		return &object.Array{Elements: elts}
+
+	case *ast.IndexExpression:
+		arr := Eval(node.Left, env)
+		if isError(arr) {
+			return arr
+		}
+		idx := Eval(node.Index, env)
+		if isError(idx) {
+			return idx
+		}
+
+		if arr.Type() != object.ARRAY_OBJ && idx.Type() != object.INTEGER_OBJ {
+			return newError("index operator not supported: %s", idx.Type())
+		}
+
+		i := idx.(*object.Integer).Value
+		a := arr.(*object.Array)
+		if i < 0 || i >= int64(len(a.Elements)) {
+			return NULL
+		}
+		return a.Elements[i]
+
 	case *ast.Null:
 		return NULL
 

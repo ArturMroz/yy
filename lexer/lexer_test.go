@@ -12,7 +12,7 @@ func TestNextToken(t *testing.T) {
 		expected []token.Token
 	}{
 		{
-			"+,(){}",
+			"+,(){}[]",
 			[]token.Token{
 				{token.PLUS, "+"},
 				{token.COMMA, ","},
@@ -20,6 +20,8 @@ func TestNextToken(t *testing.T) {
 				{token.RPAREN, ")"},
 				{token.LBRACE, "{"},
 				{token.RBRACE, "}"},
+				{token.LBRACKET, "["},
+				{token.RBRACKET, "]"},
 				{token.EOF, ""},
 			},
 		},

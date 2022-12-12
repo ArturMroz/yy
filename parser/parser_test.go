@@ -106,6 +106,44 @@ func TestStringLiteralExpression(t *testing.T) {
 	}
 }
 
+func TestParsingArrayLiterals(t *testing.T) {
+	// TODO add more cases
+	input := "[1, 2 * 2, 3 + 3]"
+	stmt := parseSingleStmt(t, input)
+	array, ok := stmt.Expression.(*ast.ArrayLiteral)
+	if !ok {
+		t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
+	}
+	if len(array.Elements) != 3 {
+		t.Fatalf("len(array.Elements) not 3. got=%d", len(array.Elements))
+	}
+	if err := testIntegerLiteral(array.Elements[0], 1); err != nil {
+		t.Error(err)
+	}
+	if err := testInfixExpression(array.Elements[1], 2, "*", 2); err != nil {
+		t.Error(err)
+	}
+	if err := testInfixExpression(array.Elements[2], 3, "+", 3); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParsingIndexExpressions(t *testing.T) {
+	// TOOD add more test cases
+	input := "myArray[1 + 1]"
+	stmt := parseSingleStmt(t, input)
+	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+	if !ok {
+		t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+	}
+	if err := testIdentifier(indexExp.Left, "myArray"); err != nil {
+		t.Error(err)
+	}
+	if err := testInfixExpression(indexExp.Index, 1, "+", 1); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
 		input    string
@@ -254,6 +292,14 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"add(a + b + c * d / f + g)",
 			"add((((a + b) + ((c * d) / f)) + g))",
+		},
+		{
+			"a * [1, 2, 3, 4][b * c] * d",
+			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
+		},
+		{
+			"add(a * b[2], b[1], 2 * [1, 2][1])",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
 		},
 	}
 

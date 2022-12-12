@@ -141,6 +141,72 @@ func TestBangOperator(t *testing.T) {
 	}
 }
 
+func TestArrayLiterals(t *testing.T) {
+	// TODO add more test cases
+	input := "[1, 2 * 2, 3 + 3]"
+
+	evaluated := testEval(input)
+	result, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Fatalf("object is not Array. got=%T (%+v)", evaluated, evaluated)
+	}
+	if len(result.Elements) != 3 {
+		t.Fatalf("array has wrong num of elements. got=%d", len(result.Elements))
+	}
+
+	if err := testIntegerObject(result.Elements[0], 1); err != nil {
+		t.Error(err)
+	}
+	if err := testIntegerObject(result.Elements[1], 4); err != nil {
+		t.Error(err)
+	}
+	if err := testIntegerObject(result.Elements[2], 6); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestArrayIndexExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"[1, 2, 3][0]", 1},
+		{"[1, 2, 3][1]", 2},
+		{"[1, 2, 3][2]", 3},
+		{"let i = 0; [1][i];", 1},
+		{"[1, 2, 3][1 + 1];", 3},
+		{
+			"let myArray = [1, 2, 3]; myArray[2];",
+			3,
+		},
+		{
+			"let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			6,
+		},
+		{
+			"let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",
+			2,
+		},
+		// out of bounds access returns nil
+		{"[1, 2, 3][3]", nil},
+		{"[1, 2, 3][-1]", nil},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
+				t.Error(err)
+			}
+		case nil:
+			if err := testNullObject(evaluated); err != nil {
+				t.Error(err)
+			}
+		}
+	}
+}
+
 func TestIfElseExpressions(t *testing.T) {
 	tests := []struct {
 		input    string
