@@ -340,6 +340,51 @@ addTwo(2);`
 	}
 }
 
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{`len("")`, 0},
+		{`len("four")`, 4},
+		{`len("hello world")`, 11},
+		{`len(1)`, "argument to `len` not supported, got INTEGER"},
+		{`len("one", "two")`, "wrong number of arguments. got=2, want=1"},
+		{`assert(1 == 1)`, nil},
+		{`assert(1 == 2)`, "assert failed"},
+		{`assert(false)`, "assert failed"},
+		{`assert(true)`, nil},
+		{`let a = 5; let b = 6; assert(a == b, "expect a to be equal to b")`, "assert failed: expect a to be equal to b"},
+		{`assert(1 == 2, "one is different than two")`, "assert failed: one is different than two"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
+				t.Error(err)
+			}
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("object is not Error. got=%T (%+v)", evaluated, evaluated)
+				continue
+			}
+			if errObj.Msg != expected {
+				t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Msg)
+			}
+		case nil:
+			if _, ok := evaluated.(*object.Null); !ok {
+				t.Errorf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
+			}
+
+		default:
+			t.Errorf("unexpected type, got=%T", expected)
+		}
+	}
+}
+
 //
 // HELPERS
 //

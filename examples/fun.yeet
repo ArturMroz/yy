@@ -19,7 +19,9 @@ let fib2 = fun(n) {
 
 fib2(20);
 
-// assert(fib(5) == fib2(5))
+assert(fib(5) == fib2(5))
+// assert accepts optional error message for more context
+assert(fib(5) == fib2(5), "fibonaccis are different") 
 
 let factorial = fun(n) { 
     if n == 0 { 1 } else { n * factorial(n-1) };
@@ -39,8 +41,8 @@ let add       = fun(a, b) { a + b };
 let sub       = fun(a, b) { a - b };
 let applyFunc = fun(a, b, func) { func(a, b) };
 
-applyFunc(2, 2, add); // 4
-applyFunc(10, 2, sub); // 8
+assert(applyFunc(2, 2, add) == 4); 
+assert(applyFunc(10, 2, sub) == 8);
 
 // closures 
 

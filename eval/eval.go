@@ -57,11 +57,13 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return NULL
 
 	case *ast.Identifier:
-		val, ok := env.Get(node.Value)
-		if !ok {
-			return newError("identifier not found: " + node.Value)
+		if val, ok := env.Get(node.Value); ok {
+			return val
 		}
-		return val
+		if builtin, ok := builtins[node.Value]; ok {
+			return builtin
+		}
+		return newError("identifier not found: " + node.Value)
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
@@ -149,24 +151,28 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 	return result
 }
 
-func applyFunction(function object.Object, args []object.Object) object.Object {
-	fn, ok := function.(*object.Function)
-	if !ok {
+func applyFunction(fn object.Object, args []object.Object) object.Object {
+	switch fn := fn.(type) {
+	case *object.Function:
+		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+		for paramIdx, param := range fn.Parameters {
+			extendedEnv.Set(param.Value, args[paramIdx])
+		}
+
+		evaluated := Eval(fn.Body, extendedEnv)
+
+		// unwrap return value so it doesn't stop eval in outer scope
+		if returnValue, ok := evaluated.(*object.ReturnValue); ok {
+			return returnValue.Value
+		}
+		return evaluated
+
+	case *object.Builtin:
+		return fn.Fn(args...)
+
+	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
-	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-	for paramIdx, param := range fn.Parameters {
-		extendedEnv.Set(param.Value, args[paramIdx])
-	}
-
-	evaluated := Eval(fn.Body, extendedEnv)
-
-	// unwrap return value so it doesn't stop eval in outer scope
-	if returnValue, ok := evaluated.(*object.ReturnValue); ok {
-		return returnValue.Value
-	}
-	return evaluated
 }
 
 func evalPrefixExpression(op string, right object.Object) object.Object {
