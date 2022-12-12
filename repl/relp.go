@@ -36,9 +36,9 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, "   ")
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		// io.WriteString(out, "   ")
+		// io.WriteString(out, program.String())
+		// io.WriteString(out, "\n")
 
 		evaluated := eval.Eval(program, env)
 		if evaluated != nil {

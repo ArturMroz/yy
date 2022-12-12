@@ -49,3 +49,38 @@ assert(applyFunc(10, 2, sub) == 8);
 let newAdder = fun(x) { fun(n) { x + n } };
 let addTwo   = newAdder(2);
 addTwo(2);
+
+// built-ins & arrays
+
+let map = fun(arr, f) {
+    let iter = fun(arr, accumulated) {
+        if (len(arr) == 0) {
+            accumulated
+        } else {
+            iter(rest(arr), push(accumulated, f(first(arr))));
+        }
+    };
+    iter(arr, []);
+};
+
+let a      = [1, 2, 3, 4];
+let double = fun(x) { x * 2 };
+yell(map(a, double)); // outputs [2, 4, 6 8]
+
+let reduce = fun(arr, initial, f) {
+    let iter = fun(arr, result) {
+        if (len(arr) == 0) {
+            result
+        } else {
+            iter(rest(arr), f(result, first(arr)));
+        }
+    };
+
+    iter(arr, initial);
+};
+
+let sum = fun(arr) {
+    reduce(arr, 0, fun(initial, el) { initial + el });
+};
+
+assert(sum([1, 2, 3, 4, 5]) == 15);
