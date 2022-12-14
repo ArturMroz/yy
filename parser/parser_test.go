@@ -109,6 +109,7 @@ func TestStringLiteralExpression(t *testing.T) {
 func TestParsingArrayLiterals(t *testing.T) {
 	// TODO add more cases
 	input := "[1, 2 * 2, 3 + 3]"
+
 	stmt := parseSingleStmt(t, input)
 	array, ok := stmt.Expression.(*ast.ArrayLiteral)
 	if !ok {
@@ -125,6 +126,34 @@ func TestParsingArrayLiterals(t *testing.T) {
 	}
 	if err := testInfixExpression(array.Elements[2], 3, "+", 3); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestParsingArrayLiterals3(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected []int64
+	}{
+		{"[]", []int64{}},
+		{"[1]", []int64{1}},
+		{"[1,2]", []int64{1, 2}},
+		{"[1,2,]", []int64{1, 2}},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+		array, ok := stmt.Expression.(*ast.ArrayLiteral)
+		if !ok {
+			t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
+		}
+		if len(array.Elements) != len(tt.expected) {
+			t.Fatalf("len(array.Elements) not %d. got=%d", len(tt.expected), len(array.Elements))
+		}
+		for i := range tt.expected {
+			if err := testIntegerLiteral(array.Elements[i], tt.expected[i]); err != nil {
+				t.Error(err)
+			}
+		}
 	}
 }
 
@@ -157,7 +186,8 @@ func TestParsingHashLiteralsStringKeys(t *testing.T) {
 	}
 }
 
-func TestParsingEmptyHashLiteral(t *testing.T) {
+func TestParsingHashLiterals(t *testing.T) {
+	// TODO more test cases
 	input := "{}"
 
 	stmt := parseSingleStmt(t, input)
@@ -765,7 +795,7 @@ func testLetStatement(stmt ast.Statement, name string) error {
 
 var testFiles = []string{
 	"fun.yeet",
-	"first.yeet",
+	"vars.yeet",
 }
 
 func TestParseFiles(t *testing.T) {

@@ -130,7 +130,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 			hashKey, ok := key.(object.Hashable)
 			if !ok {
-				return newError("key not a hashable: %s", key.Type())
+				return newError("key not hashable: %s", key.Type())
 			}
 
 			val := Eval(v, env)
@@ -144,31 +144,46 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return hash
 
 	case *ast.IndexExpression:
-		arr := Eval(node.Left, env)
-		if isError(arr) {
-			return arr
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
 		}
 		idx := Eval(node.Index, env)
 		if isError(idx) {
 			return idx
 		}
 
-		if arr.Type() != object.ARRAY_OBJ && idx.Type() != object.INTEGER_OBJ {
+		switch {
+		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			a := left.(*object.Array)
+			if i < 0 || i >= int64(len(a.Elements)) {
+				return NULL
+			}
+			return a.Elements[i]
+
+		case left.Type() == object.HASH_OBJ:
+			hashMap := left.(*object.Hash)
+			key, ok := idx.(object.Hashable)
+			if !ok {
+				return newError("key not hashable: %s", idx.Type())
+			}
+
+			pair, ok := hashMap.Pairs[key.HashKey()]
+			if !ok {
+				return NULL
+			}
+			return pair.Value
+
+		default:
 			return newError("index operator not supported: %s", idx.Type())
 		}
-
-		i := idx.(*object.Integer).Value
-		a := arr.(*object.Array)
-		if i < 0 || i >= int64(len(a.Elements)) {
-			return NULL
-		}
-		return a.Elements[i]
 
 	case *ast.Null:
 		return NULL
 
 	default:
-		return NULL
+		return newError("ast object not supported %q %T", node, node)
 	}
 }
 

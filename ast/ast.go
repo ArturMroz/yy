@@ -200,7 +200,7 @@ func (ie *IndexExpression) String() string {
 
 type PrefixExpression struct {
 	Token    token.Token // prefix token e.g. !
-	Operator string      // '-' or '!' TODO could be byte?
+	Operator string      // '-' or '!'
 	Right    Expression
 }
 

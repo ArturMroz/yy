@@ -165,6 +165,45 @@ func TestArrayLiterals(t *testing.T) {
 	}
 }
 
+func TestIntegerArrayLiterals(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected []int64
+	}{
+		{
+			"[1, 2, 3, 4, 5]",
+			[]int64{1, 2, 3, 4, 5},
+		},
+		{
+			"[1, 2 * 2, 3 + 3]",
+			[]int64{1, 4, 6},
+		},
+		{
+			"[4 / 2, 5 - 1, 8 * 4]",
+			[]int64{2, 4, 32},
+		},
+		{
+			"[1 + 1, 2 + 2, 3 + 3]",
+			[]int64{2, 4, 6},
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		array, ok := evaluated.(*object.Array)
+		if !ok {
+			t.Errorf("exp not *object.Array. got=%T", array)
+			continue
+		}
+
+		for i := range tt.expected {
+			if err := testIntegerObject(array.Elements[i], tt.expected[i]); err != nil {
+				t.Error(err)
+			}
+		}
+	}
+}
+
 func TestArrayIndexExpressions(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -242,6 +281,35 @@ let two = "two";
 		}
 		if err := testIntegerObject(pair.Value, expectedValue); err != nil {
 			t.Error(err)
+		}
+	}
+}
+
+func TestHashIndexExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`{"foo": 5}["foo"]`, 5},
+		{`{"foo": 5}["bar"]`, nil},
+		{`let key = "foo"; {"foo": 5}[key]`, 5},
+		{`{}["foo"]`, nil},
+		{`{5: 5}[5]`, 5},
+		{`{true: 5}[true]`, 5},
+		{`{false: 5}[false]`, 5},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			if err := testIntegerObject(evaluated, int64(integer)); err != nil {
+				t.Error(err)
+			}
+		} else {
+			if err := testNullObject(evaluated); err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
@@ -360,6 +428,10 @@ if (10 > 1) {
 			"foobar2(x, y)",
 			"identifier not found: foobar2",
 		},
+		{
+			`{"name": "Monkey"}[fun(x) { x }];`,
+			"key not hashable: FUNCTION",
+		},
 	}
 
 	for _, tt := range tests {
@@ -470,6 +542,7 @@ func TestBuiltinFunctions(t *testing.T) {
 			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
 				t.Error(err)
 			}
+
 		case string:
 			errObj, ok := evaluated.(*object.Error)
 			if !ok {
@@ -479,6 +552,7 @@ func TestBuiltinFunctions(t *testing.T) {
 			if errObj.Msg != expected {
 				t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Msg)
 			}
+
 		case nil:
 			if _, ok := evaluated.(*object.Null); !ok {
 				t.Errorf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
@@ -537,7 +611,7 @@ func testBooleanObject(obj object.Object, expected bool) error {
 //
 
 var testFiles = []string{
-	"first.yeet",
+	"vars.yeet",
 	"fun.yeet",
 }
 
@@ -560,10 +634,7 @@ func TestFiles(t *testing.T) {
 }
 
 func BenchmarkEval(b *testing.B) {
-	for _, f := range []string{
-		"fun.yeet",
-		"first.yeet",
-	} {
+	for _, f := range testFiles {
 		b.Run(f, func(b *testing.B) {
 			b.StopTimer()
 			filename := filepath.Join("../examples", f)
@@ -571,6 +642,7 @@ func BenchmarkEval(b *testing.B) {
 			if err != nil {
 				b.Fatalf("couldn't read test file: %s", err)
 			}
+
 			sSrc := string(src)
 			l := lexer.New(sSrc)
 			p := parser.New(l)

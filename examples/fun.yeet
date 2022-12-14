@@ -1,3 +1,18 @@
+// functions
+
+let my_func = fun (x, y) {
+    if x > y {
+        yeet x
+    } else {
+        yeet y
+    }
+}
+
+let a = 8;
+let b = 10;
+let z = my_func(a, b);
+assert(z == b)
+
 // recursion
 
 let fib = fun(n) {
@@ -8,6 +23,8 @@ let fib = fun(n) {
 }
 
 fib(20);
+
+// 'yeet' can be omitted, last statement in a block is returned implicitly
  
 let fib2 = fun(n) {
     if n < 2 {

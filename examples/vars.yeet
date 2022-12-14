@@ -1,0 +1,23 @@
+// supported data types: integer, string, array, hashmap
+
+let my_num = 5
+let yarn = "how long is a piece of string?";
+let yup = true;
+let the_void = null;
+
+yell(my_num);
+yell(5);
+yell("hello");
+
+let my_array = [1, 2, 3, 4]
+
+// array can hold values of different types
+let my_array2 = [1, true, "hello", yarn, yup]
+yell(my_array2)
+
+let friend = {"name": "Jon the Zebra", "colours": ["black", "white"], "age": 2, "alive": true }
+yell(friend["name"], " is ", friend["age"], " years old")
+
+// supported keys to a hashmap: string, integer, bool
+let foe = {"name": "Giant Chicken", true: "bool as a key!?", 42: "integer too", "what a weird": "world" }
+assert(foe[true] == "bool as a key!?")
