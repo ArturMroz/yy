@@ -80,6 +80,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.NULL:     p.parseNull,
 		token.LPAREN:   p.parseGroupedExpression,
 		token.LBRACKET: p.parseArrayLiteral,
+		token.LBRACE:   p.parseHashLiteral,
 		token.IF:       p.parseIfExpression,
 		token.FUNCTION: p.parseFunctionLiteral,
 	}
@@ -300,6 +301,35 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return arr
 }
 
+func (p *Parser) parseHashLiteral() ast.Expression {
+	hash := &ast.HashLiteral{Token: p.curToken, Pairs: map[ast.Expression]ast.Expression{}}
+
+	for !p.peekTokenIs(token.RBRACE) && !p.peekTokenIs(token.EOF) {
+		p.nextToken()
+
+		key := p.parseExpression(LOWEST)
+
+		if !p.consume(token.COLON, "missing ':' in hash literal after a key") {
+			return nil
+		}
+
+		p.nextToken()
+		val := p.parseExpression(LOWEST)
+
+		hash.Pairs[key] = val
+
+		if p.peekTokenIs(token.COMMA) { // TODO tighten up after writing more unit tests
+			p.nextToken()
+		}
+	}
+
+	if !p.consume(token.RBRACE, "missing closing '}' in hash literal") {
+		return nil
+	}
+
+	return hash
+}
+
 func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
 	indexExpr := &ast.IndexExpression{
 		Token: p.curToken,
@@ -421,6 +451,6 @@ func (p *Parser) peekError(t token.TokenType, errMsg string) {
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("[!] no prefix parse function for '%s' found", t)
+	msg := fmt.Sprintf("no prefix parse function for '%s' found", t)
 	p.errors = append(p.errors, msg)
 }

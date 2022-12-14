@@ -48,6 +48,17 @@ func TestNextToken(t *testing.T) {
 				{token.EOF, ""},
 			},
 		},
+		{
+			`{"key": "value"}`, // hash map
+			[]token.Token{
+				{token.LBRACE, "{"},
+				{token.STRING, "key"},
+				{token.COLON, ":"},
+				{token.STRING, "value"},
+				{token.RBRACE, "}"},
+				{token.EOF, ""},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
