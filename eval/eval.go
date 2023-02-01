@@ -54,7 +54,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return val
 		}
 		env.Set(node.Name.Value, val)
-		return NULL
+		return val
 
 	case *ast.Identifier:
 		if val, ok := env.Get(node.Value); ok {
@@ -99,6 +99,23 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return Eval(node.Alternative, env)
 		} else {
 			return NULL
+		}
+
+	case *ast.YoyoExpression:
+		var result object.Object
+
+		for {
+			condition := Eval(node.Condition, env)
+			if isError(condition) {
+				fmt.Println(condition)
+				return condition
+			}
+
+			if !isTruthy(condition) {
+				return result
+			}
+
+			result = Eval(node.Body, env) // TODO create new scope
 		}
 
 	case *ast.IntegerLiteral:

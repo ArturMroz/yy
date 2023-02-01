@@ -245,6 +245,18 @@ func (ie *IfExpression) String() string {
 	return b.String()
 }
 
+type YoyoExpression struct {
+	Token     token.Token // The 'yoyo' token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (ye *YoyoExpression) expressionNode()      {}
+func (ye *YoyoExpression) TokenLiteral() string { return ye.Token.Literal }
+func (ye *YoyoExpression) String() string {
+	return fmt.Sprintf("yoyo %s { %s }", ye.Condition.String(), ye.Body.String())
+}
+
 type BlockStatement struct {
 	Token      token.Token // the { token
 	Statements []Statement

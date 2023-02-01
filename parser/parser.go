@@ -82,6 +82,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LBRACKET: p.parseArrayLiteral,
 		token.LBRACE:   p.parseHashLiteral,
 		token.IF:       p.parseIfExpression,
+		token.YOYO:     p.parseYoyoExpression,
 		token.FUNCTION: p.parseFunctionLiteral,
 	}
 
@@ -279,6 +280,21 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	}
 
 	return ifExpr
+}
+
+func (p *Parser) parseYoyoExpression() ast.Expression {
+	yoyoExpr := &ast.YoyoExpression{Token: p.curToken}
+
+	p.nextToken()
+	yoyoExpr.Condition = p.parseExpression(LOWEST)
+
+	if !p.consume(token.LBRACE, "missing opening '{' after condition") {
+		return nil
+	}
+
+	yoyoExpr.Body = p.parseBlockStatement()
+
+	return yoyoExpr
 }
 
 func (p *Parser) parseArrayLiteral() ast.Expression {

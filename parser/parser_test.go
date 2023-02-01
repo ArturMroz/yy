@@ -452,6 +452,23 @@ func TestIfExpression(t *testing.T) {
 	}
 }
 
+func TestYoyoExpression(t *testing.T) {
+	input := "yoyo x < y { i }"
+	stmt := parseSingleStmt(t, input)
+
+	expr, ok := stmt.Expression.(*ast.YoyoExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.YoyoExpression. got=%T", stmt.Expression)
+	}
+
+	if err := testInfixExpression(expr.Condition, "x", "<", "y"); err != nil {
+		t.Error(err)
+	}
+	if len(expr.Body.Statements) != 1 {
+		t.Errorf("consequence is not 1 statements. got=%d\n", len(expr.Body.Statements))
+	}
+}
+
 func TestIfElseExpression(t *testing.T) {
 	input := `if (x < y) { x } else { y }`
 	stmt := parseSingleStmt(t, input)

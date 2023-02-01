@@ -49,6 +49,7 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	YEET     = "YEET"
+	YOYO     = "YOYO"
 	NULL     = "NULL"
 )
 
@@ -61,6 +62,7 @@ var keywords = map[string]TokenType{
 	"if":    IF,
 	"else":  ELSE,
 	"yeet":  YEET,
+	"yoyo":  YOYO,
 	"null":  NULL,
 }
 

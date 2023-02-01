@@ -329,6 +329,7 @@ func TestIfElseExpressions(t *testing.T) {
 		{"if 1 < 2 { 10 } else { 20 }", 10},
 		{"if null { 10 } else { 20 }", 20},
 	}
+
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
 		integer, ok := tt.expected.(int)
@@ -340,6 +341,22 @@ func TestIfElseExpressions(t *testing.T) {
 			if err := testNullObject(evaluated); err != nil {
 				t.Error(err)
 			}
+		}
+	}
+}
+
+func TestYoyoExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let i = 0; yoyo i < 5 { let i = i + 1 }", 5},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		if err := testIntegerObject(evaluated, tt.expected); err != nil {
+			t.Error(err)
 		}
 	}
 }
