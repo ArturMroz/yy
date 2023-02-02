@@ -623,38 +623,44 @@ func testBooleanObject(obj object.Object, expected bool) error {
 	return nil
 }
 
-//
-// BENCHMARKS
-//
+const examplesDir = "../examples"
 
-var testFiles = []string{
-	"vars.yeet",
-	"fun.yeet",
-}
+func TestExampleFiles(t *testing.T) {
+	testFiles, err := os.ReadDir(examplesDir)
+	if err != nil {
+		t.Fatalf("couldn't read example files dir: %s", err)
+	}
 
-func TestFiles(t *testing.T) {
 	for _, f := range testFiles {
-		t.Run(f, func(t *testing.T) {
-			filename := filepath.Join("../examples", f)
+		t.Run(f.Name(), func(t *testing.T) {
+			filename := filepath.Join(examplesDir, f.Name())
 			src, err := os.ReadFile(filename)
 			if err != nil {
 				t.Fatalf("couldn't read test file: %s", err)
 			}
-			sSrc := string(src)
-			result := testEval(sSrc)
 
+			result := testEval(string(src))
 			if evalError, ok := result.(*object.Error); ok {
-				t.Errorf("evaluated to error: %q", evalError.Msg)
+				t.Errorf("runtime error: %q", evalError.Msg)
 			}
 		})
 	}
 }
 
+//
+// BENCHMARKS
+//
+
 func BenchmarkEval(b *testing.B) {
+	testFiles, err := os.ReadDir(examplesDir)
+	if err != nil {
+		b.Fatalf("couldn't read example files dir: %s", err)
+	}
+
 	for _, f := range testFiles {
-		b.Run(f, func(b *testing.B) {
+		b.Run(f.Name(), func(b *testing.B) {
 			b.StopTimer()
-			filename := filepath.Join("../examples", f)
+			filename := filepath.Join(examplesDir, f.Name())
 			src, err := os.ReadFile(filename)
 			if err != nil {
 				b.Fatalf("couldn't read test file: %s", err)

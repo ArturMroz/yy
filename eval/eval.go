@@ -2,6 +2,7 @@ package eval
 
 import (
 	"fmt"
+	"reflect"
 
 	"ylang/ast"
 	"ylang/object"
@@ -328,6 +329,20 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 			return toYeetBool(left.Value == right.Value)
 		case "!=":
 			return toYeetBool(left.Value != right.Value)
+		}
+
+	case left.Type() == object.ARRAY_OBJ && right.Type() == object.ARRAY_OBJ:
+		right := right.(*object.Array)
+		left := left.(*object.Array)
+
+		switch operator {
+		case "+":
+			return &object.Array{Elements: append(left.Elements, right.Elements...)}
+		case "==":
+			// TODO deepEqual performance isn't great, replace it
+			return toYeetBool(reflect.DeepEqual(left.Elements, right.Elements))
+		case "!=":
+			return toYeetBool(reflect.DeepEqual(left.Elements, right.Elements))
 		}
 	}
 

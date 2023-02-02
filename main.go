@@ -28,17 +28,18 @@ func main() {
 		l := lexer.New(string(src))
 		p := parser.New(l)
 		program := p.ParseProgram()
-
 		if len(p.Errors()) > 0 {
 			for _, msg := range p.Errors() {
-				fmt.Printf("parser error: %q", msg)
+				fmt.Printf("parser error: %q\n", msg)
 			}
 			fmt.Println()
 			return
 		}
 
-		env := object.NewEnvironment()
-		eval.Eval(program, env)
+		result := eval.Eval(program, object.NewEnvironment())
+		if evalError, ok := result.(*object.Error); ok {
+			fmt.Printf("runtime error: %s\n", evalError.Msg)
+		}
 
 	default:
 		fmt.Println("usage: ylang [script]")
