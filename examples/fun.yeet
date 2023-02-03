@@ -2,7 +2,7 @@
 
 let my_func = fun (x, y) {
     if x > y {
-        yeet x
+        yeet x // 'yeet' yeets the value and returns from the function
     } else {
         yeet y
     }
@@ -17,12 +17,11 @@ assert(z == b)
 
 let fib = fun(n) {
     if n < 2 {
-        yeet n;
+        yeet n; 
     }
     yeet fib(n-1) + fib(n-2);
 }
 
-fib(20);
 
 // 'yeet' can be omitted, last statement in a block is returned implicitly
  
@@ -34,9 +33,11 @@ let fib2 = fun(n) {
     }
 }
 
-fib2(20);
-
+assert(fib(20) == 6765);
+assert(fib2(20) == 6765);
 assert(fib(5) == fib2(5))
+assert(fib(6) != fib2(9))
+
 // assert accepts optional error message for more context
 assert(fib(5) == fib2(5), "fibonaccis are different") 
 
@@ -44,28 +45,31 @@ let factorial = fun(n) {
     if n == 0 { 1 } else { n * factorial(n-1) };
 };
 
-factorial(5);
+assert(factorial(0) == 1);
+assert(factorial(1) == 1);
+assert(factorial(5) == 120);
 
 
 // higher-order functions
 
 let addThree     = fun(x) { yeet x + 3 };
 let callTwoTimes = fun(x, func) { func(func(x)) }
-callTwoTimes(3, addThree);
-
+assert(callTwoTimes(3, addThree) == 9)
 
 let add       = fun(a, b) { a + b };
 let sub       = fun(a, b) { a - b };
-let applyFunc = fun(a, b, func) { func(a, b) };
+let applyFunc = fun(func, a, b) { func(a, b) };
 
-assert(applyFunc(2, 2, add) == 4); 
-assert(applyFunc(10, 2, sub) == 8);
+assert(applyFunc(add, 2, 2) == 4); 
+assert(applyFunc(sub, 10, 2) == 8);
 
-// closures 
+
+// closures
 
 let newAdder = fun(x) { fun(n) { x + n } };
 let addTwo   = newAdder(2);
-addTwo(2);
+assert(addTwo(5) == 7);
+
 
 // built-ins & arrays
 
@@ -82,7 +86,8 @@ let map = fun(arr, f) {
 
 let a      = [1, 2, 3, 4];
 let double = fun(x) { x * 2 };
-yell(map(a, double)); // outputs [2, 4, 6 8]
+assert(map(a, double) == [2, 4, 6, 8])
+
 
 let reduce = fun(arr, initial, f) {
     let iter = fun(arr, result) {
