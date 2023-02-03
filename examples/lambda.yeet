@@ -1,0 +1,108 @@
+// functions/lambdas
+
+let my_func = \(x, y) {
+    if x > y {
+        yeet x // 'yeet' yeets the value and returns from the function
+    } else {
+        yeet y
+    }
+}
+
+let a = 8;
+let b = 10;
+let z = my_func(a, b);
+assert(z == b)
+
+// recursion
+
+let fib = \(n) {
+    if n < 2 {
+        yeet n; 
+    }
+    yeet fib(n-1) + fib(n-2);
+}
+
+
+// 'yeet' can be omitted, last statement in a block is returned implicitly
+ 
+let fib2 = \(n) {
+    if n < 2 {
+        n;
+    } else {
+        fib(n-1) + fib(n-2);
+    }
+}
+
+assert(fib(20) == 6765);
+assert(fib2(20) == 6765);
+assert(fib(5) == fib2(5))
+assert(fib(6) != fib2(9))
+
+// assert accepts optional error message for more context
+assert(fib(5) == fib2(5), "fibonaccis are different") 
+
+let factorial = \(n) { 
+    if n == 0 { 1 } else { n * factorial(n-1) };
+};
+
+assert(factorial(0) == 1);
+assert(factorial(1) == 1);
+assert(factorial(5) == 120);
+
+
+// higher-order functions
+
+let addThree     = \(x) { yeet x + 3 };
+let callTwoTimes = \(x, func) { func(func(x)) }
+assert(callTwoTimes(3, addThree) == 9)
+
+let add       = \(a, b) { a + b };
+let sub       = \(a, b) { a - b };
+let applyFunc = \(func, a, b) { func(a, b) };
+
+assert(applyFunc(add, 2, 2) == 4); 
+assert(applyFunc(sub, 10, 2) == 8);
+
+
+// closures
+
+let newAdder = \(x) { fun(n) { x + n } };
+let addTwo   = newAdder(2);
+assert(addTwo(5) == 7);
+
+
+// built-ins & arrays
+
+let map = \(arr, f) {
+    let iter = \(arr, accumulated) {
+        if (len(arr) == 0) {
+            accumulated
+        } else {
+            iter(rest(arr), push(accumulated, f(first(arr))));
+        }
+    };
+    iter(arr, []);
+};
+
+let a      = [1, 2, 3, 4];
+let double = \(x) { x * 2 };
+assert(map(a, double) == [2, 4, 6, 8])
+
+
+let reduce = \(arr, initial, f) {
+    let iter = \(arr, result) {
+        if (len(arr) == 0) {
+            result
+        } else {
+            iter(rest(arr), f(result, first(arr)));
+        }
+    };
+
+    iter(arr, initial);
+};
+
+let sum = \(arr) {
+    reduce(arr, 0, \(initial, el) { initial + el });
+};
+
+assert(sum([1, 2, 3, 4, 5]) == 15);

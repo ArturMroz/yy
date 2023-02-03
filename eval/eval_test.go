@@ -521,6 +521,60 @@ func TestFunctionApplication(t *testing.T) {
 	}
 }
 
+func TestLambdaObject(t *testing.T) {
+	tests := []struct {
+		input  string
+		params []string
+		body   string
+	}{
+		{`\() { 69 };`, []string{}, "{ 69 }"},
+		{`\(x) { x + 2; };`, []string{"x"}, "{ (x + 2) }"},
+		{`\(x, y) { x + y };`, []string{"x", "y"}, "{ (x + y) }"},
+		{`\(x, y, z) { x * y - z };`, []string{"x", "y", "z"}, "{ ((x * y) - z) }"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		fn, ok := evaluated.(*object.Function)
+		if !ok {
+			t.Fatalf("object is not Function. got=%T (%+v)", evaluated, evaluated)
+		}
+		if len(fn.Parameters) != len(tt.params) {
+			t.Fatalf("lambda has wrong parameters. got=%+v, expected=%+v", fn.Parameters, tt.params)
+		}
+		for i, param := range tt.params {
+			if fn.Parameters[i].String() != param {
+				t.Fatalf("parameter is not '%s'. got=%q", param, fn.Parameters[i])
+			}
+		}
+		if fn.Body.String() != tt.body {
+			t.Fatalf("body is not %q. got=%q", tt.body, fn.Body.String())
+		}
+	}
+}
+
+func TestLambdaApplication(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{`let nope = \() { 69 }; nope();`, 69},
+		{`let identity = \(x) { x; }; identity(5);`, 5},
+		{`let identity = \(x) { yeet x; }; identity(5);`, 5},
+		{`let double = \(x) { x * 2; }; double(5);`, 10},
+		{`let add = \(x, y) { x + y; }; add(5, 5);`, 10},
+		{`let add = \(x, y) { x + y; }; add(5 + 5, add(5, 5));`, 20},
+		{`let add = \(x, y, z) { x + y + z; }; add(1, 2, 3);`, 6},
+		{`\(x) { x; }(5)`, 5},
+	}
+
+	for _, tt := range tests {
+		if err := testIntegerObject(testEval(tt.input), tt.expected); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 func TestClosures(t *testing.T) {
 	input := `
 let newAdder = fun(x) {

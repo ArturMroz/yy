@@ -70,20 +70,21 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.IDENT:    p.parseIdentifier,
-		token.INT:      p.parseIntegerLiteral,
-		token.STRING:   p.parseStringLiteral,
-		token.MINUS:    p.parsePrefixExpression,
-		token.BANG:     p.parsePrefixExpression,
-		token.TRUE:     p.parseBoolean,
-		token.FALSE:    p.parseBoolean,
-		token.NULL:     p.parseNull,
-		token.LPAREN:   p.parseGroupedExpression,
-		token.LBRACKET: p.parseArrayLiteral,
-		token.LBRACE:   p.parseHashLiteral,
-		token.IF:       p.parseIfExpression,
-		token.YOYO:     p.parseYoyoExpression,
-		token.FUNCTION: p.parseFunctionLiteral,
+		token.IDENT:     p.parseIdentifier,
+		token.INT:       p.parseIntegerLiteral,
+		token.STRING:    p.parseStringLiteral,
+		token.MINUS:     p.parsePrefixExpression,
+		token.BANG:      p.parsePrefixExpression,
+		token.TRUE:      p.parseBoolean,
+		token.FALSE:     p.parseBoolean,
+		token.NULL:      p.parseNull,
+		token.LPAREN:    p.parseGroupedExpression,
+		token.LBRACKET:  p.parseArrayLiteral,
+		token.LBRACE:    p.parseHashLiteral,
+		token.IF:        p.parseIfExpression,
+		token.YOYO:      p.parseYoyoExpression,
+		token.FUNCTION:  p.parseFunctionLiteral,
+		token.BACKSLASH: p.parseLambdaLiteral,
 	}
 
 	p.infixParseFns = map[token.TokenType]infixParseFn{
@@ -384,6 +385,36 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	}
 
 	if !p.consume(token.LBRACE, "missing opening '{' before function body") {
+		return nil
+	}
+
+	fn.Body = p.parseBlockStatement()
+
+	return fn
+}
+
+func (p *Parser) parseLambdaLiteral() ast.Expression {
+	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
+	if !p.consume(token.LPAREN, "missing opening '(' after lambda") {
+		return nil
+	}
+
+	for !p.peekTokenIs(token.RPAREN) && !p.peekTokenIs(token.EOF) {
+		p.nextToken()
+
+		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		fn.Parameters = append(fn.Parameters, param)
+
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+	}
+
+	if !p.consume(token.RPAREN, "missing closing ')' after lambda parameters") {
+		return nil
+	}
+
+	if !p.consume(token.LBRACE, "missing opening '{' before lambda body") {
 		return nil
 	}
 

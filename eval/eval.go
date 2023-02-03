@@ -339,10 +339,10 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		case "+":
 			return &object.Array{Elements: append(left.Elements, right.Elements...)}
 		case "==":
-			// TODO deepEqual performance isn't great, replace it
+			// TODO DeepEqual performance isn't great, replace it
 			return toYeetBool(reflect.DeepEqual(left.Elements, right.Elements))
 		case "!=":
-			return toYeetBool(reflect.DeepEqual(left.Elements, right.Elements))
+			return toYeetBool(!reflect.DeepEqual(left.Elements, right.Elements))
 		}
 	}
 

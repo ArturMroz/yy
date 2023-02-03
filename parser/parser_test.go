@@ -618,6 +618,31 @@ func TestFunctionParameterParsing(t *testing.T) {
 	}
 }
 
+func TestLambdaLiteralParsing(t *testing.T) {
+	input := `\(x, y) { x + y; }`
+	stmt := parseSingleStmt(t, input)
+
+	function, ok := stmt.Expression.(*ast.FunctionLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.FunctionLiteral. got=%T", stmt.Expression)
+	}
+	if len(function.Parameters) != 2 {
+		t.Fatalf("function literal parameters wrong. want 2, got=%d\n", len(function.Parameters))
+	}
+
+	testLiteralExpression(function.Parameters[0], "x")
+	testLiteralExpression(function.Parameters[1], "y")
+
+	if len(function.Body.Statements) != 1 {
+		t.Fatalf("function.Body.Statements has not 1 statements. got=%d\n", len(function.Body.Statements))
+	}
+	bodyStmt, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("function body stmt is not ast.ExpressionStatement. got=%T", function.Body.Statements[0])
+	}
+	testInfixExpression(bodyStmt.Expression, "x", "+", "y")
+}
+
 func TestCallExpressionParsing(t *testing.T) {
 	input := "myFunction(1, 2 * 3, 4 + 5);"
 	stmt := parseSingleStmt(t, input)

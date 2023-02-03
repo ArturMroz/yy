@@ -59,6 +59,23 @@ func TestNextToken(t *testing.T) {
 				{token.EOF, ""},
 			},
 		},
+		{
+			`\(x, y) { x + y }`,
+			[]token.Token{
+				{token.BACKSLASH, "\\"},
+				{token.LPAREN, "("},
+				{token.IDENT, "x"},
+				{token.COMMA, ","},
+				{token.IDENT, "y"},
+				{token.RPAREN, ")"},
+				{token.LBRACE, "{"},
+				{token.IDENT, "x"},
+				{token.PLUS, "+"},
+				{token.IDENT, "y"},
+				{token.RBRACE, "}"},
+				{token.EOF, ""},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
