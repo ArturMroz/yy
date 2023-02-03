@@ -394,24 +394,25 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 }
 
 func (p *Parser) parseLambdaLiteral() ast.Expression {
-	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
-	if !p.consume(token.LPAREN, "missing opening '(' after lambda") {
-		return nil
+	fn := &ast.FunctionLiteral{Token: p.curToken}
+
+	if p.peekTokenIs(token.LPAREN) { // parens are optional
+		p.nextToken()
 	}
 
-	for !p.peekTokenIs(token.RPAREN) && !p.peekTokenIs(token.EOF) {
+	for !p.peekTokenIs(token.RPAREN) && !p.peekTokenIs(token.LBRACE) && !p.peekTokenIs(token.EOF) {
 		p.nextToken()
 
 		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 		fn.Parameters = append(fn.Parameters, param)
 
-		if p.peekTokenIs(token.COMMA) {
+		if p.peekTokenIs(token.COMMA) { // comma is optional
 			p.nextToken()
 		}
 	}
 
-	if !p.consume(token.RPAREN, "missing closing ')' after lambda parameters") {
-		return nil
+	if p.peekTokenIs(token.RPAREN) { // parens are optional
+		p.nextToken()
 	}
 
 	if !p.consume(token.LBRACE, "missing opening '{' before lambda body") {

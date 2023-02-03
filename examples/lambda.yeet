@@ -1,6 +1,6 @@
 // functions/lambdas
 
-let my_func = \(x, y) {
+let my_func = \x y {
     if x > y {
         yeet x // 'yeet' yeets the value and returns from the function
     } else {
@@ -15,7 +15,7 @@ assert(z == b)
 
 // recursion
 
-let fib = \(n) {
+let fib = \n {
     if n < 2 {
         yeet n; 
     }
@@ -25,7 +25,7 @@ let fib = \(n) {
 
 // 'yeet' can be omitted, last statement in a block is returned implicitly
  
-let fib2 = \(n) {
+let fib2 = \n {
     if n < 2 {
         n;
     } else {
@@ -41,7 +41,7 @@ assert(fib(6) != fib2(9))
 // assert accepts optional error message for more context
 assert(fib(5) == fib2(5), "fibonaccis are different") 
 
-let factorial = \(n) { 
+let factorial = \n { 
     if n == 0 { 1 } else { n * factorial(n-1) };
 };
 
@@ -52,45 +52,53 @@ assert(factorial(5) == 120);
 
 // higher-order functions
 
-let addThree     = \(x) { yeet x + 3 };
-let callTwoTimes = \(x, func) { func(func(x)) }
+let addThree     = \x { yeet x + 3 };
+let callTwoTimes = \x, func { func(func(x)) }
 assert(callTwoTimes(3, addThree) == 9)
 
-let add       = \(a, b) { a + b };
-let sub       = \(a, b) { a - b };
-let applyFunc = \(func, a, b) { func(a, b) };
+let add     = \(a, b) { a + b };
+let sub     = \(a, b) { a - b };
+let applyFn = \(fn, a, b) { fn(a, b) };
 
-assert(applyFunc(add, 2, 2) == 4); 
-assert(applyFunc(sub, 10, 2) == 8);
+assert(applyFn(add, 2, 2) == 4); 
+assert(applyFn(sub, 10, 2) == 8);
+
+// parens and commas are optional (for now)
+let add     = \a b { a + b };
+let sub     = \a b { a - b };
+let applyFn = \fn a b { fn(a, b) };
+
+assert(applyFn(add, 2, 2) == 4); 
+assert(applyFn(sub, 10, 2) == 8);
 
 
 // closures
 
-let newAdder = \(x) { fun(n) { x + n } };
+let newAdder = \x { fun(n) { x + n } };
 let addTwo   = newAdder(2);
 assert(addTwo(5) == 7);
 
 
 // built-ins & arrays
 
-let map = \(arr, f) {
-    let iter = \(arr, accumulated) {
+let map = \arr f {
+    let iter = \arr acc {
         if (len(arr) == 0) {
-            accumulated
+            acc
         } else {
-            iter(rest(arr), push(accumulated, f(first(arr))));
+            iter(rest(arr), push(acc, f(first(arr))));
         }
     };
     iter(arr, []);
 };
 
 let a      = [1, 2, 3, 4];
-let double = \(x) { x * 2 };
+let double = \x { x * 2 };
 assert(map(a, double) == [2, 4, 6, 8])
+assert(map(a, \x { x * 3 }) == [3, 6, 9, 12])
 
-
-let reduce = \(arr, initial, f) {
-    let iter = \(arr, result) {
+let reduce = \arr initial f {
+    let iter = \arr result {
         if (len(arr) == 0) {
             result
         } else {
@@ -101,8 +109,8 @@ let reduce = \(arr, initial, f) {
     iter(arr, initial);
 };
 
-let sum = \(arr) {
-    reduce(arr, 0, \(initial, el) { initial + el });
+let sum = \arr {
+    reduce(arr, 0, \initial, el { initial + el });
 };
 
 assert(sum([1, 2, 3, 4, 5]) == 15);

@@ -531,6 +531,14 @@ func TestLambdaObject(t *testing.T) {
 		{`\(x) { x + 2; };`, []string{"x"}, "{ (x + 2) }"},
 		{`\(x, y) { x + y };`, []string{"x", "y"}, "{ (x + y) }"},
 		{`\(x, y, z) { x * y - z };`, []string{"x", "y", "z"}, "{ ((x * y) - z) }"},
+
+		{`\ { 69 };`, []string{}, "{ 69 }"},
+		{`\x { x + 2; };`, []string{"x"}, "{ (x + 2) }"},
+		{`\x, y { x + y };`, []string{"x", "y"}, "{ (x + y) }"},
+		{`\x, y, z { x * y - z };`, []string{"x", "y", "z"}, "{ ((x * y) - z) }"},
+
+		{`\x y { x + y }`, []string{"x", "y"}, "{ (x + y) }"},
+		{`\x y z { x * y - z }`, []string{"x", "y", "z"}, "{ ((x * y) - z) }"},
 	}
 
 	for _, tt := range tests {
@@ -565,7 +573,23 @@ func TestLambdaApplication(t *testing.T) {
 		{`let add = \(x, y) { x + y; }; add(5, 5);`, 10},
 		{`let add = \(x, y) { x + y; }; add(5 + 5, add(5, 5));`, 20},
 		{`let add = \(x, y, z) { x + y + z; }; add(1, 2, 3);`, 6},
+
+		{`let nope = \ { 69 }; nope();`, 69},
+		{`let add = \x, y { x + y; }; add(5, 5);`, 10},
+		{`let add = \x, y { x + y; }; add(5 + 5, add(5, 5));`, 20},
+		{`let add = \x, y, z { x + y + z; }; add(1, 2, 3);`, 6},
+
+		{`let add = \x y { x + y; }; add(5, 5);`, 10},
+		{`let add = \x y { x + y; }; add(5+5 add(5, 5));`, 20},
+		{`let add = \x y z { x + y + z }; add(1 2 3);`, 6},
+
 		{`\(x) { x; }(5)`, 5},
+		{`\x { x }(5)`, 5},
+		{`\x, y { x * y }(3, 5)`, 15},
+		{`\x y { x * y }(3 5)`, 15},
+		{`\x y { x * y }(3+2 5+1)`, 30},
+		{`\x y { x * y }(3 + 2 5 + 1)`, 30},
+		{`\x y { x * y }(3 + 2, 5 + 1)`, 30},
 	}
 
 	for _, tt := range tests {
@@ -578,7 +602,7 @@ func TestLambdaApplication(t *testing.T) {
 func TestClosures(t *testing.T) {
 	input := `
 let newAdder = fun(x) {
-fun(y) { x + y };
+	fun(y) { x + y };
 };
 let addTwo = newAdder(2);
 addTwo(2);`
@@ -678,6 +702,10 @@ func testBooleanObject(obj object.Object, expected bool) error {
 }
 
 const examplesDir = "../examples"
+
+//
+// PROGRAMS FROM EXAMPLES/
+//
 
 func TestExampleFiles(t *testing.T) {
 	testFiles, err := os.ReadDir(examplesDir)
