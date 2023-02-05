@@ -1,48 +1,52 @@
-// functions/lambdas
+// FUNCTIONS/LAMBDAS
 
-let my_func = \x y {
+max := \x y {
     if x > y {
-        yeet x // 'yeet' yeets the value and returns from the function
+        yeet x // yeets the value and returns from the function
     } else {
         yeet y
     }
 }
 
-let a = 8;
-let b = 10;
-let z = my_func(a, b);
-assert(z == b)
-
-// recursion
-
-let fib = \n {
-    if n < 2 {
-        yeet n; 
-    }
-    yeet fib(n-1) + fib(n-2);
-}
-
+a := 3;
+b := 18;
+c := max(a, b);
+assert(b == c)
+assert(max(12, 8) == 12)
 
 // 'yeet' can be omitted, last statement in a block is returned implicitly
- 
-let fib2 = \n {
+max2 := \x y {
+    if x > y {
+        x 
+    } else {
+        y
+    }
+}
+
+assert(max(a, b) == max2(a, b))
+
+// and again, as a one liner
+max3 := \x y { if x > y { x } else { y } }
+
+assert(max2(a, b) == max3(a, b))
+
+
+// RECURSION
+
+fib := \n {
     if n < 2 {
-        n;
+        n; 
     } else {
         fib(n-1) + fib(n-2);
     }
 }
 
 assert(fib(20) == 6765);
-assert(fib2(20) == 6765);
-assert(fib(5) == fib2(5))
-assert(fib(6) != fib2(9))
+// assert() accepts optional error message for more context
+assert(fib(20) == 6765, "fibonaccis are different");
 
-// assert accepts optional error message for more context
-assert(fib(5) == fib2(5), "fibonaccis are different") 
-
-let factorial = \n { 
-    if n == 0 { 1 } else { n * factorial(n-1) };
+factorial := \n { 
+    if n == 0 { 1 } else { n * factorial(n-1) }
 };
 
 assert(factorial(0) == 1);
@@ -50,39 +54,42 @@ assert(factorial(1) == 1);
 assert(factorial(5) == 120);
 
 
-// higher-order functions
+// HIGHER-ORDER FUNCTIONS
 
-let addThree     = \x { yeet x + 3 };
-let callTwoTimes = \x, func { func(func(x)) }
+addThree     := \x { x + 3 };
+callTwoTimes := \x, func { func(func(x)) }
 assert(callTwoTimes(3, addThree) == 9)
 
-let add     = \(a, b) { a + b };
-let sub     = \(a, b) { a - b };
-let applyFn = \(fn, a, b) { fn(a, b) };
-
-assert(applyFn(add, 2, 2) == 4); 
-assert(applyFn(sub, 10, 2) == 8);
-
 // parens and commas are optional (for now)
-let add     = \a b { a + b };
-let sub     = \a b { a - b };
-let applyFn = \fn a b { fn(a, b) };
+add     := \a b { a + b };
+sub     := \a b { a - b };
+applyFn := \fn a b { fn(a, b) };
+
+assert(applyFn(add, 2, 2) == 4); 
+assert(applyFn(sub, 10, 2) == 8);
+
+// and the above could be written as such (shadowing is allowed btw):
+add     := \(a, b) { a + b };
+sub     := \(a, b) { a - b };
+applyFn := \(fn, a, b) { fn(a, b) };
 
 assert(applyFn(add, 2, 2) == 4); 
 assert(applyFn(sub, 10, 2) == 8);
 
 
-// closures
+// CLOSURES
 
-let newAdder = \x { fun(n) { x + n } };
-let addTwo   = newAdder(2);
+newAdder := \x { fun(n) { x + n } };
+addTwo   := newAdder(2);
 assert(addTwo(5) == 7);
 
 
-// built-ins & arrays
+// BUILT-INS
 
-let map = \arr f {
-    let iter = \arr acc {
+// first(), rest(), & push() are builtin and can be used to contruct functions like map() or reduce()
+
+map := \arr f {
+    iter := \arr acc {
         if (len(arr) == 0) {
             acc
         } else {
@@ -92,13 +99,13 @@ let map = \arr f {
     iter(arr, []);
 };
 
-let a      = [1, 2, 3, 4];
-let double = \x { x * 2 };
+a      := [1, 2, 3, 4];
+double := \x { x * 2 };
 assert(map(a, double) == [2, 4, 6, 8])
 assert(map(a, \x { x * 3 }) == [3, 6, 9, 12])
 
-let reduce = \arr initial f {
-    let iter = \arr result {
+reduce := \arr initial f {
+    iter := \arr result {
         if (len(arr) == 0) {
             result
         } else {
@@ -109,7 +116,7 @@ let reduce = \arr initial f {
     iter(arr, initial);
 };
 
-let sum = \arr {
+sum := \arr {
     reduce(arr, 0, \initial, el { initial + el });
 };
 

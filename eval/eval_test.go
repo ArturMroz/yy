@@ -207,7 +207,7 @@ func TestIntegerArrayLiterals(t *testing.T) {
 func TestArrayIndexExpressions(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected interface{}
+		expected any
 	}{
 		{"[1, 2, 3][0]", 1},
 		{"[1, 2, 3][1]", 2},
@@ -226,6 +226,7 @@ func TestArrayIndexExpressions(t *testing.T) {
 			"let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",
 			2,
 		},
+
 		// out of bounds access returns nil
 		{"[1, 2, 3][3]", nil},
 		{"[1, 2, 3][-1]", nil},
@@ -453,13 +454,8 @@ if (10 > 1) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		errObj, ok := evaluated.(*object.Error)
-		if !ok {
-			t.Errorf("no error object returned. got=%T(%+v)", evaluated, evaluated)
-			continue
-		}
-		if errObj.Msg != tt.expectedMessage {
-			t.Errorf("wrong error message. want=%q, got=%q", tt.expectedMessage, errObj.Msg)
+		if err := testErrorObject(evaluated, tt.expectedMessage); err != nil {
+			t.Error(err)
 		}
 	}
 }
@@ -478,6 +474,38 @@ func TestLetStatements(t *testing.T) {
 	for _, tt := range tests {
 		if err := testIntegerObject(testEval(tt.input), tt.expected); err != nil {
 			t.Error(err)
+		}
+	}
+}
+
+func TestAssignExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{"a := 8", 8},
+		{"a := 8; a", 8},
+		{"a := 8 * 5 + 3 / 2 - 2 * (2 + 3) * 3", 11},
+		{"a := 8; b := a", 8},
+		{"a := 8; b := a + 2", 10},
+		{"a := 8; b := 2; c := a + b", 10},
+
+		{"a := 8; a = 15", 15},
+		{"a := 8; b := 2; a = b", 2},
+		{"a = 8", "identifier not found: a"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
+				t.Error(err)
+			}
+		case string:
+			if err := testErrorObject(evaluated, expected); err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
@@ -579,9 +607,13 @@ func TestLambdaApplication(t *testing.T) {
 		{`let add = \x, y { x + y; }; add(5 + 5, add(5, 5));`, 20},
 		{`let add = \x, y, z { x + y + z; }; add(1, 2, 3);`, 6},
 
-		{`let add = \x y { x + y; }; add(5, 5);`, 10},
-		{`let add = \x y { x + y; }; add(5+5 add(5, 5));`, 20},
-		{`let add = \x y z { x + y + z }; add(1 2 3);`, 6},
+		{`add := \x y { x + y; }; add(5, 5);`, 10},
+		{`add := \x y { x + y; }; add(5+5 add(5, 5));`, 20},
+		{`add := \x y z { x + y + z }; add(1 2 3);`, 6},
+
+		{`add := \x y { x + y; }; add(5, 5);`, 10},
+		{`add := \x y { x + y; }; add(5+5 add(5, 5));`, 20},
+		{`add := \x y z { x + y + z }; add(1 2 3);`, 6},
 
 		{`\(x) { x; }(5)`, 5},
 		{`\x { x }(5)`, 5},
@@ -701,11 +733,22 @@ func testBooleanObject(obj object.Object, expected bool) error {
 	return nil
 }
 
-const examplesDir = "../examples"
+func testErrorObject(obj object.Object, expectedMsg string) error {
+	result, ok := obj.(*object.Error)
+	if !ok {
+		return fmt.Errorf("object is not Error. got=%T (%+v)", obj, obj)
+	}
+	if result.Msg != expectedMsg {
+		return fmt.Errorf("wrong error message. want=%q, got=%q", expectedMsg, result.Msg)
+	}
+	return nil
+}
 
 //
 // PROGRAMS FROM EXAMPLES/
 //
+
+const examplesDir = "../examples"
 
 func TestExampleFiles(t *testing.T) {
 	testFiles, err := os.ReadDir(examplesDir)

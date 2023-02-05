@@ -40,6 +40,8 @@ const (
 )
 
 var precedences = map[token.TokenType]Precedence{
+	token.ASSIGN:   EQUALS,
+	token.WALRUS:   EQUALS,
 	token.EQ:       EQUALS,
 	token.NOT_EQ:   EQUALS,
 	token.LT:       LESSGREATER,
@@ -96,6 +98,8 @@ func New(l *lexer.Lexer) *Parser {
 		token.NOT_EQ:   p.parseInfixExpression,
 		token.LT:       p.parseInfixExpression,
 		token.GT:       p.parseInfixExpression,
+		token.WALRUS:   p.parseAssignExpression,
+		token.ASSIGN:   p.parseAssignExpression,
 		token.LPAREN:   p.parseCallExpression,
 		token.LBRACKET: p.parseIndexExpression,
 	}
@@ -108,7 +112,7 @@ func New(l *lexer.Lexer) *Parser {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	program := &ast.Program{Statements: []ast.Statement{}}
+	program := &ast.Program{}
 
 	for p.curToken.Type != token.EOF {
 		stmt := p.parseStatement()
@@ -422,6 +426,30 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 	fn.Body = p.parseBlockStatement()
 
 	return fn
+}
+
+func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression {
+	ident, ok := maybeIdent.(*ast.Identifier)
+	if !ok {
+		errMsg := fmt.Sprintf("can only assign to an Identifier (got '%s', type of %T)", maybeIdent, maybeIdent)
+		p.errors = append(p.errors, errMsg)
+		return nil
+	}
+
+	assExpr := &ast.AssignExpression{
+		Name:   ident,
+		Token:  p.curToken,
+		IsInit: p.curTokenIs(token.WALRUS),
+	}
+
+	p.nextToken()
+	assExpr.Value = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) { // optional semicolon
+		p.nextToken()
+	}
+
+	return assExpr
 }
 
 func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {

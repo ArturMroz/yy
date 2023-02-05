@@ -64,6 +64,29 @@ func (ls *LetStatement) String() string {
 	return b.String()
 }
 
+type AssignExpression struct {
+	Token  token.Token
+	Name   *Identifier
+	Value  Expression
+	IsInit bool
+}
+
+func (ls *AssignExpression) expressionNode()      {}
+func (ls *AssignExpression) TokenLiteral() string { return ls.Token.Literal }
+func (ls *AssignExpression) String() string {
+	var b strings.Builder
+
+	// fmt.Fprintf(&b, "%s %s = %s;", ls.TokenLiteral(), ls.Name.String(), ls.Value.String())
+
+	fmt.Fprintf(&b, "%s %s", ls.Name.String(), ls.TokenLiteral())
+	if ls.Value != nil {
+		b.WriteString(ls.Value.String())
+	}
+	b.WriteString(";")
+
+	return b.String()
+}
+
 type Identifier struct {
 	Token token.Token // the token.IDENT token
 	Value string

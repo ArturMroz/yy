@@ -35,6 +35,28 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestAssignExpression(t *testing.T) {
+	tests := []struct {
+		input              string
+		expectedIdentifier string
+		expectedValue      any
+	}{
+		{"x := 69;", "x", 69},
+		{"y := true;", "y", true},
+		{"z := y;", "z", "y"},
+		{"x = 69;", "x", 69},
+		{"y = true;", "y", true},
+		{"z = y;", "z", "y"},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+		if err := testLiteralExpression(stmt.Expression.(*ast.AssignExpression).Value, tt.expectedValue); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 func TestYeetStatements(t *testing.T) {
 	tests := []struct {
 		input         string
@@ -413,13 +435,25 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"add(a * b[2], b[1], 2 * [1, 2][1])",
 			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
 		},
+		{
+			"add(a * b[2] b[1] 2 * [1, 2][1])",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+		},
+		{
+			`add := \a b { a + b }; add(5 10) == 5 + 2 * 10`,
+			`add :=\(a, b) { (a + b) };(add(5, 10) == (5 + (2 * 10)))`,
+		},
+		{
+			`a := 5 + 2 * 10 / 8 - 15;`,
+			`a :=((5 + ((2 * 10) / 8)) - 15);`,
+		},
 	}
 
 	for _, tt := range tests {
 		program := parse(t, tt.input)
 		actual := program.String()
 		if actual != tt.expected {
-			t.Errorf("expected=%q, got=%q", tt.expected, actual)
+			t.Errorf("\nwant %q \ngot  %q", tt.expected, actual)
 		}
 	}
 }

@@ -28,6 +28,7 @@ const (
 	GT       = ">"
 	EQ       = "=="
 	NOT_EQ   = "!="
+	WALRUS   = ":="
 
 	// Delimiters
 	COMMA     = ","

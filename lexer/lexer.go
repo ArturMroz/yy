@@ -21,21 +21,6 @@ func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
 	switch ch := l.ch; ch {
-	case '=':
-		if l.peekChar() == '=' {
-			l.advance()
-			tok = token.Token{Type: token.EQ, Literal: "=="}
-		} else {
-			tok = newToken(token.ASSIGN, ch)
-		}
-	case '!':
-		if l.peekChar() == '=' {
-			l.advance()
-			tok = token.Token{Type: token.NOT_EQ, Literal: "!="}
-		} else {
-			tok = newToken(token.BANG, ch)
-		}
-
 	case '-':
 		tok = newToken(token.MINUS, ch)
 	case '+':
@@ -50,8 +35,6 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.GT, ch)
 	case ';':
 		tok = newToken(token.SEMICOLON, ch)
-	case ':':
-		tok = newToken(token.COLON, ch)
 	case '(':
 		tok = newToken(token.LPAREN, ch)
 	case ')':
@@ -68,6 +51,13 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.RBRACKET, ch)
 	case '\\':
 		tok = newToken(token.BACKSLASH, ch)
+
+	case '=':
+		tok = l.switch2(token.ASSIGN, token.EQ)
+	case '!':
+		tok = l.switch2(token.BANG, token.NOT_EQ)
+	case ':':
+		tok = l.switch2(token.COLON, token.WALRUS)
 
 	case '"':
 		literal := l.readString()
@@ -168,6 +158,14 @@ func (l *Lexer) skipWhitespace() {
 			return
 		}
 	}
+}
+
+func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
+	if l.peekChar() == '=' {
+		l.advance()
+		return token.Token{Type: tok2, Literal: string(tok2)}
+	}
+	return token.Token{Type: tok1, Literal: string(tok1)}
 }
 
 // utils
