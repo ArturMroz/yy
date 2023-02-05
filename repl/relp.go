@@ -42,7 +42,6 @@ func Start(in io.Reader, out io.Writer) {
 
 		evaluated := eval.Eval(program, env)
 		if evaluated != nil {
-			io.WriteString(out, "=> ")
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}
