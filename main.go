@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -11,14 +12,18 @@ import (
 	"ylang/repl"
 )
 
-func main() {
-	switch len(os.Args) {
-	case 1:
-		fmt.Println("Welcome to the Y programming language REPL!")
-		repl.Start(os.Stdin, os.Stdout)
+var debug = flag.Bool("debug", false, "turns on debug mode")
 
-	case 2:
-		f := os.Args[1]
+func main() {
+	flag.Parse()
+
+	switch len(flag.Args()) {
+	case 0:
+		fmt.Println("Welcome to the Y programming language REPL!")
+		repl.Start(os.Stdin, os.Stdout, *debug)
+
+	case 1:
+		f := flag.Args()[0]
 		src, err := os.ReadFile(f)
 		if err != nil {
 			fmt.Println("error: couldn't read file: " + f)
@@ -42,6 +47,6 @@ func main() {
 		}
 
 	default:
-		fmt.Println("usage: ylang [script]")
+		fmt.Println("usage: ylang [script] [--debug=true|false]")
 	}
 }
