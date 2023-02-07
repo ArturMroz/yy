@@ -107,6 +107,10 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{`"yolo" == "yeet"`, false},
 		{`"yolo" != "yolo"`, false},
 		{`"yolo" != "yeet"`, true},
+		{`"[1, 2, 3]" == "[1, 2, 3]"`, true},
+		{`"[1, 2, 3]" == "[1, 2, 9]"`, false},
+		{`"[1, 2, 3]" != "[1, 2, 3]"`, false},
+		{`"[1, 2, 3]" != "[1, 2, 9]"`, true},
 	}
 
 	for _, tt := range tests {
@@ -329,6 +333,11 @@ func TestIfElseExpressions(t *testing.T) {
 		{"if 1 > 2 { 10 } else { 20 }", 20},
 		{"if 1 < 2 { 10 } else { 20 }", 10},
 		{"if null { 10 } else { 20 }", 20},
+		{"result := if null { 10 } else { 20 }; result", 20},
+		{"5 + if null { 10 } else { 20 }", 25},
+		{"if null { 10 } else { 20 } * 2", 40},
+		{"5 + if null { 10 } else { 20 } * 2", 45},
+		{"result := 3 * if null { 10 } else { 20 } + 9; result", 69},
 	}
 
 	for _, tt := range tests {
@@ -351,7 +360,17 @@ func TestYoyoExpressions(t *testing.T) {
 		input    string
 		expected int64
 	}{
-		{"let i = 0; yoyo i < 5 { let i = i + 1 }", 5},
+		{"i := 0; yoyo ; i < 5; { i = i + 1 }", 5},
+		{"yoyo i := 0; i < 5; { i = i + 1 }", 5},
+		{"yoyo i := 0; i < 5; i = i + 1 { i }", 4},
+		{"i := 69; yoyo i := 0; i < 5; i = i + 1 { i }; i", 69},
+		// {"i := 69; yoyo i = 0; i < 5; i = i + 1 { i }; i", 5}, // TODO fix test
+		{"result := (yoyo i := 0; i < 5; i = i + 1 { i }); result", 4},
+		{"result := yoyo i := 0; i < 5; i = i + 1 { i }; result", 4},
+
+		// TODO test error handling
+		// {"yoyo i = 0; i < 5; i = i + 1 { i }",  "identifier not found: i"},
+		// {"yoyo i := 0; i < 5; i = i + 1 { i }; i", "identifier not found: i"},
 	}
 
 	for _, tt := range tests {
@@ -489,9 +508,13 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := 8; b := a", 8},
 		{"a := 8; b := a + 2", 10},
 		{"a := 8; b := 2; c := a + b", 10},
+		{"a := 8 == 5", false},
+		{"a := 8 != 5", true},
+		{"a := 8 > 5", true},
 
 		{"a := 8; a = 15", 15},
 		{"a := 8; b := 2; a = b", 2},
+
 		{"a = 8", "identifier not found: a"},
 	}
 
@@ -502,7 +525,11 @@ func TestAssignExpressions(t *testing.T) {
 			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
 				t.Error(err)
 			}
-		case string:
+		case bool:
+			if err := testBooleanObject(evaluated, expected); err != nil {
+				t.Error(err)
+			}
+		case string: // errors
 			if err := testErrorObject(evaluated, expected); err != nil {
 				t.Error(err)
 			}

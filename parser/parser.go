@@ -35,13 +35,12 @@ const (
 	SUM         // + -
 	PRODUCT     // * /
 	PREFIX      // -x !x
+	ASSIGNMENT  // = :=
 	CALL        // my_function(x)
 	INDEX       // my_array[idx]
 )
 
 var precedences = map[token.TokenType]Precedence{
-	token.ASSIGN:   EQUALS,
-	token.WALRUS:   EQUALS,
 	token.EQ:       EQUALS,
 	token.NOT_EQ:   EQUALS,
 	token.LT:       LESSGREATER,
@@ -50,6 +49,8 @@ var precedences = map[token.TokenType]Precedence{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.ASSIGN:   ASSIGNMENT,
+	token.WALRUS:   ASSIGNMENT,
 	token.LPAREN:   CALL,
 	token.LBRACKET: INDEX,
 }
@@ -300,11 +301,26 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 func (p *Parser) parseYoyoExpression() ast.Expression {
 	yoyoExpr := &ast.YoyoExpression{Token: p.curToken}
+	p.advance()
+
+	if !p.curIs(token.SEMICOLON) {
+		yoyoExpr.Initialiser = p.parseExpression(LOWEST)
+		p.advance()
+	}
 
 	p.advance()
-	yoyoExpr.Condition = p.parseExpression(LOWEST)
 
-	if !p.consume(token.LBRACE, "missing opening '{' after condition") {
+	if !p.curIs(token.SEMICOLON) {
+		yoyoExpr.Condition = p.parseExpression(LOWEST)
+		p.advance()
+	}
+
+	if !p.peekIs(token.LBRACE) {
+		p.advance()
+		yoyoExpr.Post = p.parseExpression(LOWEST)
+	}
+
+	if !p.consume(token.LBRACE, "missing opening '{' after 'yoyo'") {
 		return nil
 	}
 
@@ -457,10 +473,6 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 
 	p.advance()
 	assExpr.Value = p.parseExpression(LOWEST)
-
-	if p.peekIs(token.SEMICOLON) { // optional semicolon
-		p.advance()
-	}
 
 	return assExpr
 }

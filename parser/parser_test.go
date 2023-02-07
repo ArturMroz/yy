@@ -441,11 +441,19 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		},
 		{
 			`add := \a b { a + b }; add(5 10) == 5 + 2 * 10`,
-			`add :=\(a, b) { (a + b) };(add(5, 10) == (5 + (2 * 10)))`,
+			`(add := \(a, b) { (a + b) })(add(5, 10) == (5 + (2 * 10)))`,
 		},
 		{
 			`a := 5 + 2 * 10 / 8 - 15;`,
-			`a :=((5 + ((2 * 10) / 8)) - 15);`,
+			`(a := ((5 + ((2 * 10) / 8)) - 15))`,
+		},
+		{
+			"a = b = c = 8",
+			"(a = (b = (c = 8)))",
+		},
+		{
+			"f := 6 + 2 * 3 g := 3 * 3 + 1 h := f + g",
+			"(f := (6 + (2 * 3)))(g := ((3 * 3) + 1))(h := (f + g))",
 		},
 	}
 
@@ -487,19 +495,92 @@ func TestIfExpression(t *testing.T) {
 }
 
 func TestYoyoExpression(t *testing.T) {
-	input := "yoyo x < y { i }"
-	stmt := parseSingleStmt(t, input)
-
-	expr, ok := stmt.Expression.(*ast.YoyoExpression)
-	if !ok {
-		t.Fatalf("stmt.Expression is not ast.YoyoExpression. got=%T", stmt.Expression)
+	tests := []struct {
+		input       string
+		initialiser string
+		condition   string
+		post        string
+		body        string
+	}{
+		{
+			"yoyo i := 0; i < 5; i = i + 1 { i }",
+			"(i := 0)",
+			"(i < 5)",
+			"(i = (i + 1))",
+			"{ i }",
+		},
+		{
+			"yoyo ; i < 5; i = i + 1 { i }",
+			"",
+			"(i < 5)",
+			"(i = (i + 1))",
+			"{ i }",
+		},
+		{
+			"yoyo ;; i = i + 1 { i }",
+			"",
+			"",
+			"(i = (i + 1))",
+			"{ i }",
+		},
+		{
+			"yoyo ; i < 5; { i }",
+			"",
+			"(i < 5)",
+			"",
+			"{ i }",
+		},
+		{
+			"yoyo i := 0; ; i = i + 1 { i }",
+			"(i := 0)",
+			"",
+			"(i = (i + 1))",
+			"{ i }",
+		},
+		{"yoyo ;; { i }", "", "", "", "{ i }"},
 	}
 
-	if err := testInfixExpression(expr.Condition, "x", "<", "y"); err != nil {
-		t.Error(err)
-	}
-	if len(expr.Body.Statements) != 1 {
-		t.Errorf("consequence is not 1 statements. got=%d\n", len(expr.Body.Statements))
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+
+		yyExpr, ok := stmt.Expression.(*ast.YoyoExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.YoyoExpression. got=%T", stmt.Expression)
+		}
+
+		if yyExpr.Initialiser == nil {
+			if tt.initialiser != "" {
+				t.Errorf("exp.Initialiser is nil. want=%q", tt.initialiser)
+			}
+		} else {
+			if yyExpr.Initialiser.String() != tt.initialiser {
+				t.Errorf("exp.Initialiser is not %q. got=%q", tt.initialiser, yyExpr.Initialiser.String())
+			}
+		}
+
+		if yyExpr.Condition == nil {
+			if tt.condition != "" {
+				t.Errorf("exp.Condition is nil. want=%q", tt.condition)
+			}
+		} else {
+			if yyExpr.Condition.String() != tt.condition {
+				t.Errorf("condition is not %q. got=%q", tt.condition, yyExpr.Condition.String())
+			}
+		}
+
+		if yyExpr.Post == nil {
+			if tt.post != "" {
+				t.Errorf("exp.Post is nil. want=%q", tt.post)
+			}
+		} else {
+			if yyExpr.Post.String() != tt.post {
+				t.Errorf("exp.Post is not %q. got=%q", tt.post, yyExpr.Post.String())
+			}
+		}
+
+		if yyExpr.Body.String() != tt.body {
+			t.Errorf("condition.String() is not %q. got=%q", tt.body, yyExpr.Body.String())
+		}
 	}
 }
 
@@ -869,15 +950,21 @@ func testLetStatement(stmt ast.Statement, name string) error {
 	return nil
 }
 
-var testFiles = []string{
-	"fun.yeet",
-	"vars.yeet",
-}
+//
+// PROGRAMS FROM EXAMPLES/
+//
+
+const examplesDir = "../examples"
 
 func TestParseFiles(t *testing.T) {
+	testFiles, err := os.ReadDir(examplesDir)
+	if err != nil {
+		t.Fatalf("couldn't read example files dir: %s", err)
+	}
+
 	for _, f := range testFiles {
-		t.Run(f, func(t *testing.T) {
-			filename := filepath.Join("..", "examples", f)
+		t.Run(f.Name(), func(t *testing.T) {
+			filename := filepath.Join("..", "examples", f.Name())
 			src, err := os.ReadFile(filename)
 			if err != nil {
 				t.Fatalf("couldn't read test file: %s", err)
@@ -889,10 +976,15 @@ func TestParseFiles(t *testing.T) {
 }
 
 func BenchmarkParse(b *testing.B) {
+	testFiles, err := os.ReadDir(examplesDir)
+	if err != nil {
+		b.Fatalf("couldn't read example files dir: %s", err)
+	}
+
 	for _, f := range testFiles {
-		b.Run(f, func(b *testing.B) {
+		b.Run(f.Name(), func(b *testing.B) {
 			b.StopTimer()
-			filename := filepath.Join("..", "examples", f)
+			filename := filepath.Join(examplesDir, f.Name())
 			src, err := os.ReadFile(filename)
 			if err != nil {
 				b.Fatalf("couldn't read test file: %s", err)

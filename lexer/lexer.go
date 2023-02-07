@@ -106,9 +106,8 @@ func (l *Lexer) advance() {
 func (l *Lexer) peekChar() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
-	} else {
-		return l.input[l.readPosition]
 	}
+	return l.input[l.readPosition]
 }
 
 func (l *Lexer) readIdentifier() string {
@@ -120,6 +119,7 @@ func (l *Lexer) readIdentifier() string {
 }
 
 func (l *Lexer) readNumber() string {
+	// TODO support decimals
 	start := l.position
 	for isDigit(l.ch) {
 		l.advance()

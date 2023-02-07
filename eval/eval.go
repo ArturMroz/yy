@@ -118,12 +118,18 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 
 	case *ast.YoyoExpression:
-		var result object.Object
+		extendedEnv := object.NewEnclosedEnvironment(env)
+		if node.Initialiser != nil {
+			init := Eval(node.Initialiser, extendedEnv)
+			if isError(init) {
+				return init
+			}
+		}
 
+		var result object.Object
 		for {
-			condition := Eval(node.Condition, env)
+			condition := Eval(node.Condition, extendedEnv)
 			if isError(condition) {
-				fmt.Println(condition)
 				return condition
 			}
 
@@ -131,7 +137,14 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				return result
 			}
 
-			result = Eval(node.Body, env) // TODO create new scope
+			result = Eval(node.Body, extendedEnv)
+
+			if node.Post != nil {
+				post := Eval(node.Post, extendedEnv)
+				if isError(post) {
+					return post
+				}
+			}
 		}
 
 	case *ast.IntegerLiteral:
@@ -345,6 +358,9 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		case "!=":
 			return toYeetBool(left.Value != right.Value)
 		}
+
+	case left.Type() == object.NULL_OBJ && right.Type() == object.NULL_OBJ:
+		return toYeetBool(operator == "==")
 
 	case left.Type() == object.ARRAY_OBJ && right.Type() == object.ARRAY_OBJ:
 		right := right.(*object.Array)

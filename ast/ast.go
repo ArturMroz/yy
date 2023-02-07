@@ -65,7 +65,7 @@ func (ls *LetStatement) String() string {
 }
 
 type AssignExpression struct {
-	Token  token.Token
+	Token  token.Token // the '=' or ':=' token
 	Name   *Identifier
 	Value  Expression
 	IsInit bool
@@ -74,17 +74,7 @@ type AssignExpression struct {
 func (ls *AssignExpression) expressionNode()      {}
 func (ls *AssignExpression) TokenLiteral() string { return ls.Token.Literal }
 func (ls *AssignExpression) String() string {
-	var b strings.Builder
-
-	// fmt.Fprintf(&b, "%s %s = %s;", ls.TokenLiteral(), ls.Name.String(), ls.Value.String())
-
-	fmt.Fprintf(&b, "%s %s", ls.Name.String(), ls.TokenLiteral())
-	if ls.Value != nil {
-		b.WriteString(ls.Value.String())
-	}
-	b.WriteString(";")
-
-	return b.String()
+	return fmt.Sprintf("(%s %s %s)", ls.Name.String(), ls.TokenLiteral(), ls.Value.String())
 }
 
 type Identifier struct {
@@ -114,7 +104,8 @@ func (ys *YeetStatement) String() string {
 }
 
 type ExpressionStatement struct {
-	Token      token.Token // the first token of the expression
+	// the first token of the expression
+	Token      token.Token
 	Expression Expression
 }
 
@@ -269,9 +260,11 @@ func (ie *IfExpression) String() string {
 }
 
 type YoyoExpression struct {
-	Token     token.Token // The 'yoyo' token
-	Condition Expression
-	Body      *BlockStatement
+	Token       token.Token // The 'yoyo' token
+	Initialiser Expression
+	Condition   Expression
+	Post        Expression
+	Body        *BlockStatement
 }
 
 func (ye *YoyoExpression) expressionNode()      {}
