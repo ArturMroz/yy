@@ -1,0 +1,94 @@
+// VARIABLES
+
+// variables are declared and assigned using walrus operator ':='
+a := 5
+assert(a == 5)
+
+// variables are mutable (equals operator '=' is for assignments only)
+a = 10
+assert(a == 10)
+
+// you cannot assign to a variable that hasn't been declared, this isn't 2000s JS
+// line below would cause runtime error: 'identifer not found: i_dont_exist'
+// i_dont_exist = 69
+
+// variables can be redeclared (and shadowed)
+a := 15
+assert(a == 15)
+
+// semicolons are optional, you can use them if C/Java corrupted you
+// and you aren't physically able to write a statement without a semicolon
+b := 5;
+c := 6;
+assert(b + 1 == c);
+
+// you don't even need semicolons between statements on the same line
+// if you are psychotic, nothing is stopping you from writing this
+f := 6 + 2 * 3 g := 3 * 3 + 1 h := f + g
+assert(f == 12)
+assert(g == 10)
+assert(h == f + g)
+
+// which is equivalent to 
+f := 6 + 2 * 3; g := 3 * 3 + 1; h := f + g;
+
+// or to
+f := 6 + 2 * 3
+g := 3 * 3 + 1
+h := f + g
+
+// (almost) everything is an expression
+a := if 8 > 3 {
+    5
+} else {
+    "wtf"
+}
+assert(a == 5)
+
+// assignments can be chained
+a = b = c = 8
+assert(a == 8)
+assert(b == 8)
+assert(c == 8)
+
+
+// TYPES
+
+// this language is dynamically typed
+// supported types: integer, string, bool, null
+
+my_num   := 5
+yarn     := "how long is a piece of string?"
+yup      := true
+the_void := null
+
+// print with 'yelp()' (or 'yell()' if urgent)
+yelp("Hello, world!")       // prints "Hello, world!"
+yell("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
+
+
+// DATA STRUCTURES
+
+// suported data structures: arrays & hashmaps 
+// (which means this language has more data structures than Lua)
+
+my_array := [1, 2, 3, 4]
+
+// array can hold values of different types
+my_array2 := [1, true, "hello", yarn, yup]
+
+// arrays can be concatenated
+mega_array := my_array + my_array2
+yelp(mega_array)
+assert(mega_array == my_array + my_array2)
+assert(mega_array == [1, 2, 3, 4, 1, true, "hello", yarn, yup])
+assert(mega_array == [1, 2, 3, 4, 1, true, "hello", "how long is a piece of string?", true])
+assert(my_array != my_array2)
+
+// hashmaps
+friend := { "name": "Jon the Zebra", "colours": ["black", "white"], "age": 2, "alive": true }
+yelp(friend["name"], " is ", friend["age"], " years old.") // prints "Jon the Zebra is 2 years old."
+
+// a key to a hashmap can be a string, an integer, or a bool
+let foe = { "name": "Giant Chicken", true: "bool as a key!?", 42: "integer too", "what a weird": "world" }
+assert(foe[true] == "bool as a key!?")
