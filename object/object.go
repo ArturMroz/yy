@@ -22,6 +22,7 @@ const (
 	ARRAY_OBJ   ObjectType = "ARRAY"
 	HASH_OBJ    ObjectType = "HASH"
 	NULL_OBJ    ObjectType = "NULL"
+	RANGE_OBJ   ObjectType = "RANGE"
 
 	ERROR_OBJ        ObjectType = "ERROR"
 	FUNCTION_OBJ     ObjectType = "FUNCTION"
@@ -54,6 +55,14 @@ type Null struct{}
 
 func (n *Null) Type() ObjectType { return NULL_OBJ }
 func (n *Null) Inspect() string  { return "null" }
+
+type Range struct {
+	Start int64
+	End   int64
+}
+
+func (r *Range) Type() ObjectType { return RANGE_OBJ }
+func (r *Range) Inspect() string  { return fmt.Sprintf("%d..%d", r.Start, r.End) }
 
 type Array struct {
 	Elements []Object

@@ -29,6 +29,7 @@ const (
 	EQ       = "=="
 	NOT_EQ   = "!="
 	WALRUS   = ":="
+	RANGE    = ".."
 
 	// Delimiters
 	COMMA     = ","

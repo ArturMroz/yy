@@ -59,6 +59,12 @@ func (l *Lexer) NextToken() token.Token {
 	case ':':
 		tok = l.switch2(token.COLON, token.WALRUS)
 
+	case '.':
+		if l.peekChar() == '.' {
+			l.advance()
+			tok = token.Token{Type: token.RANGE, Literal: ".."}
+		}
+
 	case '"':
 		literal := l.readString()
 		tok = token.Token{Type: token.STRING, Literal: literal}

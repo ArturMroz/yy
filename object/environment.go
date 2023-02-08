@@ -29,13 +29,12 @@ func (e *Environment) Set(name string, val Object) {
 }
 
 func (e *Environment) Update(name string, val Object) bool {
-	_, ok := e.store[name]
-	if ok {
+	if _, ok := e.store[name]; ok {
 		e.store[name] = val
 		return true
 	}
 
-	if !ok && e.outer != nil {
+	if e.outer != nil {
 		return e.outer.Update(name, val)
 	}
 

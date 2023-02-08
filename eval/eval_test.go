@@ -141,6 +141,40 @@ func TestBangOperator(t *testing.T) {
 	}
 }
 
+func TestRangeLiterals(t *testing.T) {
+	tests := []struct {
+		input string
+		start int64
+		end   int64
+	}{
+		{"0..5", 0, 5},
+		{"5..0", 5, 0},
+		{"(1+2)..(5*2)", 3, 10},
+		{"3 + 2 * 2 .. 5 - 2 * 2", 7, 1},
+		{"-5..-2", -5, -2},
+		{"a := 1; b := 8; a..b", 1, 8},
+		{"a := 1; b := 8; (a+3)..(b-1)", 4, 7},
+		{"a := 1; b := 8; a+3 .. b-1", 4, 7},
+		{"r := 1+3 .. 9-1; r", 4, 8},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		rangeObj, ok := evaluated.(*object.Range)
+		if !ok {
+			t.Errorf("obj not *object.Range. got=%q, type of %T", evaluated, evaluated)
+			continue
+		}
+
+		if rangeObj.Start != tt.start {
+			t.Errorf("start wrong: want %d, got %d", tt.start, rangeObj.Start)
+		}
+		if rangeObj.End != tt.end {
+			t.Errorf("end wrong: want %d, got %d", tt.end, rangeObj.End)
+		}
+	}
+}
+
 func TestArrayLiterals(t *testing.T) {
 	// TODO add more test cases
 	input := "[1, 2 * 2, 3 + 3]"
@@ -392,7 +426,8 @@ func TestYoniExpressions(t *testing.T) {
 		{`yoni "testme" { yt }`, "e"},
 		{"sum := 0; yoni [1 2 3] { sum = sum + yt }; sum", 6},
 		{`my_str := "swag"; yoni my_str { yt }`, "g"},
-		// {`yoni 0..5 { yt }`, 5},
+		{`yoni 0..5 { yt }`, 5},
+		{`sum := 0; yoni 1..4 { sum = sum + yt }; sum`, 10},
 		// {`yoni i : 0..5 { i }`, 5},
 		// {`yoni v, i : 0..5 { yt }`, 5},
 	}

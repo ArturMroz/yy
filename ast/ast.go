@@ -174,10 +174,16 @@ func (al *ArrayLiteral) String() string {
 	return b.String()
 }
 
-type IndexExpression struct {
-	Token token.Token // The [ token
-	Left  Expression
-	Index Expression
+type RangeLiteral struct {
+	Token token.Token // the '..' token
+	Start Expression
+	End   Expression
+}
+
+func (rl *RangeLiteral) expressionNode()      {}
+func (rl *RangeLiteral) TokenLiteral() string { return rl.Token.Literal }
+func (rl *RangeLiteral) String() string {
+	return fmt.Sprintf("(%s..%s)", rl.Start, rl.End)
 }
 
 type HashLiteral struct {
@@ -198,6 +204,12 @@ func (hl *HashLiteral) String() string {
 	b.WriteString("}")
 
 	return b.String()
+}
+
+type IndexExpression struct {
+	Token token.Token // The [ token
+	Left  Expression
+	Index Expression
 }
 
 func (ie *IndexExpression) expressionNode()      {}

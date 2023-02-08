@@ -156,14 +156,30 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				extendedEnv.Set("yt", v)
 				result = Eval(node.Body, extendedEnv)
 			}
+
 		case *object.String:
 			for _, v := range iter.Value {
 				extendedEnv.Set("yt", &object.String{Value: string(v)})
 				result = Eval(node.Body, extendedEnv)
 			}
+
+		case *object.Range:
+			if iter.Start <= iter.End {
+				for i := iter.Start; i <= iter.End; i++ {
+					extendedEnv.Set("yt", &object.Integer{Value: i})
+					result = Eval(node.Body, extendedEnv)
+				}
+			} else {
+				for i := iter.Start; i >= iter.End; i-- {
+					extendedEnv.Set("yt", &object.Integer{Value: i})
+					result = Eval(node.Body, extendedEnv)
+				}
+			}
+
 		default:
 			return newError("cannot iterate over %s, type of %T", iter, iter)
 		}
+
 		return result
 
 	case *ast.IntegerLiteral:
@@ -174,6 +190,24 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	case *ast.Boolean:
 		return toYeetBool(node.Value)
+
+	case *ast.RangeLiteral:
+		start := Eval(node.Start, env)
+		if isError(start) {
+			return start
+		}
+		end := Eval(node.End, env)
+		if isError(end) {
+			return end
+		}
+		if start.Type() != object.INTEGER_OBJ || end.Type() != object.INTEGER_OBJ {
+			return newError("only integers can be used to create a range")
+		}
+
+		return &object.Range{
+			Start: start.(*object.Integer).Value,
+			End:   end.(*object.Integer).Value,
+		}
 
 	case *ast.ArrayLiteral:
 		var elts []object.Object

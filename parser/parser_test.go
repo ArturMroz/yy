@@ -179,6 +179,36 @@ func TestParsingArrayLiterals3(t *testing.T) {
 	}
 }
 
+func TestRangeLiteral(t *testing.T) {
+	tests := []struct {
+		input string
+		start string
+		end   string
+	}{
+		{"a..b", "a", "b"},
+		{"(a+1)..(b+5)", "(a + 1)", "(b + 5)"},
+		{"1..5", "1", "5"},
+		{"(1+1)..5", "(1 + 1)", "5"},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+
+		rangeLit, ok := stmt.Expression.(*ast.RangeLiteral)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.RangeLiteral. got=%T", stmt.Expression)
+		}
+
+		if rangeLit.Start.String() != tt.start {
+			t.Errorf("Iterable is not %q. got=%q", tt.start, rangeLit.Start.String())
+		}
+
+		if rangeLit.End.String() != tt.end {
+			t.Errorf("End is not %q. got=%q", tt.end, rangeLit.End.String())
+		}
+	}
+}
+
 func TestParsingHashLiteralsStringKeys(t *testing.T) {
 	input := `{"one": 1, "two": 2, "three": 3}`
 	expected := map[string]int64{
@@ -454,6 +484,18 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"f := 6 + 2 * 3 g := 3 * 3 + 1 h := f + g",
 			"(f := (6 + (2 * 3)))(g := ((3 * 3) + 1))(h := (f + g))",
+		},
+		{
+			"(1+2) .. (8*2)",
+			"((1 + 2)..(8 * 2))",
+		},
+		{
+			"1 + 2 .. 8 * 2",
+			"((1 + 2)..(8 * 2))",
+		},
+		{
+			"r := 1 + 2 .. 8 * 2",
+			"(r := ((1 + 2)..(8 * 2)))",
 		},
 	}
 

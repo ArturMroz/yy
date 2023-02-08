@@ -32,6 +32,7 @@ const (
 	LOWEST
 	EQUALS      // == !=
 	LESSGREATER // > <
+	RANGE       // x..y
 	SUM         // + -
 	PRODUCT     // * /
 	PREFIX      // -x !x
@@ -45,6 +46,7 @@ var precedences = map[token.TokenType]Precedence{
 	token.NOT_EQ:   EQUALS,
 	token.LT:       LESSGREATER,
 	token.GT:       LESSGREATER,
+	token.RANGE:    RANGE,
 	token.PLUS:     SUM,
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
@@ -93,6 +95,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.NOT_EQ:   p.parseInfixExpression,
 		token.LT:       p.parseInfixExpression,
 		token.GT:       p.parseInfixExpression,
+		token.RANGE:    p.parseRangeLiteral,
 		token.WALRUS:   p.parseAssignExpression,
 		token.ASSIGN:   p.parseAssignExpression,
 		token.LPAREN:   p.parseCallExpression,
@@ -222,19 +225,6 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	p.advance()
 	expression.Right = p.parseExpression(PREFIX)
 	return expression
-}
-
-func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	expr := &ast.InfixExpression{
-		Token:    p.curToken,
-		Operator: p.curToken.Literal,
-		Left:     left,
-	}
-
-	precedence := getPrecedence(p.curToken)
-	p.advance()
-	expr.Right = p.parseExpression(precedence)
-	return expr
 }
 
 // PREFIX EXPRESSIONS
@@ -459,20 +449,18 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 
 // INFIX EXPRESSIONS
 
-func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
-	indexExpr := &ast.IndexExpression{
-		Token: p.curToken,
-		Left:  array,
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	expr := &ast.InfixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+		Left:     left,
 	}
 
+	precedence := getPrecedence(p.curToken)
 	p.advance()
-	indexExpr.Index = p.parseExpression(LOWEST)
+	expr.Right = p.parseExpression(precedence)
 
-	if !p.consume(token.RBRACKET, "missing closing ']' when indexing an array") {
-		return nil
-	}
-
-	return indexExpr
+	return expr
 }
 
 func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression {
@@ -493,6 +481,34 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 	assExpr.Value = p.parseExpression(LOWEST)
 
 	return assExpr
+}
+
+func (p *Parser) parseRangeLiteral(left ast.Expression) ast.Expression {
+	rangeLit := &ast.RangeLiteral{
+		Token: p.curToken,
+		Start: left,
+	}
+
+	p.advance()
+	rangeLit.End = p.parseExpression(LOWEST)
+
+	return rangeLit
+}
+
+func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
+	indexExpr := &ast.IndexExpression{
+		Token: p.curToken,
+		Left:  array,
+	}
+
+	p.advance()
+	indexExpr.Index = p.parseExpression(LOWEST)
+
+	if !p.consume(token.RBRACKET, "missing closing ']' when indexing an array") {
+		return nil
+	}
+
+	return indexExpr
 }
 
 func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
