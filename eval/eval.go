@@ -147,6 +147,26 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 		}
 
+	case *ast.YoniExpression:
+		var result object.Object
+		iter := Eval(node.Iterable, env)
+		extendedEnv := object.NewEnclosedEnvironment(env)
+		switch iter := iter.(type) {
+		case *object.Array:
+			for _, v := range iter.Elements {
+				extendedEnv.Set("yt", v)
+				result = Eval(node.Body, extendedEnv)
+			}
+		case *object.String:
+			for _, v := range iter.Value {
+				extendedEnv.Set("yt", &object.String{Value: string(v)})
+				result = Eval(node.Body, extendedEnv)
+			}
+		default:
+			return newError("cannot iterate over %s, type of %T", iter, iter)
+		}
+		return result
+
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 

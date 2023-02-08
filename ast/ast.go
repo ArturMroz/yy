@@ -270,7 +270,20 @@ type YoyoExpression struct {
 func (ye *YoyoExpression) expressionNode()      {}
 func (ye *YoyoExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YoyoExpression) String() string {
-	return fmt.Sprintf("yoyo %s { %s }", ye.Condition.String(), ye.Body.String())
+	return fmt.Sprintf("yoyo %s; %s; %s; { %s }",
+		ye.Initialiser.String(), ye.Condition.String(), ye.Post.String(), ye.Body.String())
+}
+
+type YoniExpression struct {
+	Token    token.Token // The 'yoni' token
+	Iterable Expression
+	Body     *BlockStatement
+}
+
+func (ye *YoniExpression) expressionNode()      {}
+func (ye *YoniExpression) TokenLiteral() string { return ye.Token.Literal }
+func (ye *YoniExpression) String() string {
+	return fmt.Sprintf("yoni %s { %s }", ye.Iterable.String(), ye.Body.String())
 }
 
 type BlockStatement struct {

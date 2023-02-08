@@ -584,6 +584,37 @@ func TestYoyoExpression(t *testing.T) {
 	}
 }
 
+func TestYoniExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		iterable string
+		body     string
+	}{
+		{
+			"yoni array { yt }",
+			"array",
+			"{ yt }",
+		},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+
+		yyExpr, ok := stmt.Expression.(*ast.YoniExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.YoyoExpression. got=%T", stmt.Expression)
+		}
+
+		if yyExpr.Iterable.String() != tt.iterable {
+			t.Errorf("Iterable is not %q. got=%q", tt.iterable, yyExpr.Iterable.String())
+		}
+
+		if yyExpr.Body.String() != tt.body {
+			t.Errorf("Body is not %q. got=%q", tt.body, yyExpr.Body.String())
+		}
+	}
+}
+
 func TestIfElseExpression(t *testing.T) {
 	input := `if (x < y) { x } else { y }`
 	stmt := parseSingleStmt(t, input)

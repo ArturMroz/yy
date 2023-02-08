@@ -46,12 +46,8 @@ func TestStringLiteral(t *testing.T) {
 	expected := "Hello World!"
 	evaluated := testEval(input)
 
-	str, ok := evaluated.(*object.String)
-	if !ok {
-		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
-	}
-	if str.Value != expected {
-		t.Errorf("String has wrong value. want=%q, got=%q", expected, str.Value)
+	if err := testStringObject(evaluated, expected); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -190,6 +186,10 @@ func TestIntegerArrayLiterals(t *testing.T) {
 			"[1 + 1, 2 + 2, 3 + 3]",
 			[]int64{2, 4, 6},
 		},
+		{
+			"[1 + 2 * 3 2 + 2 / 2 3 + 3]",
+			[]int64{7, 3, 6},
+		},
 	}
 
 	for _, tt := range tests {
@@ -216,18 +216,19 @@ func TestArrayIndexExpressions(t *testing.T) {
 		{"[1, 2, 3][0]", 1},
 		{"[1, 2, 3][1]", 2},
 		{"[1, 2, 3][2]", 3},
-		{"let i = 0; [1][i];", 1},
+		{"[1 2 3][2]", 3},
+		{"i := 0; [1][i];", 1},
 		{"[1, 2, 3][1 + 1];", 3},
 		{
-			"let myArray = [1, 2, 3]; myArray[2];",
+			"myArray := [1, 2, 3]; myArray[2];",
 			3,
 		},
 		{
-			"let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
 			6,
 		},
 		{
-			"let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",
+			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
 			2,
 		},
 
@@ -377,6 +378,35 @@ func TestYoyoExpressions(t *testing.T) {
 		evaluated := testEval(tt.input)
 		if err := testIntegerObject(evaluated, tt.expected); err != nil {
 			t.Error(err)
+		}
+	}
+}
+
+func TestYoniExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{"yoni [1 2 3] { yt }", 3},
+		{"arr := [1 2 3]; yoni arr { yt }", 3},
+		{`yoni "testme" { yt }`, "e"},
+		{`my_str := "swag"; yoni my_str { yt }`, "g"},
+		// {`yoni 0..5 { yt }`, 5},
+		// {`yoni i : 0..5 { i }`, 5},
+		// {`yoni v, i : 0..5 { yt }`, 5},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
+				t.Error(err)
+			}
+		case string:
+			if err := testStringObject(evaluated, expected); err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
@@ -744,7 +774,18 @@ func testIntegerObject(obj object.Object, expected int64) error {
 		return fmt.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
+		return fmt.Errorf("Integer object has wrong value. got=%d, want=%d", result.Value, expected)
+	}
+	return nil
+}
+
+func testStringObject(obj object.Object, expected string) error {
+	result, ok := obj.(*object.String)
+	if !ok {
+		return fmt.Errorf("object is not String. got=%T (%+v)", obj, obj)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("String has wrong value. want=%q, got=%q", expected, result.Value)
 	}
 	return nil
 }
