@@ -66,8 +66,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			env.Set(node.Name.Value, val)
 			return val
 		}
-		if _, ok := env.Get(node.Name.Value); ok {
-			env.Set(node.Name.Value, val)
+		if ok := env.Update(node.Name.Value, val); ok {
 			return val
 		}
 		return newError("identifier not found: " + node.Name.Value)

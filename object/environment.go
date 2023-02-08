@@ -24,7 +24,20 @@ func (e *Environment) Get(name string) (Object, bool) {
 	return obj, ok
 }
 
-func (e *Environment) Set(name string, val Object) Object {
+func (e *Environment) Set(name string, val Object) {
 	e.store[name] = val
-	return val
+}
+
+func (e *Environment) Update(name string, val Object) bool {
+	_, ok := e.store[name]
+	if ok {
+		e.store[name] = val
+		return true
+	}
+
+	if !ok && e.outer != nil {
+		return e.outer.Update(name, val)
+	}
+
+	return false
 }

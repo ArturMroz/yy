@@ -365,7 +365,7 @@ func TestYoyoExpressions(t *testing.T) {
 		{"yoyo i := 0; i < 5; { i = i + 1 }", 5},
 		{"yoyo i := 0; i < 5; i = i + 1 { i }", 4},
 		{"i := 69; yoyo i := 0; i < 5; i = i + 1 { i }; i", 69},
-		// {"i := 69; yoyo i = 0; i < 5; i = i + 1 { i }; i", 5}, // TODO fix test
+		{"i := 69; yoyo i = 0; i < 5; i = i + 1 { i }; i", 5},
 		{"result := (yoyo i := 0; i < 5; i = i + 1 { i }); result", 4},
 		{"result := yoyo i := 0; i < 5; i = i + 1 { i }; result", 4},
 
@@ -390,6 +390,7 @@ func TestYoniExpressions(t *testing.T) {
 		{"yoni [1 2 3] { yt }", 3},
 		{"arr := [1 2 3]; yoni arr { yt }", 3},
 		{`yoni "testme" { yt }`, "e"},
+		{"sum := 0; yoni [1 2 3] { sum = sum + yt }; sum", 6},
 		{`my_str := "swag"; yoni my_str { yt }`, "g"},
 		// {`yoni 0..5 { yt }`, 5},
 		// {`yoni i : 0..5 { i }`, 5},
