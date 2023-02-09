@@ -81,7 +81,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LBRACE:    p.parseHashLiteral,
 		token.IF:        p.parseIfExpression,
 		token.YOYO:      p.parseYoyoExpression,
-		token.YONI:      p.parseYoniExpression,
+		token.YALL:      p.parseYallExpression,
 		token.FUNCTION:  p.parseFunctionLiteral,
 		token.BACKSLASH: p.parseLambdaLiteral,
 	}
@@ -320,21 +320,28 @@ func (p *Parser) parseYoyoExpression() ast.Expression {
 	return yoyoExpr
 }
 
-func (p *Parser) parseYoniExpression() ast.Expression {
-	yoniExpr := &ast.YoniExpression{Token: p.curToken}
+func (p *Parser) parseYallExpression() ast.Expression {
+	yallExpr := &ast.YallExpression{Token: p.curToken}
 	p.advance()
 
-	expr := p.parseExpression(LOWEST)
-	yoniExpr.Iterable = expr
-	fmt.Printf("%q %T \n\n", expr, expr)
+	if p.curIs(token.IDENT) && p.peekIs(token.COLON) {
+		yallExpr.KeyName = p.curToken.Literal
 
-	if !p.consume(token.LBRACE, "missing opening '{' after 'yoni'") {
+		p.advance()
+		p.advance()
+	} else {
+		yallExpr.KeyName = "yt" // yt stands for yeeterator
+	}
+
+	yallExpr.Iterable = p.parseExpression(LOWEST)
+
+	if !p.consume(token.LBRACE, "missing opening '{' after 'yall'") {
 		return nil
 	}
 
-	yoniExpr.Body = p.parseBlockStatement()
+	yallExpr.Body = p.parseBlockStatement()
 
-	return yoniExpr
+	return yallExpr
 }
 
 func (p *Parser) parseArrayLiteral() ast.Expression {

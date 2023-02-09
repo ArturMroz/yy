@@ -626,14 +626,28 @@ func TestYoyoExpression(t *testing.T) {
 	}
 }
 
-func TestYoniExpression(t *testing.T) {
+func TestYallExpression(t *testing.T) {
 	tests := []struct {
 		input    string
+		name     string
 		iterable string
 		body     string
 	}{
 		{
-			"yoni array { yt }",
+			"yall array { yt }",
+			"yt",
+			"array",
+			"{ yt }",
+		},
+		{
+			"yall i: array { i }",
+			"i",
+			"array",
+			"{ i }",
+		},
+		{
+			"yall yt: array { yt }",
+			"yt",
 			"array",
 			"{ yt }",
 		},
@@ -642,17 +656,21 @@ func TestYoniExpression(t *testing.T) {
 	for _, tt := range tests {
 		stmt := parseSingleStmt(t, tt.input)
 
-		yyExpr, ok := stmt.Expression.(*ast.YoniExpression)
+		yallExpr, ok := stmt.Expression.(*ast.YallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.YoyoExpression. got=%T", stmt.Expression)
+			t.Fatalf("stmt.Expression is not ast.YallExpression. got=%T", stmt.Expression)
 		}
 
-		if yyExpr.Iterable.String() != tt.iterable {
-			t.Errorf("Iterable is not %q. got=%q", tt.iterable, yyExpr.Iterable.String())
+		if yallExpr.KeyName != tt.name {
+			t.Errorf("KeyName is not %s. got=%s", tt.name, yallExpr.KeyName)
 		}
 
-		if yyExpr.Body.String() != tt.body {
-			t.Errorf("Body is not %q. got=%q", tt.body, yyExpr.Body.String())
+		if yallExpr.Iterable.String() != tt.iterable {
+			t.Errorf("Iterable is not %s. got=%s", tt.iterable, yallExpr.Iterable)
+		}
+
+		if yallExpr.Body.String() != tt.body {
+			t.Errorf("Body is not %s. got=%s", tt.body, yallExpr.Body)
 		}
 	}
 }

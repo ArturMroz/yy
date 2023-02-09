@@ -286,16 +286,17 @@ func (ye *YoyoExpression) String() string {
 		ye.Initialiser.String(), ye.Condition.String(), ye.Post.String(), ye.Body.String())
 }
 
-type YoniExpression struct {
-	Token    token.Token // The 'yoni' token
+type YallExpression struct {
+	Token    token.Token
 	Iterable Expression
+	KeyName  string
 	Body     *BlockStatement
 }
 
-func (ye *YoniExpression) expressionNode()      {}
-func (ye *YoniExpression) TokenLiteral() string { return ye.Token.Literal }
-func (ye *YoniExpression) String() string {
-	return fmt.Sprintf("yoni %s { %s }", ye.Iterable.String(), ye.Body.String())
+func (ye *YallExpression) expressionNode()      {}
+func (ye *YallExpression) TokenLiteral() string { return ye.Token.Literal }
+func (ye *YallExpression) String() string {
+	return fmt.Sprintf("yall %s: %s { %s }", ye.KeyName, ye.Iterable.String(), ye.Body.String())
 }
 
 type BlockStatement struct {

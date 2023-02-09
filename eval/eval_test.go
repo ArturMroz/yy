@@ -416,20 +416,21 @@ func TestYoyoExpressions(t *testing.T) {
 	}
 }
 
-func TestYoniExpressions(t *testing.T) {
+func TestYallExpressions(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected any
 	}{
-		{"yoni [1 2 3] { yt }", 3},
-		{"arr := [1 2 3]; yoni arr { yt }", 3},
-		{`yoni "testme" { yt }`, "e"},
-		{"sum := 0; yoni [1 2 3] { sum = sum + yt }; sum", 6},
-		{`my_str := "swag"; yoni my_str { yt }`, "g"},
-		{`yoni 0..5 { yt }`, 5},
-		{`sum := 0; yoni 1..4 { sum = sum + yt }; sum`, 10},
-		// {`yoni i : 0..5 { i }`, 5},
-		// {`yoni v, i : 0..5 { yt }`, 5},
+		{"yall [1, 2, 3] { yt }", 3},
+		{"arr := [1, 2, 3]; yall arr { yt }", 3},
+		{`yall "testme" { yt }`, "e"},
+		{"sum := 0; yall [1, 2, 3] { sum = sum + yt }; sum", 6},
+		{`my_str := "swag"; yall my_str { yt }`, "g"},
+		{`yall 0..5 { yt }`, 5},
+		{`yall 4..4 { yt }`, 4},
+		{`sum := 0; yall 1..4 { sum = sum + yt }; sum`, 10},
+		{`yall i: 0..5 { i }`, 5},
+		{`sum := 0; yall j: 1..4 { sum = sum + j }; sum`, 10},
 	}
 
 	for _, tt := range tests {
@@ -534,6 +535,14 @@ if (10 > 1) {
 		{
 			`{"name": "Monkey"}[fun(x) { x }];`,
 			"key not hashable: FUNCTION",
+		},
+		{
+			`yall 0..5 { x }`,
+			"identifier not found: x",
+		},
+		{
+			`yall i: 0..5 { yt }`,
+			"identifier not found: yt",
 		},
 	}
 

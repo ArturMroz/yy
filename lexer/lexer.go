@@ -60,7 +60,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.switch2(token.COLON, token.WALRUS)
 
 	case '.':
-		if l.peekChar() == '.' {
+		if l.peek() == '.' {
 			l.advance()
 			tok = token.Token{Type: token.RANGE, Literal: ".."}
 		}
@@ -109,7 +109,7 @@ func (l *Lexer) advance() {
 	l.readPosition++
 }
 
-func (l *Lexer) peekChar() byte {
+func (l *Lexer) peek() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
 	}
@@ -151,7 +151,7 @@ func (l *Lexer) skipWhitespace() {
 			l.advance()
 
 		case '/':
-			if l.peekChar() == '/' {
+			if l.peek() == '/' {
 				// treating comments as whitespace, sue me
 				for l.ch != '\n' && l.ch != 0 {
 					l.advance()
@@ -167,7 +167,7 @@ func (l *Lexer) skipWhitespace() {
 }
 
 func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
-	if l.peekChar() == '=' {
+	if l.peek() == '=' {
 		l.advance()
 		return token.Token{Type: tok2, Literal: string(tok2)}
 	}
