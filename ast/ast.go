@@ -287,7 +287,7 @@ func (ye *YoyoExpression) String() string {
 }
 
 type YetExpression struct {
-	Token     token.Token // The 'yoyo' token
+	Token     token.Token
 	Condition Expression
 	Body      *BlockStatement
 }

@@ -10,30 +10,30 @@ import (
 	"ylang/lexer"
 )
 
-func TestLetStatements(t *testing.T) {
-	tests := []struct {
-		input              string
-		expectedIdentifier string
-		expectedValue      any
-	}{
-		{"let x = 69;", "x", 69},
-		{"let y = true;", "y", true},
-		{"let z = y;", "z", "y"},
-	}
+// func TestLetStatements(t *testing.T) {
+// 	tests := []struct {
+// 		input              string
+// 		expectedIdentifier string
+// 		expectedValue      any
+// 	}{
+// 		{"let x = 69;", "x", 69},
+// 		{"let y = true;", "y", true},
+// 		{"let z = y;", "z", "y"},
+// 	}
 
-	for _, tt := range tests {
-		program := parse(t, tt.input)
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
-		}
-		if err := testLetStatement(program.Statements[0], tt.expectedIdentifier); err != nil {
-			t.Error(err)
-		}
-		if err := testLiteralExpression(program.Statements[0].(*ast.LetStatement).Value, tt.expectedValue); err != nil {
-			t.Error(err)
-		}
-	}
-}
+// 	for _, tt := range tests {
+// 		program := parse(t, tt.input)
+// 		if len(program.Statements) != 1 {
+// 			t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+// 		}
+// 		if err := testLetStatement(program.Statements[0], tt.expectedIdentifier); err != nil {
+// 			t.Error(err)
+// 		}
+// 		if err := testLiteralExpression(program.Statements[0].(*ast.LetStatement).Value, tt.expectedValue); err != nil {
+// 			t.Error(err)
+// 		}
+// 	}
+// }
 
 func TestAssignExpression(t *testing.T) {
 	tests := []struct {
@@ -50,7 +50,7 @@ func TestAssignExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 		if err := testLiteralExpression(stmt.Expression.(*ast.AssignExpression).Value, tt.expectedValue); err != nil {
 			t.Error(err)
 		}
@@ -60,7 +60,7 @@ func TestAssignExpression(t *testing.T) {
 func TestYeetStatements(t *testing.T) {
 	tests := []struct {
 		input         string
-		expectedValue interface{}
+		expectedValue any
 	}{
 		{"yeet 8;", 8},
 		{"yeet true;", true},
@@ -75,6 +75,7 @@ func TestYeetStatements(t *testing.T) {
 		}
 
 		stmt := program.Statements[0]
+
 		yeetStmt, ok := stmt.(*ast.YeetStatement)
 		if !ok {
 			t.Errorf("stmt not *ast.YeetStatement. got=%T", stmt)
@@ -92,23 +93,17 @@ func TestIdentifierExpression(t *testing.T) {
 	input := "foobar;"
 	expected := "foobar"
 
-	stmt := parseSingleStmt(t, input)
-	ident, ok := stmt.Expression.(*ast.Identifier)
-	if !ok {
-		t.Fatalf("expr not *ast.Identifier. got=%T", stmt.Expression)
-	}
-	if ident.Value != expected {
-		t.Errorf("ident.Value not %s. got=%s", expected, ident.Value)
-	}
-	if ident.TokenLiteral() != expected {
-		t.Errorf("ident.TokenLiteral not %s. got=%s", expected, ident.TokenLiteral())
+	stmt := parseSingleExprStmt(t, input)
+	if err := testIdentifier(stmt.Expression, expected); err != nil {
+		t.Error(err)
 	}
 }
 
 func TestIntegerLiteralExpression(t *testing.T) {
 	input := "5;"
 	expected := int64(5)
-	stmt := parseSingleStmt(t, input)
+
+	stmt := parseSingleExprStmt(t, input)
 	if err := testIntegerLiteral(stmt.Expression, expected); err != nil {
 		t.Error(err)
 	}
@@ -118,7 +113,7 @@ func TestStringLiteralExpression(t *testing.T) {
 	input := `"Yo, world!";`
 	expected := "Yo, world!"
 
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 	literal, ok := stmt.Expression.(*ast.StringLiteral)
 	if !ok {
 		t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
@@ -129,10 +124,9 @@ func TestStringLiteralExpression(t *testing.T) {
 }
 
 func TestParsingArrayLiterals(t *testing.T) {
-	// TODO add more cases
 	input := "[1, 2 * 2, 3 + 3]"
 
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 	array, ok := stmt.Expression.(*ast.ArrayLiteral)
 	if !ok {
 		t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
@@ -163,7 +157,7 @@ func TestParsingArrayLiterals3(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 		array, ok := stmt.Expression.(*ast.ArrayLiteral)
 		if !ok {
 			t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
@@ -192,7 +186,7 @@ func TestRangeLiteral(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 
 		rangeLit, ok := stmt.Expression.(*ast.RangeLiteral)
 		if !ok {
@@ -202,7 +196,6 @@ func TestRangeLiteral(t *testing.T) {
 		if rangeLit.Start.String() != tt.start {
 			t.Errorf("Iterable is not %q. got=%q", tt.start, rangeLit.Start.String())
 		}
-
 		if rangeLit.End.String() != tt.end {
 			t.Errorf("End is not %q. got=%q", tt.end, rangeLit.End.String())
 		}
@@ -217,7 +210,7 @@ func TestParsingHashLiteralsStringKeys(t *testing.T) {
 		"three": 3,
 	}
 
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 	hash, ok := stmt.Expression.(*ast.HashLiteral)
 	if !ok {
 		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
@@ -242,7 +235,7 @@ func TestParsingHashLiterals(t *testing.T) {
 	// TODO more test cases
 	input := "{}"
 
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 	hash, ok := stmt.Expression.(*ast.HashLiteral)
 	if !ok {
 		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
@@ -254,7 +247,7 @@ func TestParsingHashLiterals(t *testing.T) {
 
 func TestParsingHashLiteralsWithExpressions(t *testing.T) {
 	input := `{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}`
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 	hash, ok := stmt.Expression.(*ast.HashLiteral)
 	if !ok {
 		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
@@ -295,7 +288,7 @@ func TestParsingHashLiteralsWithExpressions(t *testing.T) {
 func TestParsingIndexExpressions(t *testing.T) {
 	// TOOD add more test cases
 	input := "myArray[1 + 1]"
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
 	if !ok {
 		t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
@@ -321,7 +314,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	}
 
 	for _, tt := range prefixTests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 		if err := testPrefixExpression(stmt.Expression, tt.expected, tt.operator); err != nil {
 			t.Error(err)
 		}
@@ -349,7 +342,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 
 	for _, tt := range infixTests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 		if err := testInfixExpression(stmt.Expression, tt.leftValue, tt.operator, tt.rightValue); err != nil {
 			t.Error(err)
 		}
@@ -511,7 +504,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 func TestIfExpression(t *testing.T) {
 	// TODO add more test cases
 	input := `if (x < y) { x }`
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 
 	expr, ok := stmt.Expression.(*ast.IfExpression)
 	if !ok {
@@ -583,7 +576,7 @@ func TestYoyoExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 
 		yyExpr, ok := stmt.Expression.(*ast.YoyoExpression)
 		if !ok {
@@ -637,10 +630,15 @@ func TestYetExpression(t *testing.T) {
 			"(i < 5)",
 			"{ (i = (i + 1)) }",
 		},
+		{
+			"yet true { yell() }",
+			"true",
+			"{ yell() }",
+		},
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 
 		yyExpr, ok := stmt.Expression.(*ast.YetExpression)
 		if !ok {
@@ -685,7 +683,7 @@ func TestYallExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 
 		yallExpr, ok := stmt.Expression.(*ast.YallExpression)
 		if !ok {
@@ -708,7 +706,7 @@ func TestYallExpression(t *testing.T) {
 
 func TestIfElseExpression(t *testing.T) {
 	input := `if (x < y) { x } else { y }`
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 
 	expr, ok := stmt.Expression.(*ast.IfExpression)
 	if !ok {
@@ -779,7 +777,7 @@ func TestParseIfExpressions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 
 		ifExpr, ok := stmt.Expression.(*ast.IfExpression)
 		if !ok {
@@ -806,9 +804,9 @@ func TestParseIfExpressions(t *testing.T) {
 	}
 }
 
-func TestFunctionLiteralParsing(t *testing.T) {
-	input := `fun(x, y) { x + y; }`
-	stmt := parseSingleStmt(t, input)
+func TestLambdaLiteralParsing(t *testing.T) {
+	input := `\(x, y) { x + y }`
+	stmt := parseSingleExprStmt(t, input)
 
 	function, ok := stmt.Expression.(*ast.FunctionLiteral)
 	if !ok {
@@ -836,13 +834,18 @@ func TestFunctionParameterParsing(t *testing.T) {
 		input          string
 		expectedParams []string
 	}{
-		{"fun() {};", []string{}},
-		{"fun(x) {};", []string{"x"}},
-		{"fun(x, y, z) {};", []string{"x", "y", "z"}},
-		{"fun(x, y, z,) {};", []string{"x", "y", "z"}},
+		{`\() {};`, []string{}},
+		{`\ {};`, []string{}},
+		{`\(x) {};`, []string{"x"}},
+		{`\x {};`, []string{"x"}},
+		{`\(x, y, z) {};`, []string{"x", "y", "z"}},
+		{`\(x, y, z,) {};`, []string{"x", "y", "z"}},
+		{`\(x y z) {};`, []string{"x", "y", "z"}},
+		{`\x y z {};`, []string{"x", "y", "z"}},
 	}
+
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 		fn := stmt.Expression.(*ast.FunctionLiteral)
 		if len(fn.Parameters) != len(tt.expectedParams) {
 			t.Errorf("length parameters wrong. want %d, got=%d\n", len(tt.expectedParams), len(fn.Parameters))
@@ -855,34 +858,9 @@ func TestFunctionParameterParsing(t *testing.T) {
 	}
 }
 
-func TestLambdaLiteralParsing(t *testing.T) {
-	input := `\(x, y) { x + y; }`
-	stmt := parseSingleStmt(t, input)
-
-	function, ok := stmt.Expression.(*ast.FunctionLiteral)
-	if !ok {
-		t.Fatalf("stmt.Expression is not ast.FunctionLiteral. got=%T", stmt.Expression)
-	}
-	if len(function.Parameters) != 2 {
-		t.Fatalf("function literal parameters wrong. want 2, got=%d\n", len(function.Parameters))
-	}
-
-	testLiteralExpression(function.Parameters[0], "x")
-	testLiteralExpression(function.Parameters[1], "y")
-
-	if len(function.Body.Statements) != 1 {
-		t.Fatalf("function.Body.Statements has not 1 statements. got=%d\n", len(function.Body.Statements))
-	}
-	bodyStmt, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("function body stmt is not ast.ExpressionStatement. got=%T", function.Body.Statements[0])
-	}
-	testInfixExpression(bodyStmt.Expression, "x", "+", "y")
-}
-
 func TestCallExpressionParsing(t *testing.T) {
 	input := "myFunction(1, 2 * 3, 4 + 5);"
-	stmt := parseSingleStmt(t, input)
+	stmt := parseSingleExprStmt(t, input)
 
 	expr, ok := stmt.Expression.(*ast.CallExpression)
 	if !ok {
@@ -917,7 +895,7 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		stmt := parseSingleStmt(t, tt.input)
+		stmt := parseSingleExprStmt(t, tt.input)
 		callExpr := stmt.Expression.(*ast.CallExpression)
 		if len(callExpr.Arguments) != len(tt.expectedArgs) {
 			t.Errorf("length args wrong. want %d, got=%d\n", len(tt.expectedArgs), len(callExpr.Arguments))
@@ -957,10 +935,10 @@ func checkParserErrors(t *testing.T, p *Parser) {
 	t.FailNow()
 }
 
-func parseSingleStmt(t *testing.T, input string) *ast.ExpressionStatement {
+func parseSingleExprStmt(t *testing.T, input string) *ast.ExpressionStatement {
 	program := parse(t, input)
 	if len(program.Statements) != 1 {
-		t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+		t.Fatalf("program.Statements does not contain a single statement. got=%d\n", len(program.Statements))
 	}
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
@@ -973,8 +951,8 @@ func testLiteralExpression(expr ast.Expression, expected any) error {
 	switch v := expected.(type) {
 	case int:
 		return testIntegerLiteral(expr, int64(v))
-	case int64:
-		return testIntegerLiteral(expr, v)
+	// case int64:
+	// 	return testIntegerLiteral(expr, v)
 	case string:
 		return testIdentifier(expr, v)
 	case bool:
@@ -1053,24 +1031,24 @@ func testPrefixExpression(expr ast.Expression, expectedRight any, operator strin
 	return testLiteralExpression(prefixExpr.Right, expectedRight)
 }
 
-func testLetStatement(stmt ast.Statement, name string) error {
-	if stmt.TokenLiteral() != "let" {
-		return fmt.Errorf("s.TokenLiteral not 'let'. got=%q", stmt.TokenLiteral())
-	}
+// func testLetStatement(stmt ast.Statement, name string) error {
+// 	if stmt.TokenLiteral() != "let" {
+// 		return fmt.Errorf("s.TokenLiteral not 'let'. got=%q", stmt.TokenLiteral())
+// 	}
 
-	letStmt, ok := stmt.(*ast.LetStatement)
-	if !ok {
-		return fmt.Errorf("s not *ast.LetStatement. got=%T", stmt)
-	}
-	if letStmt.Name.Value != name {
-		return fmt.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStmt.Name.Value)
-	}
-	if letStmt.Name.TokenLiteral() != name {
-		return fmt.Errorf("letStmt.Name.TokenLiteral() not '%s'. got=%s", name, letStmt.Name.TokenLiteral())
-	}
+// 	letStmt, ok := stmt.(*ast.LetStatement)
+// 	if !ok {
+// 		return fmt.Errorf("s not *ast.LetStatement. got=%T", stmt)
+// 	}
+// 	if letStmt.Name.Value != name {
+// 		return fmt.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStmt.Name.Value)
+// 	}
+// 	if letStmt.Name.TokenLiteral() != name {
+// 		return fmt.Errorf("letStmt.Name.TokenLiteral() not '%s'. got=%s", name, letStmt.Name.TokenLiteral())
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 //
 // PROGRAMS FROM EXAMPLES/
