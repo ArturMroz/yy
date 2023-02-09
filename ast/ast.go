@@ -286,6 +286,18 @@ func (ye *YoyoExpression) String() string {
 		ye.Initialiser.String(), ye.Condition.String(), ye.Post.String(), ye.Body.String())
 }
 
+type YetExpression struct {
+	Token     token.Token // The 'yoyo' token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (ye *YetExpression) expressionNode()      {}
+func (ye *YetExpression) TokenLiteral() string { return ye.Token.Literal }
+func (ye *YetExpression) String() string {
+	return fmt.Sprintf("yet %s { %s }", ye.Condition.String(), ye.Body.String())
+}
+
 type YallExpression struct {
 	Token    token.Token
 	Iterable Expression

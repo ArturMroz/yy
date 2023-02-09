@@ -82,6 +82,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.IF:        p.parseIfExpression,
 		token.YOYO:      p.parseYoyoExpression,
 		token.YALL:      p.parseYallExpression,
+		token.YET:       p.parseYetExpression,
 		token.FUNCTION:  p.parseFunctionLiteral,
 		token.BACKSLASH: p.parseLambdaLiteral,
 	}
@@ -318,6 +319,21 @@ func (p *Parser) parseYoyoExpression() ast.Expression {
 	yoyoExpr.Body = p.parseBlockStatement()
 
 	return yoyoExpr
+}
+
+func (p *Parser) parseYetExpression() ast.Expression {
+	yetExpr := &ast.YetExpression{Token: p.curToken}
+	p.advance()
+
+	yetExpr.Condition = p.parseExpression(LOWEST)
+
+	if !p.consume(token.LBRACE, "missing opening '{' after 'yet'") {
+		return nil
+	}
+
+	yetExpr.Body = p.parseBlockStatement()
+
+	return yetExpr
 }
 
 func (p *Parser) parseYallExpression() ast.Expression {

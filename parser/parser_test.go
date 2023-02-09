@@ -626,6 +626,37 @@ func TestYoyoExpression(t *testing.T) {
 	}
 }
 
+func TestYetExpression(t *testing.T) {
+	tests := []struct {
+		input     string
+		condition string
+		body      string
+	}{
+		{
+			"yet i < 5 { i = i + 1 }",
+			"(i < 5)",
+			"{ (i = (i + 1)) }",
+		},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleStmt(t, tt.input)
+
+		yyExpr, ok := stmt.Expression.(*ast.YetExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.YetExpression. got=%T", stmt.Expression)
+		}
+
+		if yyExpr.Condition.String() != tt.condition {
+			t.Errorf("condition is not %s. got=%s", tt.condition, yyExpr.Condition)
+		}
+
+		if yyExpr.Body.String() != tt.body {
+			t.Errorf("condition.String() is not %s. got=%s", tt.body, yyExpr.Body)
+		}
+	}
+}
+
 func TestYallExpression(t *testing.T) {
 	tests := []struct {
 		input    string

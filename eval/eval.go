@@ -146,6 +146,23 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 		}
 
+	case *ast.YetExpression:
+		extendedEnv := object.NewEnclosedEnvironment(env)
+
+		var result object.Object
+		for {
+			condition := Eval(node.Condition, extendedEnv)
+			if isError(condition) {
+				return condition
+			}
+
+			if !isTruthy(condition) {
+				return result
+			}
+
+			result = Eval(node.Body, extendedEnv)
+		}
+
 	case *ast.YallExpression:
 		var result object.Object
 		iter := Eval(node.Iterable, env)
@@ -211,7 +228,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 
 	case *ast.ArrayLiteral:
-		var elts []object.Object
+		elts := []object.Object{}
 		for _, elt := range node.Elements {
 			evaluated := Eval(elt, env)
 			if isError(evaluated) {
@@ -414,6 +431,7 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		}
 
 	case left.Type() == object.NULL_OBJ && right.Type() == object.NULL_OBJ:
+		// TODO compare other objects to null
 		return toYeetBool(operator == "==")
 
 	case left.Type() == object.ARRAY_OBJ && right.Type() == object.ARRAY_OBJ:

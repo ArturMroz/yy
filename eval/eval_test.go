@@ -416,6 +416,24 @@ func TestYoyoExpressions(t *testing.T) {
 	}
 }
 
+func TestYetExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"i := 0; yet i < 5 { i = i + 1 }", 5},
+		{"sum := 0; i := 1; yet i < 5 { sum = sum + i; i = i + 1 }; sum", 10},
+		{"i := 1; yet false { i = 69 }; i", 1},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		if err := testIntegerObject(evaluated, tt.expected); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 func TestYallExpressions(t *testing.T) {
 	tests := []struct {
 		input    string
