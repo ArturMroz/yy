@@ -79,7 +79,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LPAREN:    p.parseGroupedExpression,
 		token.LBRACKET:  p.parseArrayLiteral,
 		token.LBRACE:    p.parseHashLiteral,
-		token.IF:        p.parseIfExpression,
+		token.YIF:       p.parseYifExpression,
 		token.YOYO:      p.parseYoyoExpression,
 		token.YALL:      p.parseYallExpression,
 		token.YET:       p.parseYetExpression,
@@ -243,27 +243,27 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseIfExpression() ast.Expression {
-	ifExpr := &ast.IfExpression{Token: p.curToken}
+func (p *Parser) parseYifExpression() ast.Expression {
+	yifExpr := &ast.YifExpression{Token: p.curToken}
 
 	p.advance()
-	ifExpr.Condition = p.parseExpression(LOWEST)
+	yifExpr.Condition = p.parseExpression(LOWEST)
 
-	if !p.eat(token.LBRACE, "missing opening '{' after condition") {
+	if !p.eat(token.LBRACE, "missing opening '{' after 'yif' condition") {
 		return nil
 	}
 
-	ifExpr.Consequence = p.parseBlockStatement()
+	yifExpr.Consequence = p.parseBlockStatement()
 
-	if p.peekIs(token.ELSE) {
+	if p.peekIs(token.YELS) {
 		p.advance()
-		if !p.eat(token.LBRACE, "missing opening '{' after 'else'") {
+		if !p.eat(token.LBRACE, "missing opening '{' after 'yels'") {
 			return nil
 		}
-		ifExpr.Alternative = p.parseBlockStatement()
+		yifExpr.Alternative = p.parseBlockStatement()
 	}
 
-	return ifExpr
+	return yifExpr
 }
 
 func (p *Parser) parseYoyoExpression() ast.Expression {

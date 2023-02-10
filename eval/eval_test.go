@@ -211,22 +211,22 @@ func TestHashIndexExpressions(t *testing.T) {
 	})
 }
 
-func TestIfElseExpressions(t *testing.T) {
+func TestYifYelsExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{"if true { 10 }", 10},
-		{"if false { 10 }", nil},
-		{"if null { 10 }", nil},
-		{"if 1 { 10 }", 10},
-		{"if 1 < 2 { 10 }", 10},
-		{"if 1 > 2 { 10 }", nil},
-		{"if 1 > 2 { 10 } else { 20 }", 20},
-		{"if 1 < 2 { 10 } else { 20 }", 10},
-		{"if null { 10 } else { 20 }", 20},
-		{"result := if null { 10 } else { 20 }; result", 20},
-		{"5 + if null { 10 } else { 20 }", 25},
-		{"if null { 10 } else { 20 } * 2", 40},
-		{"5 + if null { 10 } else { 20 } * 2", 45},
-		{"result := 3 * if null { 10 } else { 20 } + 9; result", 69},
+		{"yif true { 10 }", 10},
+		{"yif false { 10 }", nil},
+		{"yif null { 10 }", nil},
+		{"yif 1 { 10 }", 10},
+		{"yif 1 < 2 { 10 }", 10},
+		{"yif 1 > 2 { 10 }", nil},
+		{"yif 1 > 2 { 10 } yels { 20 }", 20},
+		{"yif 1 < 2 { 10 } yels { 20 }", 10},
+		{"yif null { 10 } yels { 20 }", 20},
+		{"result := yif null { 10 } yels { 20 }; result", 20},
+		{"5 + yif null { 10 } yels { 20 }", 25},
+		{"yif null { 10 } yels { 20 } * 2", 40},
+		{"5 + yif null { 10 } yels { 20 } * 2", 45},
+		{"result := 3 * yif null { 10 } yels { 20 } + 9; result", 69},
 	})
 }
 
@@ -280,8 +280,8 @@ func TestYeetStatements(t *testing.T) {
 		{"9; yeet 2 * 5; 9;", 10},
 		{
 			`
-if 10 > 1 {
-	if 10 > 1 {
+yif 10 > 1 {
+	yif 10 > 1 {
 		yeet 10;
 	}
 	yeet 1;
@@ -442,13 +442,13 @@ func TestErrorHandling(t *testing.T) {
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
-			"if (10 > 1) { true + false; }",
+			"yif (10 > 1) { true + false; }",
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			`
-if (10 > 1) {
-	if (10 > 1) {
+yif (10 > 1) {
+	yif (10 > 1) {
 		yeet true + false;
 	}
 	yeet 1;

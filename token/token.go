@@ -47,8 +47,8 @@ const (
 	YO    = "YO"
 	TRUE  = "TRUE"
 	FALSE = "FALSE"
-	IF    = "IF"
-	ELSE  = "ELSE"
+	YIF   = "YIF"
+	YELS  = "YELS"
 	YEET  = "YEET"
 	YOYO  = "YOYO"
 	YALL  = "YALL"
@@ -60,8 +60,8 @@ var keywords = map[string]TokenType{
 	"yo":    YO,
 	"true":  TRUE,
 	"false": FALSE,
-	"if":    IF,
-	"else":  ELSE,
+	"yif":   YIF,
+	"yels":  YELS,
 	"yeet":  YEET,
 	"yoyo":  YOYO,
 	"yet":   YET,

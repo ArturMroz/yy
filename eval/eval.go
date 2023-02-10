@@ -94,7 +94,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return evalInfixExpression(node.Operator, left, right)
 
-	case *ast.IfExpression:
+	case *ast.YifExpression:
 		condition := Eval(node.Condition, env)
 		if isError(condition) {
 			return condition

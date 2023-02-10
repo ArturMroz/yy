@@ -227,23 +227,20 @@ func (ie *InfixExpression) String() string {
 	return fmt.Sprintf("(%s %s %s)", ie.Left.String(), ie.Operator, ie.Right.String())
 }
 
-type IfExpression struct {
-	Token       token.Token // The 'if' token
+type YifExpression struct {
+	Token       token.Token
 	Condition   Expression
 	Consequence *BlockStatement
 	Alternative *BlockStatement
 }
 
-func (ie *IfExpression) expressionNode()      {}
-func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
-func (ie *IfExpression) String() string {
+func (ie *YifExpression) expressionNode()      {}
+func (ie *YifExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *YifExpression) String() string {
 	var b strings.Builder
-	b.WriteString("if ")
-	b.WriteString(ie.Condition.String())
-	b.WriteString(" ")
-	b.WriteString(ie.Consequence.String())
+	fmt.Fprintf(&b, "yif %s %s", ie.Condition, ie.Consequence)
 	if ie.Alternative != nil {
-		b.WriteString("else ")
+		b.WriteString("yels ")
 		b.WriteString(ie.Alternative.String())
 	}
 	return b.String()

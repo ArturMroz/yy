@@ -503,10 +503,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 
 func TestIfExpression(t *testing.T) {
 	// TODO add more test cases
-	input := `if (x < y) { x }`
+	input := `yif (x < y) { x }`
 	stmt := parseSingleExprStmt(t, input)
 
-	expr, ok := stmt.Expression.(*ast.IfExpression)
+	expr, ok := stmt.Expression.(*ast.YifExpression)
 	if !ok {
 		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
 	}
@@ -704,11 +704,11 @@ func TestYallExpression(t *testing.T) {
 	}
 }
 
-func TestIfElseExpression(t *testing.T) {
-	input := `if (x < y) { x } else { y }`
+func TestYifYelsExpression(t *testing.T) {
+	input := `yif (x < y) { x } yels { y }`
 	stmt := parseSingleExprStmt(t, input)
 
-	expr, ok := stmt.Expression.(*ast.IfExpression)
+	expr, ok := stmt.Expression.(*ast.YifExpression)
 	if !ok {
 		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
 	}
@@ -745,33 +745,33 @@ func TestParseIfExpressions(t *testing.T) {
 		expectedAlternative string
 	}{
 		{
-			"if x < y { x }",
+			"yif x < y { x }",
 			"(x < y)",
 			"{ x }",
 			"",
 		},
 		{
-			"if (x < y) { x }",
+			"yif (x < y) { x }",
 			"(x < y)",
 			"{ x }",
 			"",
 		},
 		{
-			"if x < y { x } else { y }",
+			"yif x < y { x } yels { y }",
 			"(x < y)",
 			"{ x }",
 			"{ y }",
 		},
 		{
-			"if null { x } else { y }",
+			"yif null { x } yels { y }",
 			"null",
 			"{ x }",
 			"{ y }",
 		},
 		{
-			"if (x < y) { if (x > y) { x } }",
+			"yif (x < y) { yif (x > y) { x } }",
 			"(x < y)",
-			"{ if (x > y) { x } }",
+			"{ yif (x > y) { x } }",
 			"",
 		},
 	}
@@ -779,7 +779,7 @@ func TestParseIfExpressions(t *testing.T) {
 	for _, tt := range tests {
 		stmt := parseSingleExprStmt(t, tt.input)
 
-		ifExpr, ok := stmt.Expression.(*ast.IfExpression)
+		ifExpr, ok := stmt.Expression.(*ast.YifExpression)
 		if !ok {
 			t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
 		}
