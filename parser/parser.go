@@ -83,7 +83,6 @@ func New(l *lexer.Lexer) *Parser {
 		token.YOYO:      p.parseYoyoExpression,
 		token.YALL:      p.parseYallExpression,
 		token.YET:       p.parseYetExpression,
-		token.FUNCTION:  p.parseFunctionLiteral,
 		token.BACKSLASH: p.parseLambdaLiteral,
 	}
 
@@ -126,8 +125,6 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
-	case token.LET:
-		return p.parseLetStatement()
 	case token.YEET:
 		return p.parseYeetStatement()
 	default:
@@ -145,28 +142,6 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.advance()
 	}
 	return block
-}
-
-func (p *Parser) parseLetStatement() *ast.LetStatement {
-	letStmt := &ast.LetStatement{Token: p.curToken}
-	if !p.consume(token.IDENT, "missing identfier after 'let' keyword") {
-		return nil // TODO return error
-	}
-
-	letStmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-	if !p.consume(token.ASSIGN, "missing '=' after identifier in assignment") {
-		return nil
-	}
-
-	p.advance()
-
-	letStmt.Value = p.parseExpression(LOWEST)
-
-	if p.peekIs(token.SEMICOLON) { // optional semicolon
-		p.advance()
-	}
-
-	return letStmt
 }
 
 func (p *Parser) parseYeetStatement() *ast.YeetStatement {
@@ -261,7 +236,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.advance()
 
 	expr := p.parseExpression(LOWEST)
-	if !p.consume(token.RPAREN, "missing closing ')' in grouped expression") {
+	if !p.eat(token.RPAREN, "missing closing ')' in grouped expression") {
 		return nil
 	}
 
@@ -274,7 +249,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	p.advance()
 	ifExpr.Condition = p.parseExpression(LOWEST)
 
-	if !p.consume(token.LBRACE, "missing opening '{' after condition") {
+	if !p.eat(token.LBRACE, "missing opening '{' after condition") {
 		return nil
 	}
 
@@ -282,7 +257,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	if p.peekIs(token.ELSE) {
 		p.advance()
-		if !p.consume(token.LBRACE, "missing opening '{' after 'else'") {
+		if !p.eat(token.LBRACE, "missing opening '{' after 'else'") {
 			return nil
 		}
 		ifExpr.Alternative = p.parseBlockStatement()
@@ -312,7 +287,7 @@ func (p *Parser) parseYoyoExpression() ast.Expression {
 		yoyoExpr.Post = p.parseExpression(LOWEST)
 	}
 
-	if !p.consume(token.LBRACE, "missing opening '{' after 'yoyo'") {
+	if !p.eat(token.LBRACE, "missing opening '{' after 'yoyo'") {
 		return nil
 	}
 
@@ -327,7 +302,7 @@ func (p *Parser) parseYetExpression() ast.Expression {
 
 	yetExpr.Condition = p.parseExpression(LOWEST)
 
-	if !p.consume(token.LBRACE, "missing opening '{' after 'yet'") {
+	if !p.eat(token.LBRACE, "missing opening '{' after 'yet'") {
 		return nil
 	}
 
@@ -337,7 +312,7 @@ func (p *Parser) parseYetExpression() ast.Expression {
 }
 
 func (p *Parser) parseYallExpression() ast.Expression {
-	yallExpr := &ast.YallExpression{Token: p.curToken}
+	yallExpr := &ast.YallExpression{Token: p.curToken, KeyName: "yt"}
 	p.advance()
 
 	if p.curIs(token.IDENT) && p.peekIs(token.COLON) {
@@ -345,13 +320,11 @@ func (p *Parser) parseYallExpression() ast.Expression {
 
 		p.advance()
 		p.advance()
-	} else {
-		yallExpr.KeyName = "yt" // yt stands for yeeterator
 	}
 
 	yallExpr.Iterable = p.parseExpression(LOWEST)
 
-	if !p.consume(token.LBRACE, "missing opening '{' after 'yall'") {
+	if !p.eat(token.LBRACE, "missing opening '{' after 'yall'") {
 		return nil
 	}
 
@@ -368,12 +341,12 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 
 		arr.Elements = append(arr.Elements, p.parseExpression(LOWEST))
 
-		if p.peekIs(token.COMMA) { // TODO tighten up after writing more unit tests
+		if p.peekIs(token.COMMA) { // TODO make comma nonoptional
 			p.advance()
 		}
 	}
 
-	if !p.consume(token.RBRACKET, "missing closing ']' in array literal") {
+	if !p.eat(token.RBRACKET, "missing closing ']' in array literal") {
 		return nil
 	}
 
@@ -381,14 +354,17 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 }
 
 func (p *Parser) parseHashLiteral() ast.Expression {
-	hash := &ast.HashLiteral{Token: p.curToken, Pairs: map[ast.Expression]ast.Expression{}}
+	hash := &ast.HashLiteral{
+		Token: p.curToken,
+		Pairs: map[ast.Expression]ast.Expression{},
+	}
 
 	for !p.peekIs(token.RBRACE) && !p.peekIs(token.EOF) {
 		p.advance()
 
 		key := p.parseExpression(LOWEST)
 
-		if !p.consume(token.COLON, "missing ':' in hash literal after a key") {
+		if !p.eat(token.COLON, "missing ':' in hash literal after a key") {
 			return nil
 		}
 
@@ -402,7 +378,7 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 		}
 	}
 
-	if !p.consume(token.RBRACE, "missing closing '}' in hash literal") {
+	if !p.eat(token.RBRACE, "missing closing '}' in hash literal") {
 		return nil
 	}
 
@@ -411,7 +387,7 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
-	if !p.consume(token.LPAREN, "missing opening '(' after function") {
+	if !p.eat(token.LPAREN, "missing opening '(' after function") {
 		return nil
 	}
 
@@ -426,11 +402,11 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 		}
 	}
 
-	if !p.consume(token.RPAREN, "missing closing ')' after function parameters") {
+	if !p.eat(token.RPAREN, "missing closing ')' after function parameters") {
 		return nil
 	}
 
-	if !p.consume(token.LBRACE, "missing opening '{' before function body") {
+	if !p.eat(token.LBRACE, "missing opening '{' before function body") {
 		return nil
 	}
 
@@ -461,7 +437,7 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 		p.advance()
 	}
 
-	if !p.consume(token.LBRACE, "missing opening '{' before lambda body") {
+	if !p.eat(token.LBRACE, "missing opening '{' before lambda body") {
 		return nil
 	}
 
@@ -527,7 +503,7 @@ func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
 	p.advance()
 	indexExpr.Index = p.parseExpression(LOWEST)
 
-	if !p.consume(token.RBRACKET, "missing closing ']' when indexing an array") {
+	if !p.eat(token.RBRACKET, "missing closing ']' when indexing an array") {
 		return nil
 	}
 
@@ -576,7 +552,7 @@ func (p *Parser) peekIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
-func (p *Parser) consume(t token.TokenType, errMsg string) bool {
+func (p *Parser) eat(t token.TokenType, errMsg string) bool {
 	// TODO return error instead of bool?
 	if p.peekIs(t) {
 		p.advance()

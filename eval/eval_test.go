@@ -157,7 +157,7 @@ func TestArrayIndexExpressions(t *testing.T) {
 
 func TestHashLiterals(t *testing.T) {
 	input := `
-let two = "two";
+two := "two";
 {
 	"one": 10 - 9,
 	two: 1 + 1,
@@ -198,14 +198,14 @@ func TestHashIndexExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`{"foo": 5}["foo"]`, 5},
 		{`{"foo": 5}["bar"]`, nil},
-		{`let key = "foo"; {"foo": 5}[key]`, 5},
+		{`key := "foo"; {"foo": 5}[key]`, 5},
 		{`{}["foo"]`, nil},
 		{`{5: 5}[5]`, 5},
 		{`{true: 5}[true]`, 5},
 		{`{false: 5}[false]`, 5},
 
 		{
-			`{"name": "Monkey"}[fun(x) { x }];`,
+			`{"name": "Varion McVariable"}[\x { x }];`,
 			errmsg{"key not hashable: FUNCTION"},
 		},
 	})
@@ -383,8 +383,8 @@ func TestClosures(t *testing.T) {
 newAdder := \x { 
     \n { x + n } 
 }
-addTwo := newAdder(2);
-addTwo(2);`,
+addTwo := newAdder(2)
+addTwo(2)`,
 			4,
 		},
 		{
@@ -393,9 +393,9 @@ newGenerator := \ {
     n := 0
     \ { n = n + 2 }
 }
-gen := newGenerator();
-gen() + gen() + gen(); // 2 + 4 + 6`,
-			12,
+gen := newGenerator()
+gen() + gen() + gen()`,
+			12, // 2 + 4 + 6
 		},
 	})
 }
@@ -407,12 +407,12 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`len("hello world")`, 11},
 		{`len(1)`, errmsg{"argument to `len` not supported, got INTEGER"}},
 		{`len("one", "two")`, errmsg{"wrong number of arguments. got=2, want=1"}},
-		{`assert(1 == 1)`, nil},
-		{`assert(1 == 2)`, errmsg{"assert failed"}},
-		{`assert(false)`, errmsg{"assert failed"}},
-		{`let a = 5; let b = 6; assert(a == b)`, errmsg{"assert failed"}},
-		{`assert(true)`, nil},
-		{`assert(1 == 2, "one isn't two")`, errmsg{"assert failed: one isn't two"}},
+		{`yassert(1 == 1)`, nil},
+		{`yassert(1 == 2)`, errmsg{"yassert failed"}},
+		{`yassert(false)`, errmsg{"yassert failed"}},
+		{`a := 5; b := 6; yassert(a == b)`, errmsg{"yassert failed"}},
+		{`yassert(true)`, nil},
+		{`yassert(1 == 2, "one isn't two")`, errmsg{"yassert failed: one isn't two"}},
 	})
 }
 
@@ -616,6 +616,10 @@ func testErrorObject(obj object.Object, expectedMsg string) error {
 const examplesDir = "../examples"
 
 func TestExampleFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing files in short mode")
+	}
+
 	testFiles, err := os.ReadDir(examplesDir)
 	if err != nil {
 		t.Fatalf("couldn't read example files dir: %s", err)

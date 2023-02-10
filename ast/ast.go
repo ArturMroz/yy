@@ -42,28 +42,6 @@ func (p *Program) String() string {
 	return b.String()
 }
 
-type LetStatement struct {
-	Token token.Token // the token.LET token
-	Name  *Identifier
-	Value Expression
-}
-
-func (ls *LetStatement) statementNode()       {}
-func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
-func (ls *LetStatement) String() string {
-	var b strings.Builder
-
-	// fmt.Fprintf(&b, "%s %s = %s;", ls.TokenLiteral(), ls.Name.String(), ls.Value.String())
-
-	fmt.Fprintf(&b, "%s %s = ", ls.TokenLiteral(), ls.Name.String())
-	if ls.Value != nil {
-		b.WriteString(ls.Value.String())
-	}
-	b.WriteString(";")
-
-	return b.String()
-}
-
 type AssignExpression struct {
 	Token  token.Token // the '=' or ':=' token
 	Name   *Identifier

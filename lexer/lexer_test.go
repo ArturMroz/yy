@@ -12,9 +12,12 @@ func TestNextToken(t *testing.T) {
 		expected []token.Token
 	}{
 		{
-			"+,(){}[]",
+			"+-*/,(){}[]",
 			[]token.Token{
 				{Type: token.PLUS, Literal: "+"},
+				{Type: token.MINUS, Literal: "-"},
+				{Type: token.ASTERISK, Literal: "*"},
+				{Type: token.SLASH, Literal: "/"},
 				{Type: token.COMMA, Literal: ","},
 				{Type: token.LPAREN, Literal: "("},
 				{Type: token.RPAREN, Literal: ")"},
@@ -26,24 +29,14 @@ func TestNextToken(t *testing.T) {
 			},
 		},
 		{
-			"yo dawg = 5;",
+			`myString := "testy guy"; second = "other string"`,
 			[]token.Token{
-				{Type: token.YO, Literal: "yo"},
-				{Type: token.IDENT, Literal: "dawg"},
-				{Type: token.ASSIGN, Literal: "="},
-				{Type: token.INT, Literal: "5"},
-				{Type: token.SEMICOLON, Literal: ";"},
-				{Type: token.EOF, Literal: ""},
-			},
-		},
-		{
-			`yo myString = "testy guy"; "other string"`,
-			[]token.Token{
-				{Type: token.YO, Literal: "yo"},
 				{Type: token.IDENT, Literal: "myString"},
-				{Type: token.ASSIGN, Literal: "="},
+				{Type: token.WALRUS, Literal: ":="},
 				{Type: token.STRING, Literal: "testy guy"},
 				{Type: token.SEMICOLON, Literal: ";"},
+				{Type: token.IDENT, Literal: "second"},
+				{Type: token.ASSIGN, Literal: "="},
 				{Type: token.STRING, Literal: "other string"},
 				{Type: token.EOF, Literal: ""},
 			},

@@ -44,23 +44,19 @@ const (
 	BACKSLASH = "\\"
 
 	// Keywords
-	FUNCTION = "FUNCTION"
-	LET      = "LET"
-	YO       = "YO"
-	TRUE     = "TRUE"
-	FALSE    = "FALSE"
-	IF       = "IF"
-	ELSE     = "ELSE"
-	YEET     = "YEET"
-	YOYO     = "YOYO"
-	YALL     = "YALL"
-	YET      = "YET"
-	NULL     = "NULL"
+	YO    = "YO"
+	TRUE  = "TRUE"
+	FALSE = "FALSE"
+	IF    = "IF"
+	ELSE  = "ELSE"
+	YEET  = "YEET"
+	YOYO  = "YOYO"
+	YALL  = "YALL"
+	YET   = "YET"
+	NULL  = "NULL"
 )
 
 var keywords = map[string]TokenType{
-	"fun":   FUNCTION,
-	"let":   LET,
 	"yo":    YO,
 	"true":  TRUE,
 	"false": FALSE,
