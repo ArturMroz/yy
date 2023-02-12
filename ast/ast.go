@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"ylang/token"
+	"yy/token"
 )
 
 type Node interface {

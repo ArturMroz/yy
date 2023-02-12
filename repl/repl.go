@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"ylang/eval"
-	"ylang/lexer"
-	"ylang/object"
-	"ylang/parser"
+	"yy/eval"
+	"yy/lexer"
+	"yy/object"
+	"yy/parser"
 )
 
 const prompt = ">> "

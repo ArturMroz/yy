@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"ylang/eval"
-	"ylang/lexer"
-	"ylang/object"
-	"ylang/parser"
-	"ylang/repl"
+	"yy/eval"
+	"yy/lexer"
+	"yy/object"
+	"yy/parser"
+	"yy/repl"
 )
 
 var debug = flag.Bool("debug", false, "turns on debug mode")
@@ -47,6 +47,6 @@ func main() {
 		}
 
 	default:
-		fmt.Println("usage: ylang [script] [--debug=true|false]")
+		fmt.Println("usage: yy [script] [--debug=true|false]")
 	}
 }

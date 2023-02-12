@@ -6,34 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"ylang/ast"
-	"ylang/lexer"
+	"yy/ast"
+	"yy/lexer"
 )
-
-// func TestLetStatements(t *testing.T) {
-// 	tests := []struct {
-// 		input              string
-// 		expectedIdentifier string
-// 		expectedValue      any
-// 	}{
-// 		{"let x = 69;", "x", 69},
-// 		{"let y = true;", "y", true},
-// 		{"let z = y;", "z", "y"},
-// 	}
-
-// 	for _, tt := range tests {
-// 		program := parse(t, tt.input)
-// 		if len(program.Statements) != 1 {
-// 			t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
-// 		}
-// 		if err := testLetStatement(program.Statements[0], tt.expectedIdentifier); err != nil {
-// 			t.Error(err)
-// 		}
-// 		if err := testLiteralExpression(program.Statements[0].(*ast.LetStatement).Value, tt.expectedValue); err != nil {
-// 			t.Error(err)
-// 		}
-// 	}
-// }
 
 func TestAssignExpression(t *testing.T) {
 	tests := []struct {

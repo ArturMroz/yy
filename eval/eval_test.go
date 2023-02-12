@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"ylang/lexer"
-	"ylang/object"
-	"ylang/parser"
+	"yy/lexer"
+	"yy/object"
+	"yy/parser"
 )
 
 type evalTestCase struct {

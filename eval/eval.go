@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"ylang/ast"
-	"ylang/object"
+	"yy/ast"
+	"yy/object"
 )
 
 var (

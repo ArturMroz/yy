@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"ylang/ast"
-	"ylang/lexer"
-	"ylang/token"
+	"yy/ast"
+	"yy/lexer"
+	"yy/token"
 )
 
 type Parser struct {

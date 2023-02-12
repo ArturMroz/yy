@@ -5,7 +5,7 @@ import (
 	"hash/fnv"
 	"strings"
 
-	"ylang/ast"
+	"yy/ast"
 )
 
 type ObjectType string

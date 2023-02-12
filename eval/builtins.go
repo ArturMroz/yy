@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"ylang/object"
+	"yy/object"
 )
 
 var builtins = map[string]*object.Builtin{
@@ -111,17 +111,17 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
-	"assert": {
+	"yassert": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 && len(args) != 2 {
-				return newError("wrong number of arguments for `assert`. got=%d, want=1 or 2", len(args))
+				return newError("wrong number of arguments for `yassert`. got=%d, want=1 or 2", len(args))
 			}
 
 			if isTruthy(args[0]) {
 				return NULL // all good, nothing to see here
 			}
 
-			msg := "assert failed"
+			msg := "yassert failed"
 			if len(args) == 2 {
 				if v, ok := args[1].(*object.String); ok {
 					msg += ": " + v.Value
