@@ -18,18 +18,19 @@ const (
 	STRING = "STRING"
 
 	// Operators
-	ASSIGN   = "="
-	PLUS     = "+"
-	MINUS    = "-"
-	BANG     = "!"
-	ASTERISK = "*"
-	SLASH    = "/"
-	LT       = "<"
-	GT       = ">"
-	EQ       = "=="
-	NOT_EQ   = "!="
-	WALRUS   = ":="
-	RANGE    = ".."
+	ASSIGN    = "="
+	PLUS      = "+"
+	MINUS     = "-"
+	BANG      = "!"
+	ASTERISK  = "*"
+	SLASH     = "/"
+	LT        = "<"
+	GT        = ">"
+	EQ        = "=="
+	NOT_EQ    = "!="
+	WALRUS    = ":="
+	RANGE     = ".."
+	BACKSLASH = "\\"
 
 	// Delimiters
 	COMMA     = ","
@@ -41,19 +42,19 @@ const (
 	RBRACE    = "}"
 	LBRACKET  = "["
 	RBRACKET  = "]"
-	BACKSLASH = "\\"
 
 	// Keywords
-	YO    = "YO"
 	TRUE  = "TRUE"
 	FALSE = "FALSE"
+	NULL  = "NULL"
+	YO    = "YO"
 	YIF   = "YIF"
 	YELS  = "YELS"
 	YEET  = "YEET"
 	YOYO  = "YOYO"
+	YOLO  = "YOLO"
 	YALL  = "YALL"
 	YET   = "YET"
-	NULL  = "NULL"
 )
 
 var keywords = map[string]TokenType{
@@ -64,6 +65,7 @@ var keywords = map[string]TokenType{
 	"yels":  YELS,
 	"yeet":  YEET,
 	"yoyo":  YOYO,
+	"yolo":  YOLO,
 	"yet":   YET,
 	"yall":  YALL,
 	"null":  NULL,

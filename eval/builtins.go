@@ -25,19 +25,7 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
-	"first": {
-		Fn: func(args ...object.Object) object.Object {
-			arr, err := checkArray("first", args...)
-			if err != nil {
-				return newError(err.Error())
-			}
-
-			if len(arr.Elements) > 0 {
-				return arr.Elements[0]
-			}
-			return NULL
-		},
-	},
+	// ARRAYS
 
 	"last": {
 		Fn: func(args ...object.Object) object.Object {
@@ -91,6 +79,8 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
+	// PRINT
+
 	"yell": {
 		Fn: func(args ...object.Object) object.Object {
 			for _, arg := range args {
@@ -103,13 +93,16 @@ var builtins = map[string]*object.Builtin{
 
 	"yelp": {
 		Fn: func(args ...object.Object) object.Object {
-			for _, arg := range args {
-				fmt.Print(arg.Inspect())
+			s := make([]any, len(args))
+			for i, v := range args {
+				s[i] = v.Inspect()
 			}
-			fmt.Println()
+			fmt.Println(s...)
 			return NULL
 		},
 	},
+
+	// DEBUG
 
 	"yassert": {
 		Fn: func(args ...object.Object) object.Object {

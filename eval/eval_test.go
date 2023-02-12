@@ -82,9 +82,29 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{`"yolo" != "yolo"`, false},
 		{`"yolo" != "yeet"`, true},
 		{`"[1, 2, 3]" == "[1, 2, 3]"`, true},
-		{`"[1, 2, 3]" == "[1, 2, 9]"`, false},
+		{`"[1, 2, 3]" == "[4, 5, 6]"`, false},
 		{`"[1, 2, 3]" != "[1, 2, 3]"`, false},
-		{`"[1, 2, 3]" != "[1, 2, 9]"`, true},
+		{`"[1, 2, 3]" != "[4, 5, 6]"`, true},
+		{"null == null", true},
+		{"null != null", false},
+
+		// mixed types
+		{"true != null", true},
+		{"true == null", false},
+		{"2 != null", true},
+		{"2 == null", false},
+		{"[] != null", true},
+		{"[] == null", false},
+		{"[1, 2, 3] != null", true},
+		{"[1, 2, 3] == null", false},
+		{`"Testy McTestface" != null`, true},
+		{`"Testy McTestface" == null`, false},
+		{`"" != null`, true},
+		{`"" == null`, false},
+		{`"1" == 1`, false},
+		{`"1" != 1`, true},
+		{`"1" == [1]`, false},
+		{`"1" != [1]`, true},
 	})
 }
 
@@ -205,7 +225,7 @@ func TestHashIndexExpressions(t *testing.T) {
 		{`{false: 5}[false]`, 5},
 
 		{
-			`{"name": "Varion McVariable"}[\x { x }];`,
+			`{"name": "Vars McVariable"}[\x { x }];`,
 			errmsg{"key not hashable: FUNCTION"},
 		},
 	})
@@ -220,6 +240,8 @@ func TestYifYelsExpressions(t *testing.T) {
 		{"yif 1 < 2 { 10 }", 10},
 		{"yif 1 > 2 { 10 }", nil},
 		{"yif 1 > 2 { 10 } yels { 20 }", 20},
+		{`yif 1 > 2 { "nope" } yels { yif 2 > 5 { "nope" } yels { 20 } }`, 20},
+		// {`yif 1 > 2 { "nope } yels yif 2 > 5 { "nope" } yels { 20 }`, 20}, // TODO fix
 		{"yif 1 < 2 { 10 } yels { 20 }", 10},
 		{"yif null { 10 } yels { 20 }", 20},
 		{"result := yif null { 10 } yels { 20 }; result", 20},
@@ -227,6 +249,37 @@ func TestYifYelsExpressions(t *testing.T) {
 		{"yif null { 10 } yels { 20 } * 2", 40},
 		{"5 + yif null { 10 } yels { 20 } * 2", 45},
 		{"result := 3 * yif null { 10 } yels { 20 } + 9; result", 69},
+	})
+}
+
+func TestYoloExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		// normal operations in yolo mode are still ok
+		{"yolo { 2 + 2 }", 4},
+		{"yolo { 2 + 2; 8 }", 8},
+		{"yolo { a := 1; a }", 1},
+		{"yolo { a := 1; b := 2; a + b }", 3},
+		{"result := yolo { a := 1; b := 2; a + b }; result", 3},
+
+		// arrays
+		{"yolo { 3 + [1, 2, 3] }", []int64{4, 5, 6}},
+		{"yolo { [1, 2, 3] + 4 }", []int64{5, 6, 7}},
+		{"yolo { 3 * [1, 2, 3] }", []int64{3, 6, 9}},
+		{"yolo { [1, 2, 3] * 3 }", []int64{3, 6, 9}},
+
+		// strings
+		{`2 + "troll"`, errmsg{"type mismatch: INTEGER + STRING"}},
+		{`yolo { 3 * "22" }`, 66},
+		{`yolo { "22" * 3 }`, 66},
+		{`yolo { 3 * "test" }`, "testtesttest"},
+		{`yolo { "test" * 3 }`, "testtesttest"},
+		{`yolo { "test" * 0 }`, ""},
+		{`yolo { "test" * -5 }`, ABYSS.Value},
+		{`yolo { "test" / 0 }`, ABYSS.Value},
+		{`yolo { 2 + "troll" }`, "2troll"},
+
+		// what happens in yolo, stays in yolo
+		{"yolo { a := 1; a }; a", errmsg{"identifier not found: a"}},
 	})
 }
 
@@ -494,32 +547,32 @@ func runEvalTests(t *testing.T, tests []evalTestCase) {
 		switch expected := tt.expected.(type) {
 		case int:
 			if err := testIntegerObject(evaluated, int64(expected)); err != nil {
-				t.Error(err)
+				t.Errorf("%s (%s)", err, tt.input)
 			}
 
 		case []int64:
 			if err := testIntegerArray(evaluated, expected); err != nil {
-				t.Error(err)
+				t.Errorf("%s (%s)", err, tt.input)
 			}
 
 		case bool:
 			if err := testBooleanObject(evaluated, expected); err != nil {
-				t.Error(err)
+				t.Errorf("%s (%s)", err, tt.input)
 			}
 
 		case string:
 			if err := testStringObject(evaluated, expected); err != nil {
-				t.Error(err)
+				t.Errorf("%s (%s)", err, tt.input)
 			}
 
 		case errmsg:
 			if err := testErrorObject(evaluated, expected.msg); err != nil {
-				t.Error(err)
+				t.Errorf("%s (%s)", err, tt.input)
 			}
 
 		case nil:
 			if err := testNullObject(evaluated); err != nil {
-				t.Error(err)
+				t.Errorf("%s (%s)", err, tt.input)
 			}
 
 		default:

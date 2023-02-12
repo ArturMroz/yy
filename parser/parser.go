@@ -37,8 +37,8 @@ const (
 	PRODUCT     // * /
 	PREFIX      // -x !x
 	ASSIGNMENT  // = :=
-	CALL        // my_function(x)
-	INDEX       // my_array[idx]
+	CALL        // function(x)
+	INDEX       // array[idx]
 )
 
 var precedences = map[token.TokenType]Precedence{
@@ -80,6 +80,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LBRACKET:  p.parseArrayLiteral,
 		token.LBRACE:    p.parseHashLiteral,
 		token.YIF:       p.parseYifExpression,
+		token.YOLO:      p.parseYoloExpression,
 		token.YOYO:      p.parseYoyoExpression,
 		token.YALL:      p.parseYallExpression,
 		token.YET:       p.parseYetExpression,
@@ -264,6 +265,18 @@ func (p *Parser) parseYifExpression() ast.Expression {
 	}
 
 	return yifExpr
+}
+
+func (p *Parser) parseYoloExpression() ast.Expression {
+	yoloExpr := &ast.YoloExpression{Token: p.curToken}
+
+	if !p.eat(token.LBRACE, "missing opening '{' after 'yolo'") {
+		return nil
+	}
+
+	yoloExpr.Body = p.parseBlockStatement()
+
+	return yoloExpr
 }
 
 func (p *Parser) parseYoyoExpression() ast.Expression {
@@ -557,10 +570,9 @@ func (p *Parser) eat(t token.TokenType, errMsg string) bool {
 	if p.peekIs(t) {
 		p.advance()
 		return true
-	} else {
-		p.peekError(t, errMsg) // TODO move this up?
-		return false
 	}
+	p.peekError(t, errMsg) // TODO move this up?
+	return false
 }
 
 func (p *Parser) Errors() []string {
@@ -573,6 +585,7 @@ func (p *Parser) peekError(t token.TokenType, errMsg string) {
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("no prefix parse function for '%s' found", t)
+	// TODO add more details to this err msg
+	msg := fmt.Sprintf("unexpected token '%s'", t)
 	p.errors = append(p.errors, msg)
 }

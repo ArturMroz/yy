@@ -246,6 +246,17 @@ func (ie *YifExpression) String() string {
 	return b.String()
 }
 
+type YoloExpression struct {
+	Token token.Token
+	Body  *BlockStatement
+}
+
+func (ye *YoloExpression) expressionNode()      {}
+func (ye *YoloExpression) TokenLiteral() string { return ye.Token.Literal }
+func (ye *YoloExpression) String() string {
+	return fmt.Sprintf("yolo { %s }", ye.Body.String())
+}
+
 type YoyoExpression struct {
 	Token       token.Token // The 'yoyo' token
 	Initialiser Expression

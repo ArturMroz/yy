@@ -3,6 +3,8 @@ package eval
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"yy/ast"
 	"yy/object"
@@ -12,6 +14,7 @@ var (
 	NULL  = &object.Null{}
 	TRUE  = &object.Boolean{Value: true}
 	FALSE = &object.Boolean{Value: false}
+	ABYSS = &object.String{Value: "Stare at the abyss long enough, and it starts to stare back at you."}
 )
 
 func Eval(node ast.Node, env *object.Environment) object.Object {
@@ -92,7 +95,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalInfixExpression(node.Operator, left, right)
+
+		_, isYoloMode := env.Get(object.YoloKey)
+		return evalInfixExpression(node.Operator, left, right, isYoloMode)
 
 	case *ast.YifExpression:
 		condition := Eval(node.Condition, env)
@@ -107,6 +112,13 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		} else {
 			return NULL
 		}
+
+	case *ast.YoloExpression:
+		extendedEnv := object.NewEnclosedEnvironment(env)
+		env.Set(object.YoloKey, TRUE)
+
+		result := Eval(node.Body, extendedEnv)
+		return result
 
 	case *ast.YoyoExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
@@ -187,7 +199,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 
 		default:
-			return newError("cannot iterate over %s, type of %T", iter, iter)
+			return newError("cannot iterate over %s, type of %s", iter, iter.Type())
 		}
 
 		return result
@@ -291,6 +303,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.Null:
 		return NULL
 
+	case nil:
+		return newError("unexpected error: something most likely went wrong at the parsing stage")
+
 	default:
 		return newError("ast object not supported %q %T", node, node)
 	}
@@ -370,16 +385,34 @@ func evalPrefixExpression(op string, right object.Object) object.Object {
 	}
 }
 
-func evalInfixExpression(operator string, left, right object.Object) object.Object {
+func evalInfixExpression(op string, left, right object.Object, yoloOK bool) object.Object {
 	switch {
 	case left.Type() != right.Type():
-		return newError("type mismatch: %s %s %s", left.Type(), operator, right.Type())
+		switch op {
+		case "==":
+			return toYeetBool(false)
+		case "!=":
+			return toYeetBool(true)
+		}
+
+		if yoloOK {
+			return yoloMode(op, left, right)
+		}
+		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
+
+	case left.Type() == object.NULL_OBJ && right.Type() == object.NULL_OBJ:
+		switch op {
+		case "==":
+			return toYeetBool(true)
+		case "!=":
+			return toYeetBool(false)
+		}
 
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		right := right.(*object.Integer)
 		left := left.(*object.Integer)
 
-		switch operator {
+		switch op {
 		case "+":
 			return &object.Integer{Value: left.Value + right.Value}
 		case "-":
@@ -402,7 +435,7 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		right := right.(*object.Boolean)
 		left := left.(*object.Boolean)
 
-		switch operator {
+		switch op {
 		case "==":
 			return toYeetBool(left.Value == right.Value)
 		case "!=":
@@ -413,7 +446,7 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		right := right.(*object.String)
 		left := left.(*object.String)
 
-		switch operator {
+		switch op {
 		case "+":
 			return &object.String{Value: left.Value + right.Value}
 		case "==":
@@ -422,31 +455,103 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 			return toYeetBool(left.Value != right.Value)
 		}
 
-	case left.Type() == object.NULL_OBJ && right.Type() == object.NULL_OBJ:
-		// TODO compare other objects to null
-		return toYeetBool(operator == "==")
-
 	case left.Type() == object.ARRAY_OBJ && right.Type() == object.ARRAY_OBJ:
 		right := right.(*object.Array)
 		left := left.(*object.Array)
 
-		switch operator {
+		switch op {
 		case "+":
 			return &object.Array{Elements: append(left.Elements, right.Elements...)}
 		case "==":
-			// TODO DeepEqual performance isn't great, replace it
+			// TODO DeepEqual's performance isn't great
 			return toYeetBool(reflect.DeepEqual(left.Elements, right.Elements))
 		case "!=":
 			return toYeetBool(!reflect.DeepEqual(left.Elements, right.Elements))
 		}
 	}
 
-	return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+	return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 }
 
-func isTruthy(o object.Object) bool {
-	// Ruby's truthiness rules: nil & false are falsy, everything else is truthy
-	switch o {
+func yoloMode(op string, left, right object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && right.Type() == object.INTEGER_OBJ:
+		return yoloMode(op, right, left) // handle below
+
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.ARRAY_OBJ:
+		left := left.(*object.Integer)
+		right := right.(*object.Array)
+
+		switch op {
+		case "+", "-", "*", "/":
+			result := &object.Array{
+				Elements: make([]object.Object, len(right.Elements)),
+			}
+			for i, v := range right.Elements {
+				result.Elements[i] = evalInfixExpression(op, left, v, true)
+			}
+			return result
+
+		case "<":
+			return toYeetBool(true)
+		case ">":
+			return toYeetBool(false)
+		}
+
+	case left.Type() == object.STRING_OBJ && right.Type() == object.INTEGER_OBJ:
+		left := left.(*object.String)
+
+		if v, err := strconv.Atoi(left.Value); err == nil {
+			return evalInfixExpression(op, &object.Integer{Value: int64(v)}, right, true)
+		}
+
+		return yoloMode(op, right, left) // handle below
+
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.STRING_OBJ:
+		left := left.(*object.Integer)
+		right := right.(*object.String)
+
+		if v, err := strconv.Atoi(right.Value); err == nil {
+			return evalInfixExpression(op, left, &object.Integer{Value: int64(v)}, true)
+		}
+
+		switch op {
+		case "*":
+			if left.Value < 0 {
+				return ABYSS
+			}
+			result := strings.Repeat(right.Value, int(left.Value))
+			return &object.String{Value: result}
+
+		case "/":
+			if left.Value <= 0 {
+				return ABYSS
+			}
+
+			ss := strings.Split(right.Value, "")
+			elems := make([]object.Object, len(ss))
+			for i, s := range ss {
+				elems[i] = &object.String{Value: s}
+			}
+			result := &object.Array{Elements: elems}
+			return result
+
+		case "<":
+			return toYeetBool(true)
+		case ">":
+			return toYeetBool(false)
+		}
+
+		// TODO handle other type combinations
+	}
+
+	// catch all: just convert to string and concatenate
+	return &object.String{Value: left.Inspect() + right.Inspect()}
+}
+
+func isTruthy(obj object.Object) bool {
+	// Ruby's truthiness rule: nil & false are falsy, everything else is truthy
+	switch obj {
 	case NULL, FALSE:
 		return false
 	default:
@@ -454,8 +559,8 @@ func isTruthy(o object.Object) bool {
 	}
 }
 
-func toYeetBool(v bool) object.Object {
-	if v {
+func toYeetBool(b bool) object.Object {
+	if b {
 		return TRUE
 	}
 	return FALSE

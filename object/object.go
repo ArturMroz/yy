@@ -30,12 +30,19 @@ const (
 	RETURN_VALUE_OBJ ObjectType = "RETURN_VALUE"
 )
 
+const YoloKey = "$$yolo"
+
 type Integer struct {
 	Value int64
 }
 
-func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
-func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
+func (i *Integer) Type() ObjectType {
+	if INTEGER_OBJ == "s" {
+		fmt.Println("heeh")
+	}
+	return INTEGER_OBJ
+}
+func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
 
 type String struct {
 	Value string

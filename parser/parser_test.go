@@ -594,6 +594,39 @@ func TestYoyoExpression(t *testing.T) {
 	}
 }
 
+func TestYoloExpression(t *testing.T) {
+	tests := []struct {
+		input string
+		body  string
+	}{
+		{
+			"yolo { i = i + 1 }",
+			"{ (i = (i + 1)) }",
+		},
+		{
+			"yolo { yell() }",
+			"{ yell() }",
+		},
+		{
+			"yolo { yell(); 5; yelp(); 2 + 2; }",
+			"{ yell(); 5; yelp(); (2 + 2) }",
+		},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleExprStmt(t, tt.input)
+
+		yyExpr, ok := stmt.Expression.(*ast.YoloExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.YoloExpression. got=%T", stmt.Expression)
+		}
+
+		if yyExpr.Body.String() != tt.body {
+			t.Errorf("condition.String() is not %s. got=%s", tt.body, yyExpr.Body)
+		}
+	}
+}
+
 func TestYetExpression(t *testing.T) {
 	tests := []struct {
 		input     string
