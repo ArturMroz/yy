@@ -2,54 +2,51 @@
 
 // variables are declared and assigned using walrus operator ':='
 a := 5
-assert(a == 5)
+yassert(a == 5)
 
 // variables are mutable (equals operator '=' is for assignments only)
 a = 10
-assert(a == 10)
+yassert(a == 10)
 
 // you cannot assign to a variable that hasn't been declared, this isn't 2000s JS
 // line below would cause runtime error: 'identifer not found: i_dont_exist'
 // i_dont_exist = 69
 
-// variables can be redeclared (and shadowed)
+// variables can be redeclared (and shadowed, at least for now)
 a := 15
-assert(a == 15)
+yassert(a == 15)
 
 // semicolons are optional, you can use them if C/Java corrupted you
 // and you aren't physically able to write a statement without a semicolon
 b := 5;
 c := 6;
-assert(b + 1 == c);
+yassert(b + 1 == c);
 
 // you don't even need semicolons between statements on the same line
-// if you are psychotic, nothing is stopping you from writing this
+// if you are psychotic, nothing is stopping you from doing this
 f := 6 + 2 * 3 g := 3 * 3 + 1 h := f + g
-assert(f == 12)
-assert(g == 10)
-assert(h == f + g)
+yassert(f == 12)
+yassert(g == 10)
+yassert(h == f + g)
 
 // which is equivalent to 
-f := 6 + 2 * 3; g := 3 * 3 + 1; h := f + g;
-
-// or to
 f := 6 + 2 * 3
 g := 3 * 3 + 1
 h := f + g
 
 // (almost) everything is an expression
-a := if 8 > 3 {
+a := yif 8 > 3 {
     5
-} else {
+} yels {
     "wtf"
 }
-assert(a == 5)
+yassert(a == 5)
 
 // assignments can be chained
 a = b = c = 8
-assert(a == 8)
-assert(b == 8)
-assert(c == 8)
+yassert(a == 8)
+yassert(b == 8)
+yassert(c == 8)
 
 
 // TYPES
@@ -80,15 +77,28 @@ my_array2 := [1, true, "hello", yarn, yup]
 // arrays can be concatenated
 mega_array := my_array + my_array2
 yelp(mega_array)
-assert(mega_array == my_array + my_array2)
-assert(mega_array == [1, 2, 3, 4, 1, true, "hello", yarn, yup])
-assert(mega_array == [1, 2, 3, 4, 1, true, "hello", "how long is a piece of string?", true])
-assert(my_array != my_array2)
+yassert(mega_array == my_array + my_array2)
+yassert(mega_array == [1, 2, 3, 4, 1, true, "hello", yarn, yup])
+yassert(mega_array == [1, 2, 3, 4, 1, true, "hello", "how long is a piece of string?", true])
 
 // hashmaps
-friend := { "name": "Jon the Zebra", "colours": ["black", "white"], "age": 2, "alive": true }
+
+friend := { 
+    "name":    "Jon the Zebra", 
+    "age":     2, 
+    "alive":   true,
+    "colours": ["black", "white"], 
+}
+
+yassert(friend["name"] == "Jon the Zebra")
+yassert(friend["alive"] == true)
 yelp(friend["name"], " is ", friend["age"], " years old.") // prints "Jon the Zebra is 2 years old."
 
 // a key to a hashmap can be a string, an integer, or a bool
-let foe = { "name": "Giant Chicken", true: "bool as a key!?", 42: "integer too", "what a weird": "world" }
-assert(foe[true] == "bool as a key!?")
+foe := { 
+    "name": "Giant Chicken", 
+    true:   "bool as a key!?",
+    42:     "an integer works too",
+}
+
+yassert(foe[true] == "bool as a key!?")

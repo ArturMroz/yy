@@ -1,0 +1,123 @@
+// CONTROL FLOW
+
+// yif yels expressions are used for conditional execution
+// the values false and nil are falsy, and everything else is truthy 
+// yif requires brackets, but doesn't require parentheses
+yif 2*2 > 1 {
+   "all good" 
+} yels {
+    "math.exe stopped working"
+}
+
+// there are 2 looping constructs in YY: yall and yet
+
+// yall (Y'all) yeeterates over a collection (array, string or range)
+// and declares 'yt' (short for yeeterator) variable automatically in the loop's scope
+yall 0..3 {
+    yelp(yt) // prints '0', '1', '2', '3'
+}
+
+sum := 0
+yall 0..4 {
+    sum = sum + yt
+}
+yassert(sum == 10)
+
+acc := [] 
+arr := [1, 2, 3]
+yall arr {
+    acc = push(acc, yt * 2)
+}
+yassert(acc == [2, 4, 6])
+
+// alternatively
+acc := [] 
+arr := [1, 2, 3]
+yall 0..len(arr)-1 {
+    acc = push(acc, arr[yt] * 2)
+}
+yassert(acc == [2, 4, 6])
+
+acc := [] 
+yall 8..4 {
+    acc = push(acc, yt)
+}
+yassert(acc == [8, 7, 6, 5, 4])
+
+// yeeterators can be named explicitly if needed 
+acc := [] 
+yall i: 1..2 {
+    yall j: 3..4 {
+        acc = push(acc, [i, j])
+    }
+}
+yassert(acc == [[1, 3], [1, 4], [2, 3], [2, 4]])
+
+result := ""
+yall "test" {
+    result = result + yt + ","
+}
+yassert(result == "t,e,s,t,")
+
+// yall can be used to build function such as map() or filter()
+
+map := \arr fn {
+    acc := []
+    yall arr {
+        acc = push(acc, fn(yt))
+    }
+}
+
+a      := [1, 2, 3]
+triple := \x { x * 3}
+yassert(map(a, triple) == [3, 6, 9])
+
+filter := \arr, fn {
+    acc := []
+    yall arr {
+        yif fn(yt) {
+            acc = push(acc, yt)
+        }
+    }
+    acc
+}
+
+b    := [1, 2, 3, 4]
+smol := \x { x < 3}
+yassert(filter(b, smol) == [1, 2])
+
+
+// 2nd type of loop: 'yet' as in 'are we there yet?'
+
+i := 0
+yet i < 5 {
+    i := i + 1
+}
+
+yelp(i)
+
+j := 0
+result := yet j < 4 {
+    j := j + 1
+}
+
+yelp("result: ", result, " j: ", j)
+yassert(result == 4)
+
+
+arr := []
+i := 1
+
+yet len(arr) < 5 {
+    arr = push(arr, i)
+    i := i + 1
+}
+
+yassert(arr == [1, 2, 3, 4, 5])
+
+yet len(arr) > 0 {
+    arr = rest(arr)
+    yelp(arr)
+}
+
+yassert(arr == [])

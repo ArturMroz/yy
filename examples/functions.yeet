@@ -5,7 +5,7 @@
 // named functions are not supported
 
 max := \x y {
-    if x > y {
+    yif x > y {
         yeet x // yeets the value and returns from the function
     } 
     yeet y
@@ -13,88 +13,91 @@ max := \x y {
 
 a := 3
 b := 18
-assert(max(a, b) == b)
+yassert(max(a, b) == b)
 
 // 'yeet' keyword can be omitted, last statement in a block is yeeted implicitly
 max2 := \x y {
-    if x > y {
+    yif x > y {
         x 
-    } else {
+    } yels {
         y
     }
 }
 
-assert(max(a, b) == max2(a, b))
+yassert(max(a, b) == max2(a, b))
 
 // and again, as a one liner
-max3 := \x y { if x > y { x } else { y } }
+max3 := \x y { yif x > y { x } yels { y } }
 
-assert(max2(a, b) == max3(a, b))
+yassert(max2(a, b) == max3(a, b))
 
 
 // RECURSION
 
 fib := \n {
-    if n < 2 {
+    yif n < 2 {
         n 
-    } else {
+    } yels {
         fib(n-1) + fib(n-2)
     }
 }
 
-assert(fib(18) == 2584)
-// assert() accepts optional error message for more context
-assert(fib(20) == 6765, "fibonacci didn't quite work")
+yassert(fib(18) == 2584)
+// yassert() accepts optional error message for more context
+yassert(fib(20) == 6765, "fibonacci didn't quite work")
 
 factorial := \n { 
-    if n == 0 { 1 } else { n * factorial(n-1) }
+    yif n == 0 { 1 } yels { n * factorial(n-1) }
 }
 
-assert(factorial(0) == 1)
-assert(factorial(1) == 1)
-assert(factorial(5) == 120)
+yassert(factorial(0) == 1)
+yassert(factorial(1) == 1)
+yassert(factorial(5) == 120)
 
 
 // HIGHER-ORDER FUNCTIONS
 
-addThree     := \x { x + 3 }
-callTwoTimes := \x fn { fn(fn(x)) }
-assert(callTwoTimes(3, addThree) == 9)
+add_three      := \x { x + 3 }
+call_two_times := \x fn { fn(fn(x)) }
+yassert(call_two_times(3, add_three) == 9)
 
-// parens and commas are optional
-add     := \a b { a + b }
-sub     := \a b { a - b }
-applyFn := \fn a b { fn(a, b) }
+add      := \a b { a + b }
+sub      := \a b { a - b }
+apply_fn := \fn a b { fn(a, b) }
 
-assert(applyFn(add, 2, 2) == 4) 
-assert(applyFn(sub, 10, 2) == 8)
-
-// and the above could be written as such
-add     := \(a, b) { a + b }
-sub     := \(a, b) { a - b }
-applyFn := \(fn, a, b) { fn(a, b) }
-
-assert(applyFn(add, 2, 2) == 4) 
-assert(applyFn(sub, 10, 2) == 8)
+yassert(apply_fn(add, 2, 2) == 4) 
+yassert(apply_fn(sub, 10, 2) == 8)
 
 
 // CLOSURES
 
-newAdder := \x { \n { x + n } }
-addTwo   := newAdder(2)
-assert(addTwo(5) == 7)
+newAdder := \x { 
+    \n { x + n } 
+}
+
+addTwo := newAdder(2)
+yassert(addTwo(5) == 7)
+
+newGenerator := \ {
+    n := 0
+    \ { n = n + 2 }
+}
+
+gen := newGenerator()
+yelp("generating:", gen(), gen(), gen()) // prints 'generating: 2 4 6'
+yassert(gen() == 8)
 
 
-// BUILT-INS
+// BUILT-IN FUNCTIONS
 
-// first(), rest(), and push() are built in and can be used to contruct functions like map(), reduce(), or filter()
+// len(), rest(), and push() are built in and can be used to contruct functions like map(), reduce(), or filter()
 
 map := \arr f {
     iter := \arr acc {
-        if (len(arr) == 0) {
+        yif (len(arr) == 0) {
             acc
-        } else {
-            iter(rest(arr), push(acc, f(first(arr))))
+        } yels {
+            iter(rest(arr), push(acc, f(arr[0])))
         }
     }
 
@@ -103,16 +106,27 @@ map := \arr f {
 
 a      := [1, 2, 3, 4]
 double := \x { x * 2 }
-assert(map(a, double) == [2, 4, 6, 8])
-assert(map(a, \x { x * 3 }) == [3, 6, 9, 12])
+yassert(map(a, double) == [2, 4, 6, 8])
+yassert(map(a, \x { x * 3 }) == [3, 6, 9, 12])
+
+// as an aside, if you aren't that into functional languages, you could use a yall loop instead of 
+// the shenanigans above to build map() function
+map2 := \arr fn {
+    acc := []
+    yall arr {
+        acc = push(acc, fn(yt))
+    }
+}
+
+yassert(map(a, double) == map2(a, double))
 
 
 reduce := \arr initial f {
     iter := \arr result {
-        if (len(arr) == 0) {
+        yif (len(arr) == 0) {
             result
-        } else {
-            iter(rest(arr), f(result, first(arr)))
+        } yels {
+            iter(rest(arr), f(result, arr[0]))
         }
     }
 
@@ -123,17 +137,17 @@ sum := \arr {
     reduce(arr, 0, \initial el { initial + el })
 }
 
-assert(sum([1, 2, 3, 4, 5]) == 15)
+yassert(sum([1, 2, 3, 4, 5]) == 15)
 
 
 filter := \arr f {
     iter := \arr acc {
-        if (len(arr) == 0) {
+        yif (len(arr) == 0) {
             acc
-        } else {
-            if f(first(arr)) {
-                iter(rest(arr), push(acc, first(arr)))
-            } else {
+        } yels {
+            yif f(arr[0]) {
+                iter(rest(arr), push(acc, arr[0]))
+            } yels {
                 iter(rest(arr), acc)
             }
         }
@@ -142,6 +156,7 @@ filter := \arr f {
     iter(arr, [])
 }
 
-a    := [1, 2, 3, 4, 5, 6]
-smol := \x { x < 4 }
-assert(filter(a, smol) == [1, 2, 3])
+a    := [1, 2, 3, 4, 5, 6, 7]
+avg  := sum(a) / len(a)
+smol := \x { x < avg }
+yassert(filter(a, smol) == [1, 2, 3])
