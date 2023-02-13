@@ -169,9 +169,9 @@ func (l *Lexer) skipWhitespace() {
 func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
 	if l.peek() == '=' {
 		l.advance()
-		return token.Token{Type: tok2, Literal: string(tok2)}
+		return token.Token{Type: tok2, Literal: tok2.String()}
 	}
-	return token.Token{Type: tok1, Literal: string(tok1)}
+	return token.Token{Type: tok1, Literal: tok1.String()}
 }
 
 // utils

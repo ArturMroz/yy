@@ -406,36 +406,6 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 	return hash
 }
 
-func (p *Parser) parseFunctionLiteral() ast.Expression {
-	fn := &ast.FunctionLiteral{Token: p.curToken, Parameters: []*ast.Identifier{}}
-	if !p.eat(token.LPAREN, "missing opening '(' after function") {
-		return nil
-	}
-
-	for !p.peekIs(token.RPAREN) && !p.peekIs(token.EOF) {
-		p.advance()
-
-		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-		fn.Parameters = append(fn.Parameters, param)
-
-		if p.peekIs(token.COMMA) {
-			p.advance()
-		}
-	}
-
-	if !p.eat(token.RPAREN, "missing closing ')' after function parameters") {
-		return nil
-	}
-
-	if !p.eat(token.LBRACE, "missing opening '{' before function body") {
-		return nil
-	}
-
-	fn.Body = p.parseBlockStatement()
-
-	return fn
-}
-
 func (p *Parser) parseLambdaLiteral() ast.Expression {
 	fn := &ast.FunctionLiteral{Token: p.curToken}
 
@@ -509,7 +479,7 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 			Right:    assExpr.Value,
 			Operator: string(assExpr.Token.Literal[0]),
 		}
-		assExpr.Token = token.Token{Type: token.ASSIGN, Literal: token.ASSIGN}
+		assExpr.Token = token.Token{Type: token.ASSIGN, Literal: "="}
 	}
 
 	return assExpr

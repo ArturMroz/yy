@@ -8,7 +8,7 @@ import (
 	"yy/ast"
 )
 
-type ObjectType string
+type ObjectType int
 
 type Object interface {
 	Type() ObjectType
@@ -16,19 +16,40 @@ type Object interface {
 }
 
 const (
-	INTEGER_OBJ ObjectType = "INTEGER"
-	BOOLEAN_OBJ ObjectType = "BOOLEAN"
-	STRING_OBJ  ObjectType = "STRING"
-	ARRAY_OBJ   ObjectType = "ARRAY"
-	HASH_OBJ    ObjectType = "HASH"
-	NULL_OBJ    ObjectType = "NULL"
-	RANGE_OBJ   ObjectType = "RANGE"
+	INTEGER_OBJ ObjectType = iota
+	BOOLEAN_OBJ
+	STRING_OBJ
+	NULL_OBJ
 
-	ERROR_OBJ        ObjectType = "ERROR"
-	FUNCTION_OBJ     ObjectType = "FUNCTION"
-	BUILTIN_OBJ      ObjectType = "BUILTIN"
-	RETURN_VALUE_OBJ ObjectType = "RETURN_VALUE"
+	ARRAY_OBJ
+	HASH_OBJ
+	RANGE_OBJ
+	FUNCTION_OBJ
+	BUILTIN_OBJ
+
+	ERROR_OBJ
+	RETURN_VALUE_OBJ
 )
+
+var objectTypes = [...]string{
+	INTEGER_OBJ: "INTEGER",
+	BOOLEAN_OBJ: "BOOLEAN",
+	STRING_OBJ:  "STRING",
+	NULL_OBJ:    "NULL",
+
+	ARRAY_OBJ:    "ARRAY",
+	HASH_OBJ:     "HASH",
+	FUNCTION_OBJ: "FUNCTION",
+	BUILTIN_OBJ:  "BUILTIN",
+	RANGE_OBJ:    "RANGE",
+
+	ERROR_OBJ:        "ERROR",
+	RETURN_VALUE_OBJ: "RETURN_VALUE",
+}
+
+func (ot ObjectType) String() string {
+	return objectTypes[ot]
+}
 
 const YoloKey = "$$yolo"
 
@@ -36,13 +57,8 @@ type Integer struct {
 	Value int64
 }
 
-func (i *Integer) Type() ObjectType {
-	if INTEGER_OBJ == "s" {
-		fmt.Println("heeh")
-	}
-	return INTEGER_OBJ
-}
-func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
+func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
+func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 
 type String struct {
 	Value string
