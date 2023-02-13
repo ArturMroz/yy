@@ -273,6 +273,8 @@ func TestYoloExpressions(t *testing.T) {
 		{`yolo { "22" * 3 }`, 66},
 		{`yolo { 3 * "test" }`, "testtesttest"},
 		{`yolo { "test" * 3 }`, "testtesttest"},
+		{`yolo { "tree" * 3 }`, "forest"},
+		{`yolo { "crow" * 3 }`, "murder"},
 		{`yolo { "test" * 0 }`, ""},
 		{`yolo { "test" * -5 }`, ABYSS.Value},
 		{`yolo { "test" / 0 }`, ABYSS.Value},

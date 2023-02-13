@@ -19,7 +19,7 @@ func main() {
 
 	switch len(flag.Args()) {
 	case 0:
-		fmt.Println("Welcome to the Y programming language REPL!")
+		fmt.Println("YeetYoink v0.0.1")
 		repl.Start(os.Stdin, os.Stdout, *debug)
 
 	case 1:
