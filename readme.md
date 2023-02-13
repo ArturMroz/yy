@@ -52,17 +52,18 @@ yall 0..3 {
 }
 
 yarray := [1, 2, 3]
-sum := 0
+sum    := 0
 yall yarray {
-    sum = sum + yt
+    sum += yt
 }
+
 yelp(sum) // prints 6
 
 // 2nd type of loop: 'yet' as in 'are we there yet?'
 // similar to a 'while' loop in other languages
 i := 0
 yet i < 5 {
-    i = i + 1
+    i += 1
 }
 
 // ARRAYS
@@ -81,16 +82,12 @@ yak := {
     "name":    "Jon the Yak", 
     "age":     2, 
     "alive":   true,
+    42:        "yes, definitely",
     "colours": ["brown", "white"], 
 }
-yelp(friend["name"], "is", friend["age"], "years old.") // prints "Jon the Yak is 2 years old."
 
-// a key to a hashmap can be a string, an integer, or a bool
-foe := { 
-    "name": "Giant Chicken", 
-    true:   "bool as a key!?",
-    42:     "an integer works too",
-}
+yelp(friend["name"], "is", friend["age"], "years old.") // prints "Jon the Yak is 2 years old."
+yelp(friend[42]) // prints "yes, definitely"
 
 // FUNCTIONS
 
@@ -137,13 +134,20 @@ yelp(add_two(5)) // prints 7
 
 // mixing types would normally cause an error:
 c := 8 * "string" // runtime error: 'type mismatch: STRING * INTEGER'
-// But in Yolo Mode, anything goes:
+
+// assignment to a variable that hasn't been declared would normally error:
+new_var = 5 // runtime error: 'identifier not found: new_var'
+
+// but in Yolo Mode, anything goes:
 
 yolo {
     yelp("tree" * 18)   // prints forest
     yelp("2" * 5)       // prints 10
     yelp("troll" * 3)   // prints trolltrolltroll
     yelp([1, 2, 3] * 3) // prints [3, 6, 9]
+
+    new_var = 5 // this works even though new_var hasn't been declared first
+
     yelp("oh boy" / 0)  // see for yourself...
 }
 
@@ -176,7 +180,7 @@ $ yy [--debug]
 
 # FAQ
 
-### Q: Why is the project called YeetYoink
+### Q: Why is the project called YeetYoink?
 
 Yeet and Yoink symbolise two complementary, yet opposing forces that exist in the universe. Everything has both Yeet and Yoink aspects and they are interconnected and interdependent. Together, Yeet and Yoink form a whole, and the balance between the two is necessary for harmony and balance in the universe.
 

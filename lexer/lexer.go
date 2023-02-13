@@ -21,14 +21,6 @@ func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
 	switch ch := l.ch; ch {
-	case '-':
-		tok = newToken(token.MINUS, ch)
-	case '+':
-		tok = newToken(token.PLUS, ch)
-	case '/':
-		tok = newToken(token.SLASH, ch)
-	case '*':
-		tok = newToken(token.ASTERISK, ch)
 	case '<':
 		tok = newToken(token.LT, ch)
 	case '>':
@@ -52,6 +44,14 @@ func (l *Lexer) NextToken() token.Token {
 	case '\\':
 		tok = newToken(token.BACKSLASH, ch)
 
+	case '+':
+		tok = l.switch2(token.PLUS, token.ADD_ASSIGN)
+	case '-':
+		tok = l.switch2(token.MINUS, token.SUB_ASSIGN)
+	case '*':
+		tok = l.switch2(token.ASTERISK, token.MUL_ASSIGN)
+	case '/':
+		tok = l.switch2(token.SLASH, token.DIV_ASSIGN)
 	case '=':
 		tok = l.switch2(token.ASSIGN, token.EQ)
 	case '!':

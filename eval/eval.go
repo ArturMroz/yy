@@ -57,11 +57,16 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(val) {
 			return val
 		}
+
 		if node.IsInit {
 			env.Set(node.Name.Value, val)
 			return val
 		}
 		if ok := env.Update(node.Name.Value, val); ok {
+			return val
+		}
+		if env.YoloMode() {
+			env.Set(node.Name.Value, val)
 			return val
 		}
 		return newError("identifier not found: " + node.Name.Value)
@@ -96,8 +101,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return right
 		}
 
-		_, isYoloMode := env.Get(object.YoloKey)
-		return evalInfixExpression(node.Operator, left, right, isYoloMode)
+		return evalInfixExpression(node.Operator, left, right, env.YoloMode())
 
 	case *ast.YifExpression:
 		condition := Eval(node.Condition, env)

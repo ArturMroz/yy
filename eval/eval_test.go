@@ -274,11 +274,19 @@ func TestYoloExpressions(t *testing.T) {
 		{`yolo { 3 * "test" }`, "testtesttest"},
 		{`yolo { "test" * 3 }`, "testtesttest"},
 		{`yolo { "tree" * 3 }`, "forest"},
+		{`yolo { "tree   " * 3 }`, "forest"},
+		{`yolo { "   tree" * 3 }`, "forest"},
+		{`yolo { "   tree   " * 3 }`, "forest"},
 		{`yolo { "crow" * 3 }`, "murder"},
 		{`yolo { "test" * 0 }`, ""},
 		{`yolo { "test" * -5 }`, ABYSS.Value},
 		{`yolo { "test" / 0 }`, ABYSS.Value},
 		{`yolo { 2 + "troll" }`, "2troll"},
+
+		// auto declaring variables if they don't exsist
+		{"a = 1; a", errmsg{"identifier not found: a"}},
+		{"yolo { a = 1; a };", 1},
+		{"a := 5; yolo { a = 69 }; a", 69},
 
 		// what happens in yolo, stays in yolo
 		{"yolo { a := 1; a }; a", errmsg{"identifier not found: a"}},
@@ -304,6 +312,7 @@ func TestYetExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"i := 0; yet i < 5 { i = i + 1 }", 5},
 		{"sum := 0; i := 1; yet i < 5 { sum = sum + i; i = i + 1 }; sum", 10},
+		{"sum := 0; i := 1; yet i < 5 { sum += i; i += 1 }; sum", 10},
 		{"i := 1; yet false { i = 69 }; i", 1},
 	})
 }
@@ -314,13 +323,15 @@ func TestYallExpressions(t *testing.T) {
 		{"arr := [1, 2, 3]; yall arr { yt }", 3},
 		{`yall "testme" { yt }`, "e"},
 		{`s := ""; yall "test" { s = s + yt + "-" }; s`, "t-e-s-t-"},
+		{`s := ""; yall "test" { s += yt + "-" }; s`, "t-e-s-t-"},
 		{"sum := 0; yall [1, 2, 3] { sum = sum + yt }; sum", 6},
+		{"sum := 0; yall [1, 2, 3] { sum += yt }; sum", 6},
 		{`my_str := "swag"; yall my_str { yt }`, "g"},
 		{`yall 0..5 { yt }`, 5},
 		{`yall 4..4 { yt }`, 4},
-		{`sum := 0; yall 1..4 { sum = sum + yt }; sum`, 10},
+		{`sum := 0; yall 1..4 { sum += yt }; sum`, 10},
 		{`yall i: 0..5 { i }`, 5},
-		{`sum := 0; yall j: 1..4 { sum = sum + j }; sum`, 10},
+		{`sum := 0; yall j: 1..4 { sum += j }; sum`, 10},
 
 		{`yall 0..5 { x }`, errmsg{"identifier not found: x"}},
 		{`yall i: 0..5 { yt }`, errmsg{"identifier not found: yt"}},
@@ -394,7 +405,13 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := 8; b := 2; a = b", 2},
 		{"a := b := c := 8; a + b + c", 24},
 
+		{"a := 8; a += 2; a", 10},
+		{"a := 8; a -= 2; a", 6},
+		{"a := 8; a *= 2; a", 16},
+		{"a := 8; a /= 2; a", 4},
+
 		{"a = 8", errmsg{"identifier not found: a"}},
+		{"a += 8", errmsg{"identifier not found: a"}},
 	})
 }
 

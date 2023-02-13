@@ -11,7 +11,10 @@ import (
 	"yy/parser"
 )
 
-const prompt = ">> "
+const (
+	prompt  = "yy> "
+	padLeft = "    "
+)
 
 func Start(in io.Reader, out io.Writer, isDebug bool) {
 	scanner := bufio.NewScanner(in)
@@ -29,7 +32,7 @@ func Start(in io.Reader, out io.Writer, isDebug bool) {
 		program := p.ParseProgram()
 
 		if isDebug {
-			io.WriteString(out, "   ")
+			io.WriteString(out, padLeft)
 			io.WriteString(out, program.String())
 			io.WriteString(out, "\n")
 		}

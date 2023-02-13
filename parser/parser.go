@@ -30,31 +30,35 @@ type Precedence int
 const (
 	_ Precedence = iota
 	LOWEST
+	ASSIGNMENT  // = :=
 	EQUALS      // == !=
 	LESSGREATER // > <
 	RANGE       // x..y
 	SUM         // + -
 	PRODUCT     // * /
 	PREFIX      // -x !x
-	ASSIGNMENT  // = :=
 	CALL        // function(x)
 	INDEX       // array[idx]
 )
 
 var precedences = map[token.TokenType]Precedence{
-	token.EQ:       EQUALS,
-	token.NOT_EQ:   EQUALS,
-	token.LT:       LESSGREATER,
-	token.GT:       LESSGREATER,
-	token.RANGE:    RANGE,
-	token.PLUS:     SUM,
-	token.MINUS:    SUM,
-	token.SLASH:    PRODUCT,
-	token.ASTERISK: PRODUCT,
-	token.ASSIGN:   ASSIGNMENT,
-	token.WALRUS:   ASSIGNMENT,
-	token.LPAREN:   CALL,
-	token.LBRACKET: INDEX,
+	token.ASSIGN:     ASSIGNMENT,
+	token.WALRUS:     ASSIGNMENT,
+	token.ADD_ASSIGN: ASSIGNMENT,
+	token.SUB_ASSIGN: ASSIGNMENT,
+	token.MUL_ASSIGN: ASSIGNMENT,
+	token.DIV_ASSIGN: ASSIGNMENT,
+	token.EQ:         EQUALS,
+	token.NOT_EQ:     EQUALS,
+	token.LT:         LESSGREATER,
+	token.GT:         LESSGREATER,
+	token.RANGE:      RANGE,
+	token.PLUS:       SUM,
+	token.MINUS:      SUM,
+	token.SLASH:      PRODUCT,
+	token.ASTERISK:   PRODUCT,
+	token.LPAREN:     CALL,
+	token.LBRACKET:   INDEX,
 }
 
 func getPrecedence(tok token.Token) Precedence {
@@ -88,19 +92,23 @@ func New(l *lexer.Lexer) *Parser {
 	}
 
 	p.infixParseFns = map[token.TokenType]infixParseFn{
-		token.PLUS:     p.parseInfixExpression,
-		token.MINUS:    p.parseInfixExpression,
-		token.SLASH:    p.parseInfixExpression,
-		token.ASTERISK: p.parseInfixExpression,
-		token.EQ:       p.parseInfixExpression,
-		token.NOT_EQ:   p.parseInfixExpression,
-		token.LT:       p.parseInfixExpression,
-		token.GT:       p.parseInfixExpression,
-		token.RANGE:    p.parseRangeLiteral,
-		token.WALRUS:   p.parseAssignExpression,
-		token.ASSIGN:   p.parseAssignExpression,
-		token.LPAREN:   p.parseCallExpression,
-		token.LBRACKET: p.parseIndexExpression,
+		token.PLUS:       p.parseInfixExpression,
+		token.MINUS:      p.parseInfixExpression,
+		token.SLASH:      p.parseInfixExpression,
+		token.ASTERISK:   p.parseInfixExpression,
+		token.EQ:         p.parseInfixExpression,
+		token.NOT_EQ:     p.parseInfixExpression,
+		token.LT:         p.parseInfixExpression,
+		token.GT:         p.parseInfixExpression,
+		token.RANGE:      p.parseRangeLiteral,
+		token.WALRUS:     p.parseAssignExpression,
+		token.ASSIGN:     p.parseAssignExpression,
+		token.ADD_ASSIGN: p.parseAssignExpression,
+		token.SUB_ASSIGN: p.parseAssignExpression,
+		token.MUL_ASSIGN: p.parseAssignExpression,
+		token.DIV_ASSIGN: p.parseAssignExpression,
+		token.LPAREN:     p.parseCallExpression,
+		token.LBRACKET:   p.parseIndexExpression,
 	}
 
 	// read two tokens, so curToken and peekToken are both set
@@ -478,6 +486,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression {
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
+		// TODO support assignment to indnex expr ie array[2] = 5;
 		errMsg := fmt.Sprintf("can only assign to an Identifier (got '%s', type of %T)", maybeIdent, maybeIdent)
 		p.errors = append(p.errors, errMsg)
 		return nil
@@ -491,6 +500,17 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 
 	p.advance()
 	assExpr.Value = p.parseExpression(LOWEST)
+
+	// TODO rethink this implementation, maybe move to eval stage
+	switch assExpr.Token.Type {
+	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN, token.DIV_ASSIGN:
+		assExpr.Value = &ast.InfixExpression{
+			Left:     assExpr.Name,
+			Right:    assExpr.Value,
+			Operator: string(assExpr.Token.Literal[0]),
+		}
+		assExpr.Token = token.Token{Type: token.ASSIGN, Literal: token.ASSIGN}
+	}
 
 	return assExpr
 }
