@@ -31,6 +31,7 @@ const (
 	WALRUS
 	RANGE
 	BACKSLASH
+	MACRO
 	ADD_ASSIGN
 	SUB_ASSIGN
 	MUL_ASSIGN
@@ -83,7 +84,8 @@ var tokens = [...]string{
 	NOT_EQ:     "!=",
 	WALRUS:     ":=",
 	RANGE:      "..",
-	BACKSLASH:  "\\",
+	BACKSLASH:  `\`,
+	MACRO:      `@\`,
 	ADD_ASSIGN: "+=",
 	SUB_ASSIGN: "-=",
 	MUL_ASSIGN: "*=",

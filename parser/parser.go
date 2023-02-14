@@ -89,6 +89,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.YALL:      p.parseYallExpression,
 		token.YET:       p.parseYetExpression,
 		token.BACKSLASH: p.parseLambdaLiteral,
+		token.MACRO:     p.parseMacroLiteral,
 	}
 
 	p.infixParseFns = map[token.TokenType]infixParseFn{
@@ -413,6 +414,38 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 		p.advance()
 	}
 
+	for !p.peekIs(token.RPAREN) && !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
+		p.advance()
+
+		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		fn.Parameters = append(fn.Parameters, param)
+
+		if p.peekIs(token.COMMA) { // comma is optional
+			p.advance()
+		}
+	}
+
+	if p.peekIs(token.RPAREN) { // parens are optional
+		p.advance()
+	}
+
+	if !p.eat(token.LBRACE, "missing opening '{' before lambda body") {
+		return nil
+	}
+
+	fn.Body = p.parseBlockStatement()
+
+	return fn
+}
+
+func (p *Parser) parseMacroLiteral() ast.Expression {
+	fn := &ast.MacroLiteral{Token: p.curToken}
+
+	if p.peekIs(token.LPAREN) { // parens are optional
+		p.advance()
+	}
+
+	// TODO dry param parsing
 	for !p.peekIs(token.RPAREN) && !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
 		p.advance()
 

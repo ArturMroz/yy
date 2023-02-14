@@ -28,6 +28,7 @@ const (
 	FUNCTION_OBJ
 	BUILTIN_OBJ
 	QUOTE_OBJ
+	MACRO_OBJ
 
 	ERROR_OBJ
 	RETURN_VALUE_OBJ
@@ -46,6 +47,7 @@ var objectTypes = [...]string{
 	FUNCTION_OBJ: "FUNCTION",
 	BUILTIN_OBJ:  "BUILTIN",
 	QUOTE_OBJ:    "QUOTE",
+	MACRO_OBJ:    "MACRO",
 
 	ERROR_OBJ:        "ERROR",
 	RETURN_VALUE_OBJ: "RETURN_VALUE",
@@ -194,6 +196,31 @@ func (f *Function) Inspect() string {
 	b.WriteString(strings.Join(params, ", "))
 	b.WriteString(") {\n")
 	b.WriteString(f.Body.String())
+	b.WriteString("\n}")
+
+	return b.String()
+}
+
+type Macro struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+func (m *Macro) Type() ObjectType { return MACRO_OBJ }
+func (m *Macro) Inspect() string {
+	var b strings.Builder
+
+	params := []string{}
+	for _, p := range m.Parameters {
+		params = append(params, p.String())
+	}
+
+	b.WriteString("@\\")
+	b.WriteString("(")
+	b.WriteString(strings.Join(params, ", "))
+	b.WriteString(") {\n")
+	b.WriteString(m.Body.String())
 	b.WriteString("\n}")
 
 	return b.String()

@@ -69,6 +69,20 @@ func TestNextToken(t *testing.T) {
 				{Type: token.EOF, Literal: ""},
 			},
 		},
+		{
+			`@\x y { x + y }`,
+			[]token.Token{
+				{Type: token.MACRO, Literal: "@\\"},
+				{Type: token.IDENT, Literal: "x"},
+				{Type: token.IDENT, Literal: "y"},
+				{Type: token.LBRACE, Literal: "{"},
+				{Type: token.IDENT, Literal: "x"},
+				{Type: token.PLUS, Literal: "+"},
+				{Type: token.IDENT, Literal: "y"},
+				{Type: token.RBRACE, Literal: "}"},
+				{Type: token.EOF, Literal: ""},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

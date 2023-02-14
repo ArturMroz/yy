@@ -312,9 +312,6 @@ func (bs *BlockStatement) String() string {
 
 	var b strings.Builder
 	b.WriteString("{ ")
-	// for _, s := range bs.Statements {
-	// 	b.WriteString(s.String())
-	// }
 
 	b.WriteString(strings.Join(stmts, "; "))
 	b.WriteString(" }")
@@ -322,7 +319,7 @@ func (bs *BlockStatement) String() string {
 }
 
 type FunctionLiteral struct {
-	Token      token.Token // 'fun' token
+	Token      token.Token
 	Parameters []*Identifier
 	Body       *BlockStatement
 }
@@ -342,6 +339,31 @@ func (fl *FunctionLiteral) String() string {
 	b.WriteString(strings.Join(params, ", "))
 	b.WriteString(") ")
 	b.WriteString(fl.Body.String())
+
+	return b.String()
+}
+
+type MacroLiteral struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (ml *MacroLiteral) expressionNode()      {}
+func (ml *MacroLiteral) TokenLiteral() string { return ml.Token.Literal }
+func (ml *MacroLiteral) String() string {
+	var b strings.Builder
+
+	params := []string{}
+	for _, p := range ml.Parameters {
+		params = append(params, p.String())
+	}
+
+	b.WriteString(ml.TokenLiteral())
+	b.WriteString("(")
+	b.WriteString(strings.Join(params, ", "))
+	b.WriteString(") ")
+	b.WriteString(ml.Body.String())
 
 	return b.String()
 }

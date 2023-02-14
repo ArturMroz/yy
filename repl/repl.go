@@ -19,6 +19,7 @@ const (
 func Start(in io.Reader, out io.Writer, isDebug bool) {
 	scanner := bufio.NewScanner(in)
 	env := object.NewEnvironment()
+	macroEnv := object.NewEnvironment()
 
 	for {
 		fmt.Fprint(out, prompt)
@@ -44,7 +45,10 @@ func Start(in io.Reader, out io.Writer, isDebug bool) {
 			continue
 		}
 
-		evaluated := eval.Eval(program, env)
+		eval.DefineMacros(program, macroEnv)
+		expanded := eval.ExpandMacros(program, macroEnv)
+
+		evaluated := eval.Eval(expanded, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")

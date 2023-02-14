@@ -828,8 +828,12 @@ func TestLambdaLiteralParsing(t *testing.T) {
 		t.Fatalf("function literal parameters wrong. want 2, got=%d\n", len(function.Parameters))
 	}
 
-	testLiteralExpression(function.Parameters[0], "x")
-	testLiteralExpression(function.Parameters[1], "y")
+	if err := testLiteralExpression(function.Parameters[0], "x"); err != nil {
+		t.Error(err)
+	}
+	if err := testLiteralExpression(function.Parameters[1], "y"); err != nil {
+		t.Error(err)
+	}
 
 	if len(function.Body.Statements) != 1 {
 		t.Fatalf("function.Body.Statements has not 1 statements. got=%d\n", len(function.Body.Statements))
@@ -838,7 +842,44 @@ func TestLambdaLiteralParsing(t *testing.T) {
 	if !ok {
 		t.Fatalf("function body stmt is not ast.ExpressionStatement. got=%T", function.Body.Statements[0])
 	}
-	testInfixExpression(bodyStmt.Expression, "x", "+", "y")
+
+	if err := testInfixExpression(bodyStmt.Expression, "x", "+", "y"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMacroLiteralParsing(t *testing.T) {
+	input := `@\x, y { x + y; }`
+	stmt := parseSingleExprStmt(t, input)
+
+	macro, ok := stmt.Expression.(*ast.MacroLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.MacroLiteral. got=%T", stmt.Expression)
+	}
+
+	if len(macro.Parameters) != 2 {
+		t.Fatalf("macro literal parameters wrong. want 2, got=%d\n", len(macro.Parameters))
+	}
+
+	if err := testLiteralExpression(macro.Parameters[0], "x"); err != nil {
+		t.Error(err)
+	}
+	if err := testLiteralExpression(macro.Parameters[1], "y"); err != nil {
+		t.Error(err)
+	}
+
+	if len(macro.Body.Statements) != 1 {
+		t.Fatalf("macro.Body.Statements has not 1 statements. got=%d\n", len(macro.Body.Statements))
+	}
+
+	bodyStmt, ok := macro.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("macro body stmt is not ast.ExpressionStatement. got=%T", macro.Body.Statements[0])
+	}
+
+	if err := testInfixExpression(bodyStmt.Expression, "x", "+", "y"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestFunctionParameterParsing(t *testing.T) {

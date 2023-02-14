@@ -62,7 +62,13 @@ func (l *Lexer) NextToken() token.Token {
 	case '.':
 		if l.peek() == '.' {
 			l.advance()
-			tok = token.Token{Type: token.RANGE, Literal: ".."}
+			tok = token.Token{Type: token.RANGE, Literal: token.RANGE.String()}
+		}
+
+	case '@':
+		if l.peek() == '\\' {
+			l.advance()
+			tok = token.Token{Type: token.MACRO, Literal: token.MACRO.String()}
 		}
 
 	case '"':
