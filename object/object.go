@@ -8,12 +8,12 @@ import (
 	"yy/ast"
 )
 
-type ObjectType int
-
 type Object interface {
 	Type() ObjectType
 	Inspect() string
 }
+
+type ObjectType int
 
 const (
 	INTEGER_OBJ ObjectType = iota
@@ -24,8 +24,10 @@ const (
 	ARRAY_OBJ
 	HASH_OBJ
 	RANGE_OBJ
+
 	FUNCTION_OBJ
 	BUILTIN_OBJ
+	QUOTE_OBJ
 
 	ERROR_OBJ
 	RETURN_VALUE_OBJ
@@ -37,11 +39,13 @@ var objectTypes = [...]string{
 	STRING_OBJ:  "STRING",
 	NULL_OBJ:    "NULL",
 
-	ARRAY_OBJ:    "ARRAY",
-	HASH_OBJ:     "HASH",
+	ARRAY_OBJ: "ARRAY",
+	HASH_OBJ:  "HASH",
+	RANGE_OBJ: "RANGE",
+
 	FUNCTION_OBJ: "FUNCTION",
 	BUILTIN_OBJ:  "BUILTIN",
-	RANGE_OBJ:    "RANGE",
+	QUOTE_OBJ:    "QUOTE",
 
 	ERROR_OBJ:        "ERROR",
 	RETURN_VALUE_OBJ: "RETURN_VALUE",
@@ -203,3 +207,10 @@ type Builtin struct {
 
 func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 func (b *Builtin) Inspect() string  { return "builtin function" }
+
+type Quote struct {
+	Node ast.Node
+}
+
+func (q *Quote) Type() ObjectType { return QUOTE_OBJ }
+func (q *Quote) Inspect() string  { return fmt.Sprintf("QUOTE(%s)", q.Node) }

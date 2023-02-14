@@ -36,6 +36,12 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Function{Parameters: node.Parameters, Body: node.Body, Env: env}
 
 	case *ast.CallExpression:
+		if node.Function.TokenLiteral() == "quote" { // TODO this is ugly
+			return quote(node.Arguments[0], env) // quote only supprots 1 arg
+			// arg := node.Arguments[0] // quote only takes 1 arg
+			// return &object.Quote{Node: arg}
+		}
+
 		fn := Eval(node.Function, env)
 		if isError(fn) {
 			return fn
