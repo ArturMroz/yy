@@ -157,17 +157,25 @@ yolo {
 
 # Usage
 
-To run a script:
+Build with 
 
 ```
-$ yy filename
+go build
 ```
 
-To start a REPL session (--debug flag is optional):
+Run a script
 
 ```
-$ yy [--debug]
+$ ./yy [--debug] filename
 ```
+
+Or start a REPL session 
+
+```
+$ ./yy [--debug]
+```
+
+Note: `--debug` flag is optional
 
 # Other, less exciting, features
 
