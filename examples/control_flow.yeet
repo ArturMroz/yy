@@ -1,10 +1,12 @@
 // CONTROL FLOW
 
 // yif yels expressions are used for conditional execution
-// the values false and nil are falsy, and everything else is truthy 
-// yif requires brackets, but doesn't require parentheses
-yif 2*2 > 1 {
-   "all good" 
+// the values false and null are falsy, and everything else is truthy (like in Ruby)
+// parentheses aren't required, but brackets are
+yif 2*2 < 1 {           
+   "nope, that shouldn't happen" 
+} yels yif 8 + 8 > 4 {
+   "yup, all good" 
 } yels {
     "math.exe stopped working"
 }

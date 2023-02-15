@@ -199,7 +199,7 @@ func TestParsingHashLiteralsStringKeys(t *testing.T) {
 		if !ok {
 			t.Errorf("key is not ast.StringLiteral. got=%T", key)
 		}
-		expectedValue := expected[literal.String()]
+		expectedValue := expected[literal.Value]
 		if err := testIntegerLiteral(value, expectedValue); err != nil {
 			t.Error(err)
 		}
@@ -249,9 +249,9 @@ func TestParsingHashLiteralsWithExpressions(t *testing.T) {
 			t.Errorf("key is not ast.StringLiteral. got=%T", key)
 			continue
 		}
-		testFunc, ok := tests[literal.String()]
+		testFunc, ok := tests[literal.Value]
 		if !ok {
-			t.Errorf("No test function for key %q found", literal.String())
+			t.Errorf("No test function for key %q found", literal.Value)
 			continue
 		}
 		if err := testFunc(value); err != nil {
@@ -331,143 +331,143 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}{
 		{
 			"-a * b",
-			"((-a) * b)",
+			"((-a) * b);",
 		},
 		{
 			"!-a",
-			"(!(-a))",
+			"(!(-a));",
 		},
 		{
 			"a + b + c",
-			"((a + b) + c)",
+			"((a + b) + c);",
 		},
 		{
 			"a + b - c",
-			"((a + b) - c)",
+			"((a + b) - c);",
 		},
 		{
 			"a * b * c",
-			"((a * b) * c)",
+			"((a * b) * c);",
 		},
 		{
 			"a * b / c",
-			"((a * b) / c)",
+			"((a * b) / c);",
 		},
 		{
 			"a + b / c",
-			"(a + (b / c))",
+			"(a + (b / c));",
 		},
 		{
 			"a + b * c + d / e - f",
-			"(((a + (b * c)) + (d / e)) - f)",
+			"(((a + (b * c)) + (d / e)) - f);",
 		},
 		{
 			"3 + 4; -5 * 5",
-			"(3 + 4)((-5) * 5)",
+			"(3 + 4);((-5) * 5);",
 		},
 		{
 			"5 > 4 == 3 < 4",
-			"((5 > 4) == (3 < 4))",
+			"((5 > 4) == (3 < 4));",
 		},
 		{
 			"5 < 4 != 3 > 4",
-			"((5 < 4) != (3 > 4))",
+			"((5 < 4) != (3 > 4));",
 		},
 		{
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
-			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)));",
 		},
 		{
 			"true",
-			"true",
+			"true;",
 		},
 		{
 			"false",
-			"false",
+			"false;",
 		},
 		{
 			"3 > 5 == false",
-			"((3 > 5) == false)",
+			"((3 > 5) == false);",
 		},
 		{
 			"3 < 5 == true",
-			"((3 < 5) == true)",
+			"((3 < 5) == true);",
 		},
 		{
 			"1 + (2 + 3) + 4",
-			"((1 + (2 + 3)) + 4)",
+			"((1 + (2 + 3)) + 4);",
 		},
 		{
 			"(5 + 5) * 2",
-			"((5 + 5) * 2)",
+			"((5 + 5) * 2);",
 		},
 		{
 			"2 / (5 + 5)",
-			"(2 / (5 + 5))",
+			"(2 / (5 + 5));",
 		},
 		{
 			"-(5 + 5)",
-			"(-(5 + 5))",
+			"(-(5 + 5));",
 		},
 		{
 			"!(true == true)",
-			"(!(true == true))",
+			"(!(true == true));",
 		},
 		{
 			"a + add(b * c) + d",
-			"((a + add((b * c))) + d)",
+			"((a + add((b * c))) + d);",
 		},
 		{
 			"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-			"add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+			"add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)));",
 		},
 		{
 			"add(a + b + c * d / f + g)",
-			"add((((a + b) + ((c * d) / f)) + g))",
+			"add((((a + b) + ((c * d) / f)) + g));",
 		},
 		{
 			"a * [1, 2, 3, 4][b * c] * d",
-			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
+			"((a * ([1, 2, 3, 4][(b * c)])) * d);",
 		},
 		{
 			"add(a * b[2], b[1], 2 * [1, 2][1])",
-			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])));",
 		},
 		{
 			"add(a * b[2] b[1] 2 * [1, 2][1])",
-			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])));",
 		},
 		{
 			`add := \a b { a + b }; add(5 10) == 5 + 2 * 10`,
-			`(add := \(a, b) { (a + b) })(add(5, 10) == (5 + (2 * 10)))`,
+			`(add := \(a, b) { (a + b) });(add(5, 10) == (5 + (2 * 10)));`,
 		},
 		{
 			`a := 5 + 2 * 10 / 8 - 15;`,
-			`(a := ((5 + ((2 * 10) / 8)) - 15))`,
+			`(a := ((5 + ((2 * 10) / 8)) - 15));`,
 		},
 		{
 			"a := 3 + 4 * 5 == 3 * 1 + 4 * 5",
-			"(a := ((3 + (4 * 5)) == ((3 * 1) + (4 * 5))))",
+			"(a := ((3 + (4 * 5)) == ((3 * 1) + (4 * 5))));",
 		},
 		{
 			"a = b = c = 8",
-			"(a = (b = (c = 8)))",
+			"(a = (b = (c = 8)));",
 		},
 		{
 			"f := 6 + 2 * 3 g := 3 * 3 + 1 h := f + g",
-			"(f := (6 + (2 * 3)))(g := ((3 * 3) + 1))(h := (f + g))",
+			"(f := (6 + (2 * 3)));(g := ((3 * 3) + 1));(h := (f + g));",
 		},
 		{
 			"(1+2) .. (8*2)",
-			"((1 + 2)..(8 * 2))",
+			"((1 + 2)..(8 * 2));",
 		},
 		{
 			"1 + 2 .. 8 * 2",
-			"((1 + 2)..(8 * 2))",
+			"((1 + 2)..(8 * 2));",
 		},
 		{
 			"r := 1 + 2 .. 8 * 2",
-			"(r := ((1 + 2)..(8 * 2)))",
+			"(r := ((1 + 2)..(8 * 2)));",
 		},
 	}
 

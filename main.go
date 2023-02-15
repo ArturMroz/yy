@@ -41,7 +41,13 @@ func main() {
 			return
 		}
 
-		result := eval.Eval(program, object.NewEnvironment())
+		env := object.NewEnvironment()
+		macroEnv := object.NewEnvironment()
+
+		eval.DefineMacros(program, macroEnv)
+		expanded := eval.ExpandMacros(program, macroEnv)
+
+		result := eval.Eval(expanded, env)
 		if evalError, ok := result.(*object.Error); ok {
 			fmt.Printf("runtime error: %s\n", evalError.Msg)
 		}

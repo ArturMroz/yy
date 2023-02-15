@@ -26,7 +26,7 @@ func TestString(t *testing.T) {
 		},
 	}
 
-	expected := "(myVar := anotherVar)"
+	expected := "(myVar := anotherVar);"
 	if program.String() != expected {
 		t.Errorf("program.String() wrong. want=%q, got=%q", expected, program.String())
 	}

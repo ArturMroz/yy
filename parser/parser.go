@@ -222,8 +222,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	val, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
-		p.errors = append(p.errors, msg)
+		p.newError("could not parse %s as integer", p.peekToken.Literal)
 		return nil
 	}
 
@@ -267,10 +266,22 @@ func (p *Parser) parseYifExpression() ast.Expression {
 
 	if p.peekIs(token.YELS) {
 		p.advance()
-		if !p.eat(token.LBRACE, "missing opening '{' after 'yels'") {
+
+		if p.peekIs(token.LBRACE) {
+			p.advance()
+			yifExpr.Alternative = p.parseBlockStatement()
+		} else if p.peekIs(token.YIF) {
+			p.advance()
+			// TODO this is a bit clunky
+			yifExpr.Alternative = &ast.BlockStatement{
+				Statements: []ast.Statement{
+					&ast.ExpressionStatement{Expression: p.parseYifExpression()},
+				},
+			}
+		} else {
+			p.newError("expected 'yif' or '{' after 'yels', found '%s'", p.peekToken.Literal)
 			return nil
 		}
-		yifExpr.Alternative = p.parseBlockStatement()
 	}
 
 	return yifExpr
@@ -490,8 +501,7 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
 		// TODO support assignment to indnex expr ie array[2] = 5;
-		errMsg := fmt.Sprintf("can only assign to an Identifier (got '%s', type of %T)", maybeIdent, maybeIdent)
-		p.errors = append(p.errors, errMsg)
+		p.newError("can only assign to an Identifier (got '%s', type of %T)", maybeIdent, maybeIdent)
 		return nil
 	}
 
@@ -603,12 +613,15 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("%s (expected '%s', got '%s')", errMsg, t, p.peekToken.Literal)
+	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	// TODO add more details to this err msg
 	msg := fmt.Sprintf("unexpected token '%s'", t)
 	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) newError(format string, args ...any) {
+	p.errors = append(p.errors, fmt.Sprintf(format, args...))
 }

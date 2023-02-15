@@ -37,7 +37,7 @@ func (p *Program) TokenLiteral() string {
 func (p *Program) String() string {
 	var b strings.Builder
 	for _, s := range p.Statements {
-		b.WriteString(s.String())
+		b.WriteString(s.String() + ";")
 	}
 	return b.String()
 }
@@ -82,8 +82,7 @@ func (ys *YeetStatement) String() string {
 }
 
 type ExpressionStatement struct {
-	// the first token of the expression
-	Token      token.Token
+	Token      token.Token // the first token of the expression
 	Expression Expression
 }
 
@@ -129,7 +128,7 @@ type StringLiteral struct {
 
 func (sl *StringLiteral) expressionNode()      {}
 func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
-func (sl *StringLiteral) String() string       { return sl.Token.Literal }
+func (sl *StringLiteral) String() string       { return `"` + sl.Token.Literal + `"` }
 
 type ArrayLiteral struct {
 	Token    token.Token // the '[' token
@@ -240,7 +239,7 @@ func (ie *YifExpression) String() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "yif %s %s", ie.Condition, ie.Consequence)
 	if ie.Alternative != nil {
-		b.WriteString("yels ")
+		b.WriteString(" yels ")
 		b.WriteString(ie.Alternative.String())
 	}
 	return b.String()

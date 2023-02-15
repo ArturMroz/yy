@@ -241,7 +241,7 @@ func TestYifYelsExpressions(t *testing.T) {
 		{"yif 1 > 2 { 10 }", nil},
 		{"yif 1 > 2 { 10 } yels { 20 }", 20},
 		{`yif 1 > 2 { "nope" } yels { yif 2 > 5 { "nope" } yels { 20 } }`, 20},
-		// {`yif 1 > 2 { "nope } yels yif 2 > 5 { "nope" } yels { 20 }`, 20}, // TODO fix
+		{`yif 1 > 2 { "nope" } yels yif 2 > 5 { "nope" } yels { 20 }`, 20},
 		{"yif 1 < 2 { 10 } yels { 20 }", 10},
 		{"yif null { 10 } yels { 20 }", 20},
 		{"result := yif null { 10 } yels { 20 }; result", 20},
@@ -613,8 +613,12 @@ func testEval(t *testing.T, input string) object.Object {
 	}
 
 	env := object.NewEnvironment()
+	macroEnv := object.NewEnvironment()
 
-	return Eval(program, env)
+	DefineMacros(program, macroEnv)
+	expanded := ExpandMacros(program, macroEnv)
+
+	return Eval(expanded, env)
 }
 
 func testIntegerObject(obj object.Object, expected int64) error {

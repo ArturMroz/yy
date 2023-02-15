@@ -37,8 +37,10 @@ yell("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
 // CONTROL FLOW
 
 // yif requires brackets, but doesn't require parentheses
-yif 2*2 > 1 {
+yif 2 * 2 > 1 {
    "all good" 
+} yels yif 8 + 8 < 4 {
+   "still all good" 
 } yels {
     "math.exe stopped working"
 }
