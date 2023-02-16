@@ -160,7 +160,7 @@ yolo {
 Build with 
 
 ```
-go build
+$ go build
 ```
 
 Run a script

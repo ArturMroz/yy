@@ -22,13 +22,15 @@ func main() {
 
 	switch len(flag.Args()) {
 	case 0:
-		repl(os.Stdin, os.Stdout)
+		repl()
 
 	case 1:
 		runFile(flag.Args()[0])
 
 	default:
 		fmt.Println("usage: yy [--debug] [path_to_script] ")
+		// TOOD work around this limitation for better UX (this is how Go stdlib flag parsing works)
+		fmt.Println("note that the --debug flag must come befor the path to the script")
 	}
 }
 
@@ -74,12 +76,15 @@ const (
 	padLeft = "    "
 )
 
-func repl(in io.Reader, out io.Writer) {
-	fmt.Println(greet)
-
+func repl() {
+	in := os.Stdin
+	out := os.Stdout
 	scanner := bufio.NewScanner(in)
+
 	env := object.NewEnvironment()
 	macroEnv := object.NewEnvironment()
+
+	fmt.Println(greet)
 
 	for {
 		fmt.Fprint(out, prompt)
@@ -109,6 +114,7 @@ func repl(in io.Reader, out io.Writer) {
 		expanded := eval.ExpandMacros(program, macroEnv)
 
 		if *debug {
+			io.WriteString(out, padLeft)
 			io.WriteString(out, expanded.String())
 			io.WriteString(out, "\n")
 		}

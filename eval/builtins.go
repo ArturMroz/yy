@@ -17,8 +17,20 @@ var builtins = map[string]*object.Builtin{
 			switch arg := args[0].(type) {
 			case *object.Array:
 				return &object.Integer{Value: int64(len(arg.Elements))}
+
 			case *object.String:
 				return &object.Integer{Value: int64(len(arg.Value))}
+
+			case *object.Hash:
+				return &object.Integer{Value: int64(len(arg.Pairs))}
+
+			case *object.Range:
+				length := arg.End - arg.Start
+				if length < 0 {
+					length = -length
+				}
+				return &object.Integer{Value: length + 1}
+
 			default:
 				return newError("argument to `len` not supported, got %s", args[0].Type())
 			}
@@ -76,6 +88,50 @@ var builtins = map[string]*object.Builtin{
 			newElements[length] = args[1]
 
 			return &object.Array{Elements: newElements}
+		},
+	},
+
+	"yoink": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 && len(args) != 2 {
+				return newError("wrong number of arguments for `yoink`. got=%d, want=1 or 2", len(args))
+			}
+			if len(args) == 2 && args[1].Type() != object.INTEGER_OBJ {
+				return newError("second argument to `yoink` must be INTEGER, got %s", args[1].Type())
+			}
+
+			switch arg := args[0].(type) {
+			case *object.Array:
+				pos := len(arg.Elements) - 1
+				if len(args) == 2 {
+					pos = int(args[1].(*object.Integer).Value)
+				}
+				if pos >= len(arg.Elements) {
+					return NULL
+				}
+
+				elt := arg.Elements[pos]
+				arg.Elements = append(arg.Elements[:pos], arg.Elements[pos+1:]...)
+				return elt
+
+			case *object.String:
+				pos := len(arg.Value) - 1
+				if len(args) == 2 {
+					pos = int(args[1].(*object.Integer).Value)
+				}
+				if pos >= len(arg.Value) {
+					return NULL
+				}
+
+				elt := arg.Value[pos]
+				arg.Value = arg.Value[:pos] + arg.Value[pos+1:]
+				return &object.String{Value: string(elt)}
+
+			default:
+				// TODO support more types
+				return newError("cannot yoink from %s", args[0].Type())
+
+			}
 		},
 	},
 
