@@ -499,6 +499,12 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`str := "howdy"; x := yoink(str, 1); x`, "o"},
 		{`str := "howdy"; x := yoink(str, 1); str`, "hwdy"},
 		{`yoink(69)`, errmsg{"cannot yoink from INTEGER"}},
+
+		{`yarn(5)`, "5"},
+		{`yarn(true)`, "true"},
+		{`yarn([1, 2, 3])`, "[1, 2, 3]"},
+		{`yarn(0..2)`, "0..2"},
+		{`yarn("test")`, "test"},
 	})
 }
 

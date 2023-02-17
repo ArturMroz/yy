@@ -17,14 +17,15 @@ YeetYoink (YY for short) is a dynamically typed programming language that combin
 
 # Quick tour
 
-For more details, check out [examples](examples) dir.
+For more details, check out [examples](examples) directory.
+
+## Variables
 
 ```c
 a := 5 // variables are declared and assigned using walrus operator ':='
 a = 10 // variable assignment, variables must be declared before use
 
 // supported types: integer, string, bool, null
-
 yinteger := 5
 yarn     := "how long is a piece of string?"
 yup      := true
@@ -33,21 +34,25 @@ ylem     := null
 // print with 'yelp()' (or 'yell()' if urgent)
 yelp("Hello, world!")       // prints "Hello, world!"
 yell("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
+```
 
-// CONTROL FLOW
+## Control flow
 
+```c
 // yif requires brackets, but doesn't require parentheses
-yif 2 * 2 > 1 {
-   "all good" 
+yif 2 * 2 > 10 {
+   "that's untrue" 
 } yels yif 8 + 8 < 4 {
-   "still all good" 
+   "yup, that's our stop" 
 } yels {
     "math.exe stopped working"
 }
+```
 
-// there are 2 looping constructs in YY: yall and yet
+## Loops
 
-// yall (Y'all) yeeterates over a collection (array, string or range)
+```c
+// yall (y'all) yeeterates over a collection
 // variable 'yt' (short for yeeterator) is created automatically in the loop's scope
 yall 0..3 {
     yelp(yt) // prints '0', '1', '2', '3'
@@ -58,18 +63,22 @@ sum    := 0
 yall yarray {
     sum += yt
 }
-
 yelp(sum) // prints 6
+```
 
+
+```c
 // 2nd type of loop: 'yet' as in 'are we there yet?'
 // similar to a 'while' loop in other languages
 i := 0
 yet i < 5 {
     i += 1
 }
+```
 
-// ARRAYS
+## Data structures
 
+```c
 my_yarray := [1, 2, 3, 4]
 
 // yarray can hold values of different types
@@ -77,22 +86,22 @@ my_yarray2 := [1, true, "hello", yarn, yup]
 
 // yarrays can be concatenated
 mega_yarray := my_yarray + my_yarray2
+```
 
-// HASHMAPS
-
-yak := { 
+```c
+my_hashmap := { 
     "name":    "Jon the Yak", 
     "age":     2, 
     "alive":   true,
     42:        "yes, definitely",
-    "colours": ["brown", "white"], 
 }
 
-yelp(friend["name"], "is", friend["age"], "years old.") // prints "Jon the Yak is 2 years old."
-yelp(friend[42]) // prints "yes, definitely"
+yelp(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Jon the Yak is 2 years old."
+```
 
-// FUNCTIONS
+## Functions
 
+```c
 // anonymous functions (lambdas) are declared using '\'
 // (if you squint hard enough, '\' looks kinda like lambda 'λ')
 
@@ -111,29 +120,34 @@ max2 := \x y {
         y
     }
 }
+```
 
+```c
 // recursion
-
 factorial := \n { 
-    yif n == 0 { 1 } yels { n * factorial(n-1) }
+    yif n == 0 { 
+        1 
+    } yels { 
+        n * factorial(n-1) 
+    }
 }
 
 // higher-order functions
-
-add_three      := \x { x + 3 }
-call_two_times := \x fn { fn(fn(x)) }
-yelp(call_two_times(5)) // prints 11
+add_three  := \x { x + 3 }
+call_twice := \x fn { fn(fn(x)) }
+yelp(call_twice(5)) // prints 11
 
 // closures
-
 new_adder := \x { 
     \n { x + n } 
 }
 add_two := new_adder(2)
 yelp(add_two(5)) // prints 7
+```
 
-// YOLO MODE
+## Yolo Mode
 
+```c
 // mixing types would normally cause an error:
 c := 8 * "string" // runtime error: 'type mismatch: STRING * INTEGER'
 
@@ -152,8 +166,8 @@ yolo {
 
     yelp("oh boy" / 0)  // see for yourself...
 }
-
 ```
+
 
 # Usage
 
@@ -163,7 +177,7 @@ Build with
 $ go build
 ```
 
-Run a script
+Run a YY script
 
 ```
 $ ./yy [--debug] filename
@@ -177,31 +191,32 @@ $ ./yy [--debug]
 
 Note: `--debug` flag is optional
 
-# Other, less exciting, features
+
+# More features
 
 - **Two data structures.** YY supports arrays and hashmaps, providing more data structure options than Lua.
 - **Very basic data types**. YY supports the basic data types of yinteger, string, bool and null. And yes, null isn't technically a data type.
-- **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (semicolons are so 1970s anyway). 
+- **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (since semicolons are so 1970s). 
 - **Garbage collected**. YY uses automated memory management, meaning you don't have to worry about freeing up memory that is no longer being used. It's like having a personal janitor for your code!
 - **Not Object-Oriented**. You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy.
+- **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism). 
 - **Built-in functions.** YY includes a number of built-in functions for common tasks.
-- **Pass by value**. Variables are passed by value, meaning that when a variable is passed as an argument to a function, a copy of its value is used in the function. No more worrying about your function making a mess of your precious data.
 
 
 # FAQ
 
-### Q: Why is the project called YeetYoink?
+## Why is the project called YeetYoink?
 
 Yeet and Yoink symbolise two complementary, yet opposing forces that exist in the universe. Everything has both Yeet and Yoink aspects and they are interconnected and interdependent. Together, Yeet and Yoink form a whole, and the balance between the two is necessary for harmony and balance in the universe.
 
-### Q: What's the deal with the fishies in the logo?
+## What's the deal with the fishies in the logo?
 
-A: They are two koi fish and they are the mascot for the project. The dark one is called Yeet and is passive, negative, and feminine. The bright one is called Yoink and is active, positive, and masculine.
+They are two koi fish and they are the mascot for the project. The dark one is called Yeet and is passive, negative, and feminine. The bright one is called Yoink and is active, positive, and masculine.
 
-### Q: Can this language be used for serious business?
+## Can this language be used for serious business?
 
 Of course, why do you ask.
 
-### Q: Has anyone actually asked these questions?
+## Has anyone actually asked these questions?
 
-A: No, I made this section up.
+No, I made this section up.

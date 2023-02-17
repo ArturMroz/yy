@@ -140,7 +140,7 @@ var builtins = map[string]*object.Builtin{
 	"yell": {
 		Fn: func(args ...object.Object) object.Object {
 			for _, arg := range args {
-				fmt.Println(strings.ToUpper(arg.Inspect()))
+				fmt.Println(strings.ToUpper(arg.String()))
 			}
 			fmt.Println()
 			return NULL
@@ -149,16 +149,31 @@ var builtins = map[string]*object.Builtin{
 
 	"yelp": {
 		Fn: func(args ...object.Object) object.Object {
-			s := make([]any, len(args))
-			for i, v := range args {
-				s[i] = v.Inspect()
-			}
-			fmt.Println(s...)
+			msg := spaceSeparatedArgs(args...)
+			fmt.Println(msg)
 			return NULL
 		},
 	},
 
 	// DEBUG
+
+	// throws an error, effectively terminating the program
+	"yikes": {
+		Fn: func(args ...object.Object) object.Object {
+			msg := spaceSeparatedArgs(args...)
+			return newError(msg)
+		},
+	},
+
+	// converts an object to string
+	"yarn": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of arguments for `yarn`. got=%d, want=1", len(args))
+			}
+			return &object.String{Value: args[0].String()}
+		},
+	},
 
 	"yassert": {
 		Fn: func(args ...object.Object) object.Object {
@@ -190,4 +205,13 @@ func checkArray(fnName string, args ...object.Object) (*object.Array, error) {
 	}
 
 	return args[0].(*object.Array), nil
+}
+
+func spaceSeparatedArgs(args ...object.Object) string {
+	// need to convert []Object to []any for Sprint to work
+	s := make([]any, len(args))
+	for i, v := range args {
+		s[i] = v
+	}
+	return fmt.Sprint(s...)
 }

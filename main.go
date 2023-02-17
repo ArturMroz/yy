@@ -121,7 +121,7 @@ func repl() {
 
 		evaluated := eval.Eval(expanded, env)
 		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, evaluated.String())
 			io.WriteString(out, "\n")
 		}
 	}

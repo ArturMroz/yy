@@ -38,8 +38,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.CallExpression:
 		if node.Function.TokenLiteral() == "quote" { // TODO this is ugly
 			return quote(node.Arguments[0], env) // quote only supprots 1 arg
-			// arg := node.Arguments[0] // quote only takes 1 arg
-			// return &object.Quote{Node: arg}
 		}
 
 		fn := Eval(node.Function, env)
@@ -406,7 +404,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		}
 
 		if yoloOK {
-			return yoloMode(op, left, right)
+			return yoloInfixExpression(op, left, right)
 		}
 		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
 
@@ -473,7 +471,6 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		case "+":
 			return &object.Array{Elements: append(left.Elements, right.Elements...)}
 		case "==":
-			// TODO DeepEqual's performance isn't great
 			return toYeetBool(reflect.DeepEqual(left.Elements, right.Elements))
 		case "!=":
 			return toYeetBool(!reflect.DeepEqual(left.Elements, right.Elements))
@@ -483,10 +480,10 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 	return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 }
 
-func yoloMode(op string, left, right object.Object) object.Object {
+func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && right.Type() == object.INTEGER_OBJ:
-		return yoloMode(op, right, left) // handle below
+		return yoloInfixExpression(op, right, left) // handle below
 
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.ARRAY_OBJ:
 		left := left.(*object.Integer)
@@ -515,7 +512,11 @@ func yoloMode(op string, left, right object.Object) object.Object {
 			return evalInfixExpression(op, &object.Integer{Value: int64(v)}, right, true)
 		}
 
-		return yoloMode(op, right, left) // handle below
+		if op == "+" {
+			return &object.String{Value: left.String() + right.String()}
+		}
+
+		return yoloInfixExpression(op, right, left) // handle below
 
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.STRING_OBJ:
 		left := left.(*object.Integer)
@@ -561,7 +562,7 @@ func yoloMode(op string, left, right object.Object) object.Object {
 	}
 
 	// catch all: just convert to string and concatenate
-	return &object.String{Value: left.Inspect() + right.Inspect()}
+	return &object.String{Value: left.String() + right.String()}
 }
 
 func isTruthy(obj object.Object) bool {
