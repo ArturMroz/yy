@@ -29,8 +29,8 @@ func main() {
 
 	default:
 		fmt.Println("usage: yy [--debug] [path_to_script] ")
-		// TOOD work around this limitation for better UX (this is how Go stdlib flag parsing works)
-		fmt.Println("note that the --debug flag must come befor the path to the script")
+		// TODO work around this limitation for better UX (this is how Go stdlib flag parsing works)
+		fmt.Println("note that the --debug flag must come before the path to the script")
 	}
 }
 

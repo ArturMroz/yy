@@ -2,7 +2,7 @@
     <img src="./yylogo.png">
 </div>
 
-YeetYoink (YY for short) is a dynamically typed programming language that combines both functional and imperative programming paradigms. 
+YeetYoink (YY for short) is a dynamically typed programming language that combines functional and imperative programming paradigms. 
 
 
 # Key features
@@ -26,10 +26,10 @@ a := 5 // variables are declared and assigned using walrus operator ':='
 a = 10 // variable assignment, variables must be declared before use
 
 // supported types: integer, string, bool, null
-yinteger := 5
-yarn     := "how long is a piece of string?"
-yup      := true
-ylem     := null
+my_yinteger := 5
+my_yarn     := "how long is a piece of string?"
+my_yup      := true
+my_void     := null
 
 // print with 'yelp()' (or 'yell()' if urgent)
 yelp("Hello, world!")       // prints "Hello, world!"
@@ -39,7 +39,6 @@ yell("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
 ## Control flow
 
 ```c
-// yif requires brackets, but doesn't require parentheses
 yif 2 * 2 > 10 {
    "that's untrue" 
 } yels yif 8 + 8 < 4 {
@@ -60,9 +59,10 @@ yall 0..3 {
 
 yarray := [1, 2, 3]
 sum    := 0
-yall yarray {
-    sum += yt
+yall elt: yarray { // name for the yeeterator can be provided 
+    sum += elt
 }
+
 yelp(sum) // prints 6
 ```
 
@@ -82,7 +82,7 @@ yet i < 5 {
 my_yarray := [1, 2, 3, 4]
 
 // yarray can hold values of different types
-my_yarray2 := [1, true, "hello", yarn, yup]
+my_yarray2 := [1, true, "hello"]
 
 // yarrays can be concatenated
 mega_yarray := my_yarray + my_yarray2
@@ -90,21 +90,20 @@ mega_yarray := my_yarray + my_yarray2
 
 ```c
 my_hashmap := { 
-    "name":    "Jon the Yak", 
-    "age":     2, 
-    "alive":   true,
-    42:        "yes, definitely",
+    "name":  "Yakub the Yak", 
+    "age":   2, 
+    "alive": true,
+    42:      "yes, definitely",
 }
 
-yelp(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Jon the Yak is 2 years old."
+yelp(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Yakub the Yak is 2 years old."
 ```
 
 ## Functions
 
 ```c
 // anonymous functions (lambdas) are declared using '\'
-// (if you squint hard enough, '\' looks kinda like lambda 'λ')
-
+// (if you squint hard enough, '\' looks kinda like a lambda 'λ')
 max := \x y {
     yif x > y {
         yeet x // yeets the value and returns from the function
@@ -135,7 +134,7 @@ factorial := \n {
 // higher-order functions
 add_three  := \x { x + 3 }
 call_twice := \x fn { fn(fn(x)) }
-yelp(call_twice(5)) // prints 11
+yelp(call_twice(5, add_three)) // prints 11
 
 // closures
 new_adder := \x { 
@@ -157,14 +156,16 @@ new_var = 5 // runtime error: 'identifier not found: new_var'
 // but in Yolo Mode, anything goes:
 
 yolo {
-    yelp("tree" * 18)   // prints forest
+    yelp("tree" * 18)   // prints 'forest'
     yelp("2" * 5)       // prints 10
-    yelp("troll" * 3)   // prints trolltrolltroll
+    yelp("troll" * 3)   // prints 'trolltrolltroll'
     yelp([1, 2, 3] * 3) // prints [3, 6, 9]
 
-    new_var = 5 // this works even though new_var hasn't been declared first
+    // this works even though new_var hasn't been declared first
+    new_var = 5 
 
-    yelp("oh boy" / 0)  // see for yourself...
+    // but even in yolo mode, division by zero doesn't end well
+    yelp("weee" / 0) // prints "Stare at the abyss long enough, and it starts to stare back at you."
 }
 ```
 

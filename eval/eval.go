@@ -3,8 +3,6 @@ package eval
 import (
 	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 
 	"yy/ast"
 	"yy/object"
@@ -92,7 +90,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpression(node.Operator, right)
+		return evalPrefixExpression(node.Operator, right, env.YoloMode())
 
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
@@ -376,17 +374,20 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 	}
 }
 
-func evalPrefixExpression(op string, right object.Object) object.Object {
+func evalPrefixExpression(op string, right object.Object, yoloOK bool) object.Object {
 	switch op {
 	case "!":
 		return toYeetBool(!isTruthy(right))
 
 	case "-":
 		if right.Type() != object.INTEGER_OBJ {
+			if yoloOK {
+				return yoloPrefixExpression(op, right)
+			}
 			return newError("unknown operator: %s%s", op, right.Type())
 		}
-		right := right.(*object.Integer)
-		return &object.Integer{Value: -right.Value}
+		rightVal := right.(*object.Integer).Value
+		return &object.Integer{Value: -rightVal}
 
 	default:
 		return newError("unknown operator: %s%s", op, right.Type())
@@ -480,91 +481,6 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 	return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 }
 
-func yoloInfixExpression(op string, left, right object.Object) object.Object {
-	switch {
-	case left.Type() == object.ARRAY_OBJ && right.Type() == object.INTEGER_OBJ:
-		return yoloInfixExpression(op, right, left) // handle below
-
-	case left.Type() == object.INTEGER_OBJ && right.Type() == object.ARRAY_OBJ:
-		left := left.(*object.Integer)
-		right := right.(*object.Array)
-
-		switch op {
-		case "+", "-", "*", "/":
-			result := &object.Array{
-				Elements: make([]object.Object, len(right.Elements)),
-			}
-			for i, v := range right.Elements {
-				result.Elements[i] = evalInfixExpression(op, left, v, true)
-			}
-			return result
-
-		case "<":
-			return toYeetBool(true)
-		case ">":
-			return toYeetBool(false)
-		}
-
-	case left.Type() == object.STRING_OBJ && right.Type() == object.INTEGER_OBJ:
-		left := left.(*object.String)
-
-		if v, err := strconv.Atoi(left.Value); err == nil {
-			return evalInfixExpression(op, &object.Integer{Value: int64(v)}, right, true)
-		}
-
-		if op == "+" {
-			return &object.String{Value: left.String() + right.String()}
-		}
-
-		return yoloInfixExpression(op, right, left) // handle below
-
-	case left.Type() == object.INTEGER_OBJ && right.Type() == object.STRING_OBJ:
-		left := left.(*object.Integer)
-		right := right.(*object.String)
-
-		if v, err := strconv.Atoi(right.Value); err == nil {
-			return evalInfixExpression(op, left, &object.Integer{Value: int64(v)}, true)
-		}
-
-		switch op {
-		case "*":
-			if left.Value < 0 {
-				return ABYSS
-			}
-
-			if collective, ok := collectiveNouns[strings.TrimSpace(right.Value)]; ok {
-				return &object.String{Value: collective}
-			}
-
-			result := strings.Repeat(right.Value, int(left.Value))
-			return &object.String{Value: result}
-
-		case "/":
-			if left.Value <= 0 {
-				return ABYSS
-			}
-
-			ss := strings.Split(right.Value, "")
-			elems := make([]object.Object, len(ss))
-			for i, s := range ss {
-				elems[i] = &object.String{Value: s}
-			}
-			result := &object.Array{Elements: elems}
-			return result
-
-		case "<":
-			return toYeetBool(true)
-		case ">":
-			return toYeetBool(false)
-		}
-
-		// TODO handle other type combinations
-	}
-
-	// catch all: just convert to string and concatenate
-	return &object.String{Value: left.String() + right.String()}
-}
-
 func isTruthy(obj object.Object) bool {
 	// Ruby's truthiness rule: nil & false are falsy, everything else is truthy
 	switch obj {
@@ -588,159 +504,4 @@ func isError(obj object.Object) bool {
 
 func newError(format string, args ...any) *object.Error {
 	return &object.Error{Msg: fmt.Sprintf(format, args...)}
-}
-
-// TODO find a better place for this
-var collectiveNouns = map[string]string{
-	"actor":        "cast",
-	"alligator":    "congregation",
-	"angel":        "choir",
-	"ant":          "army",
-	"architect":    "argument",
-	"arsonist":     "conflagration",
-	"artillery":    "battery",
-	"asteroid":     "belt",
-	"baboon":       "congress",
-	"bacteria":     "culture",
-	"badger":       "cete",
-	"banana":       "bunch",
-	"barracuda":    "battery",
-	"bat":          "colony",
-	"batterie":     "bank",
-	"beaver":       "colony",
-	"bee":          "commonwealth",
-	"beer":         "brew",
-	"bishop":       "bench",
-	"bobolink":     "chain",
-	"bomb":         "cluster",
-	"bread":        "batch",
-	"buck":         "brace",
-	"budgerigar":   "chatter",
-	"bullfinche":   "bellowing",
-	"camel":        "caravan",
-	"cat":          "destruction",
-	"cheetah":      "coalition",
-	"chick":        "chattering",
-	"chicken":      "cluck",
-	"chimpanzee":   "cartload",
-	"circuit":      "bank",
-	"clam":         "bed",
-	"classicist":   "codex",
-	"clergy":       "assembly",
-	"computer":     "cluster",
-	"conie":        "bury",
-	"coyote":       "band",
-	"crocodile":    "bask",
-	"crow":         "murder",
-	"cur":          "cowardice",
-	"cutlery":      "canteen",
-	"deer":         "bevy",
-	"director":     "board",
-	"diver":        "bubble",
-	"doctor":       "confab",
-	"donkey":       "drove",
-	"dove":         "bevy",
-	"drawer":       "chest",
-	"duck":         "badelynge",
-	"eagle":        "aerie",
-	"economist":    "clashing",
-	"eel":          "bind",
-	"egg":          "clutch",
-	"event":        "chain",
-	"fairie":       "charm",
-	"ferret":       "business",
-	"finche":       "charm",
-	"flie":         "business",
-	"flour":        "boll",
-	"flower":       "bouquet",
-	"game":         "bag",
-	"giraffe":      "corps",
-	"goat":         "drove",
-	"gorilla":      "band",
-	"grape":        "bunch",
-	"grasshopper":  "cloud",
-	"grouse":       "brood",
-	"guillemot":    "bazaar",
-	"gun":          "arsenal",
-	"hawk":         "aerie",
-	"hedgehog":     "array",
-	"hen":          "brood",
-	"herring":      "army",
-	"hide":         "dicker",
-	"hippopotami":  "bloat",
-	"hippopotamus": "crash",
-	"historian":    "argumentation",
-	"horsemen":     "cavalcade",
-	"hound":        "cry",
-	"hummingbird":  "charm",
-	"hyena":        "clan",
-	"information":  "bits",
-	"island":       "archipelago",
-	"jay":          "band",
-	"jewel":        "cache",
-	"judge":        "bench",
-	"knight":       "banner",
-	"lark":         "ascension",
-	"leper":        "colony",
-	"magistrate":   "bench",
-	"man":          "band",
-	"manager":      "cost",
-	"matche":       "chain",
-	"monitor":      "bank",
-	"monkey":       "cartload",
-	"mormon":       "branch",
-	"motorcyclist": "clutch",
-	"mourner":      "cortege",
-	"mule":         "barren",
-	"musician":     "band",
-	"onlooker":     "crowd",
-	"otter":        "bevy",
-	"oyster":       "bed",
-	"paper":        "budget",
-	"partridge":    "bew",
-	"people":       "community",
-	"pheasant":     "brace",
-	"pigeon":       "bunch",
-	"plum":         "basket",
-	"polar bear":   "aurora",
-	"polecat":      "chine",
-	"prairie dog":  "coterie",
-	"preacher":     "converting",
-	"ptarmigan":    "covey",
-	"puffin":       "circus",
-	"quail":        "bevy",
-	"rabbit":       "bury",
-	"raven":        "conspiracy",
-	"reed":         "clump",
-	"relative":     "descent",
-	"rhinoceros":   "crash",
-	"sailor":       "crew",
-	"saint":        "communion",
-	"salmon":       "bind",
-	"seal":         "crash",
-	"ship":         "armada",
-	"slug":         "cornucopia",
-	"smoker":       "confraternity",
-	"snake":        "bed",
-	"soldier":      "brigade",
-	"spider":       "cluster",
-	"star":         "constellation",
-	"starling":     "clutter",
-	"student":      "class",
-	"swan":         "bevy",
-	"teal":         "diving",
-	"thief":        "den",
-	"tiger":        "ambush",
-	"toucan":       "durante",
-	"tree":         "forest",
-	"truck":        "convoy",
-	"turkey":       "brood",
-	"turtle":       "bale",
-	"unicorn":      "blessing",
-	"weapon":       "cache",
-	"widow":        "ambush",
-	"wigeon":       "coil",
-	"wizard":       "argument",
-	"woodcock":     "covey",
-	"worm":         "clew",
 }

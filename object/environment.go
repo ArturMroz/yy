@@ -45,8 +45,6 @@ func (e *Environment) Update(name string, val Object) bool {
 }
 
 func (e *Environment) YoloMode() bool {
-	if _, isYoloMode := e.Get(YoloKey); isYoloMode {
-		return true
-	}
-	return false
+	_, ok := e.Get(YoloKey)
+	return ok
 }
