@@ -43,6 +43,32 @@ func TestYoloExpressions(t *testing.T) {
 		{`yolo { 5 - true }`, 4},
 		{`yolo { 5 - false }`, 5},
 
+		// ranges
+		{`5 + (0..5) `, errmsg{"type mismatch: INTEGER + RANGE"}},
+		{`yolo { 5 + (0..5) }`, rng{5, 10}},
+		{`yolo { (0..5) + 5 }`, rng{5, 10}},
+		{`yolo { 5 - (0..5) }`, rng{5, 0}},
+		{`yolo { (0..5) - 5 }`, rng{-5, 0}},
+
+		// functions
+		{`5 + \x { x + 2 } `, errmsg{"type mismatch: INTEGER + FUNCTION"}},
+		{
+			`yolo { 
+				fn := \a { x := 2; yeet a + x };
+				fn2 := 69 + fn;
+				[fn(1), fn2(1)]
+			}`,
+			[]int64{3, 72},
+		},
+		{
+			`yolo { 
+				double 			  := \a { yeet a * 2 };
+				triple_the_double := double * 3;
+				[double(2), triple_the_double(2)]
+			}`,
+			[]int64{4, 12},
+		},
+
 		// auto declaring variables if they don't exsist
 		{"a = 1; a", errmsg{"identifier not found: a"}},
 		{"yolo { a = 1; a };", 1},

@@ -16,10 +16,6 @@ type evalTestCase struct {
 	expected any
 }
 
-type errmsg struct {
-	msg string
-}
-
 func TestEvalIntegerExpression(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"5", 5},
@@ -302,36 +298,17 @@ yif 10 > 1 {
 }
 
 func TestRangeLiterals(t *testing.T) {
-	tests := []struct {
-		input string
-		start int64
-		end   int64
-	}{
-		{"0..5", 0, 5},
-		{"5..0", 5, 0},
-		{"(1+2)..(5*2)", 3, 10},
-		{"3 + 2 * 2 .. 5 - 2 * 2", 7, 1},
-		{"-5..-2", -5, -2},
-		{"a := 1; b := 8; a..b", 1, 8},
-		{"a := 1; b := 8; (a+3)..(b-1)", 4, 7},
-		{"a := 1; b := 8; a+3 .. b-1", 4, 7},
-		{"r := 1+3 .. 9-1; r", 4, 8},
-	}
-
-	for _, tt := range tests {
-		evaluated := testEval(t, tt.input)
-		rangeObj, ok := evaluated.(*object.Range)
-		if !ok {
-			t.Errorf("obj not *object.Range. got=%q, type of %T", evaluated, evaluated)
-			continue
-		}
-		if rangeObj.Start != tt.start {
-			t.Errorf("start wrong: want %d, got %d", tt.start, rangeObj.Start)
-		}
-		if rangeObj.End != tt.end {
-			t.Errorf("end wrong: want %d, got %d", tt.end, rangeObj.End)
-		}
-	}
+	runEvalTests(t, []evalTestCase{
+		{"0..5", rng{0, 5}},
+		{"5..0", rng{5, 0}},
+		{"(2+2)..(5*2)", rng{4, 10}},
+		{"3 + 2 * 2 .. 5 - 2 * 2", rng{7, 1}},
+		{"-5..-2", rng{-5, -2}},
+		{"a := 1; b := 8; a..b", rng{1, 8}},
+		{"a := 1; b := 8; (a+3)..(b-1)", rng{4, 7}},
+		{"a := 1; b := 8; a+3 .. b-1", rng{4, 7}},
+		{"r := 1+3 .. 9-1; r", rng{4, 8}},
+	})
 }
 
 func TestAssignExpressions(t *testing.T) {
@@ -551,6 +528,15 @@ func BenchmarkEval(b *testing.B) {
 // HELPERS
 //
 
+type errmsg struct {
+	msg string
+}
+
+type rng struct {
+	start int64
+	end   int64
+}
+
 func runEvalTests(t *testing.T, tests []evalTestCase) {
 	t.Helper()
 
@@ -579,6 +565,11 @@ func runEvalTests(t *testing.T, tests []evalTestCase) {
 
 		case errmsg:
 			if err := testErrorObject(evaluated, expected.msg); err != nil {
+				t.Errorf("%s (%s)", err, tt.input)
+			}
+
+		case rng:
+			if err := testRangeObject(evaluated, expected); err != nil {
 				t.Errorf("%s (%s)", err, tt.input)
 			}
 
@@ -645,6 +636,20 @@ func testStringObject(obj object.Object, expected string) error {
 	}
 	if result.Value != expected {
 		return fmt.Errorf("String has wrong value. want=%q, got=%q", expected, result.Value)
+	}
+	return nil
+}
+
+func testRangeObject(obj object.Object, expectedRng rng) error {
+	result, ok := obj.(*object.Range)
+	if !ok {
+		return fmt.Errorf("object is not Range. got=%T (%+v)", obj, obj)
+	}
+	if result.Start != expectedRng.start {
+		return fmt.Errorf("wrong range start. want=%d, got=%d", expectedRng.start, result.Start)
+	}
+	if result.End != expectedRng.end {
+		return fmt.Errorf("wrong range end. want=%d, got=%d", expectedRng.end, result.End)
 	}
 	return nil
 }

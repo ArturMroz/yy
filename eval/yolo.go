@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"yy/ast"
 	"yy/object"
 )
 
@@ -130,6 +131,74 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 		}
 		boolAsInt := &object.Integer{Value: bitSet}
 		return evalInfixExpression(op, left, boolAsInt, true)
+
+	case left.Type() == object.RANGE_OBJ && right.Type() == object.INTEGER_OBJ:
+		rng := left.(*object.Range)
+		intVal := right.(*object.Integer).Value
+
+		switch op {
+		case "+":
+			return &object.Range{Start: rng.Start + intVal, End: rng.End + intVal}
+		case "-":
+			return &object.Range{Start: rng.Start - intVal, End: rng.End - intVal}
+		case "*":
+			return &object.Range{Start: rng.Start * intVal, End: rng.End * intVal}
+		case "/":
+			return &object.Range{Start: rng.Start / intVal, End: rng.End / intVal}
+		}
+
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.RANGE_OBJ:
+		intVal := left.(*object.Integer).Value
+		rng := right.(*object.Range)
+
+		switch op {
+		case "+":
+			return &object.Range{Start: intVal + rng.Start, End: intVal + rng.End}
+		case "-":
+			return &object.Range{Start: intVal - rng.Start, End: intVal - rng.End}
+		case "*":
+			return &object.Range{Start: intVal * rng.Start, End: intVal * rng.End}
+		case "/":
+			return &object.Range{Start: intVal / rng.Start, End: intVal / rng.End}
+		}
+
+	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.INTEGER_OBJ:
+		return yoloInfixExpression(op, right, left) // handle below
+
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.FUNCTION_OBJ:
+		intVal := left.(*object.Integer).Value
+		fn := right.(*object.Function)
+
+		switch op {
+		case "+", "*":
+			result := &object.Function{
+				Parameters: fn.Parameters,
+				Env:        fn.Env,
+				Body:       &ast.BlockStatement{},
+			}
+
+			for _, stmt := range fn.Body.Statements {
+				if yeetStmt, ok := stmt.(*ast.YeetStatement); ok {
+					yeetStmtCopy := &ast.YeetStatement{
+						ReturnValue: &ast.InfixExpression{
+							Left:     &ast.IntegerLiteral{Value: intVal},
+							Right:    yeetStmt.ReturnValue,
+							Operator: op,
+						},
+					}
+					result.Body.Statements = append(result.Body.Statements, yeetStmtCopy)
+				} else {
+					result.Body.Statements = append(result.Body.Statements, stmt)
+				}
+			}
+
+			return result
+
+		case "<":
+			return toYeetBool(true)
+		case ">":
+			return toYeetBool(false)
+		}
 
 		// TODO handle other type combinations
 	}
