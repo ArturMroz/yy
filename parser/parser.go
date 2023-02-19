@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"yy/ast"
@@ -67,6 +68,8 @@ func getPrecedence(tok token.Token) Precedence {
 	}
 	return LOWEST
 }
+
+var tempStringRe = regexp.MustCompile("{.*?}")
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
@@ -229,7 +232,25 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 }
 
 func (p *Parser) parseStringLiteral() ast.Expression {
-	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+	lit := p.curToken.Literal
+	matches := tempStringRe.FindAllString(lit, -1)
+
+	if len(matches) == 0 {
+		return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+	}
+
+	replaced := tempStringRe.ReplaceAllString(lit, "%s")
+	idents := []ast.Expression{}
+	for _, m := range matches {
+		noBraces := m[1 : len(m)-1]
+		idents = append(idents, &ast.Identifier{Value: noBraces})
+	}
+
+	return &ast.TemplateStringLiteral{
+		Token:    p.curToken,
+		Template: replaced,
+		Values:   idents,
+	}
 }
 
 func (p *Parser) parseBoolean() ast.Expression {

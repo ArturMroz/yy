@@ -85,16 +85,56 @@ func TestIntegerLiteralExpression(t *testing.T) {
 }
 
 func TestStringLiteralExpression(t *testing.T) {
-	input := `"Yo, world!";`
-	expected := "Yo, world!"
-
-	stmt := parseSingleExprStmt(t, input)
-	literal, ok := stmt.Expression.(*ast.StringLiteral)
-	if !ok {
-		t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{`"Yo, world!";`, "Yo, world!"},
+		{`"42 is the answer"`, "42 is the answer"},
 	}
-	if literal.Value != expected {
-		t.Errorf("literal.Value not %q. got=%q", expected, literal.Value)
+
+	for _, tt := range testCases {
+		stmt := parseSingleExprStmt(t, tt.input)
+		literal, ok := stmt.Expression.(*ast.StringLiteral)
+		if !ok {
+			t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+		}
+		if literal.Value != tt.expected {
+			t.Errorf("literal.Value not %q. got=%q", tt.expected, literal.Value)
+		}
+	}
+}
+
+func TestTemplStringLiteralExpression(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+		templ    string
+	}{
+		{
+			`"i'm {age} years old"`,
+			"i'm {age} years old",
+			"i'm %s years old",
+		},
+		{
+			`"i have {apples} apples and {carrots} carrots."`,
+			"i have {apples} apples and {carrots} carrots.",
+			"i have %s apples and %s carrots.",
+		},
+	}
+
+	for _, tt := range testCases {
+		stmt := parseSingleExprStmt(t, tt.input)
+		literal, ok := stmt.Expression.(*ast.TemplateStringLiteral)
+		if !ok {
+			t.Fatalf("exp not *ast.TemplateStringLiteral. got=%T", stmt.Expression)
+		}
+		if literal.Token.Literal != tt.expected {
+			t.Errorf("literal.Value not %q. got=%q", tt.expected, literal.Token.Literal)
+		}
+		if literal.Template != tt.templ {
+			t.Errorf("literal.Template not %q. got=%q", tt.expected, literal.Template)
+		}
 	}
 }
 

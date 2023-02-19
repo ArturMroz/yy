@@ -130,6 +130,16 @@ func (sl *StringLiteral) expressionNode()      {}
 func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
 func (sl *StringLiteral) String() string       { return `"` + sl.Token.Literal + `"` }
 
+type TemplateStringLiteral struct {
+	Token    token.Token
+	Template string
+	Values   []Expression
+}
+
+func (sl *TemplateStringLiteral) expressionNode()      {}
+func (sl *TemplateStringLiteral) TokenLiteral() string { return sl.Token.Literal }
+func (sl *TemplateStringLiteral) String() string       { return `"` + sl.Token.Literal + `"` }
+
 type ArrayLiteral struct {
 	Token    token.Token // the '[' token
 	Elements []Expression

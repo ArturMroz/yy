@@ -43,6 +43,20 @@ func TestStringLiteral(t *testing.T) {
 	})
 }
 
+func TestTemplateStringLiteral(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{`age := 69; "i'm {age} yr old"`, "i'm 69 yr old"},
+		{
+			`n1 := 69; n2 := 8; "i've got {n1} apples and {n2} pears"`,
+			"i've got 69 apples and 8 pears",
+		},
+		// {
+		// 	"n1 := 69; n2 := 8; `i've got {n1 + n2} apples and pears`",
+		// 	"i've got 77 apples and pears",
+		// },
+	})
+}
+
 func TestStringConcatenation(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`"con" + "cat"`, "concat"},
@@ -585,6 +599,8 @@ func runEvalTests(t *testing.T, tests []evalTestCase) {
 }
 
 func testEval(t *testing.T, input string) object.Object {
+	t.Helper()
+
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()

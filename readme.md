@@ -2,7 +2,7 @@
     <img src="./yylogo.png">
 </div>
 
-YeetYoink (YY for short) is a dynamically typed programming language that combines functional and imperative programming paradigms. 
+YeetYoink (YY for short) is a dynamically typed programming language that combines functional and imperative programming paradigms.
 
 
 # Key features
@@ -19,6 +19,15 @@ YeetYoink (YY for short) is a dynamically typed programming language that combin
 
 For more details, check out [examples](examples) directory.
 
+## Hello world
+
+```c
+// print with 'yelp()' (or 'yell()' if urgent)
+name := "Yennefer"
+yelp("Hello, {name}!") // prints "Hello, Yennefer!"
+yell("Hello, {name}!") // prints "HELLO, YENNEFER!"
+```
+
 ## Variables
 
 ```c
@@ -30,19 +39,15 @@ my_yinteger := 5
 my_yarn     := "how long is a piece of string?"
 my_yup      := true
 my_void     := null
-
-// print with 'yelp()' (or 'yell()' if urgent)
-yelp("Hello, world!")       // prints "Hello, world!"
-yell("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
 ```
 
 ## Control flow
 
 ```c
 yif 2 * 2 > 10 {
-   "that's untrue" 
+   "that's untrue"
 } yels yif 8 + 8 < 4 {
-   "yup, that's our stop" 
+   "yup, that's our stop"
 } yels {
     "math.exe stopped working"
 }
@@ -59,7 +64,7 @@ yall 0..3 {
 
 yarray := [1, 2, 3]
 sum    := 0
-yall elt: yarray { // name for the yeeterator can be provided 
+yall elt: yarray { // optionally, you can name the yeeterator
     sum += elt
 }
 
@@ -89,9 +94,9 @@ mega_yarray := my_yarray + my_yarray2
 ```
 
 ```c
-my_hashmap := { 
-    "name":  "Yakub the Yak", 
-    "age":   2, 
+my_hashmap := {
+    "name":  "Yakub the Yak",
+    "age":   2,
     "alive": true,
     42:      "yes, definitely",
 }
@@ -107,14 +112,14 @@ yelp(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Yakub
 max := \x y {
     yif x > y {
         yeet x // yeets the value and returns from the function
-    } 
+    }
     yeet y
 }
 
 // 'yeet' keyword can be omitted, last statement in a block is yeeted implicitly
 max2 := \x y {
     yif x > y {
-        x 
+        x
     } yels {
         y
     }
@@ -123,11 +128,11 @@ max2 := \x y {
 
 ```c
 // recursion
-factorial := \n { 
-    yif n == 0 { 
-        1 
-    } yels { 
-        n * factorial(n-1) 
+factorial := \n {
+    yif n == 0 {
+        1
+    } yels {
+        n * factorial(n-1)
     }
 }
 
@@ -137,8 +142,8 @@ call_twice := \x fn { fn(fn(x)) }
 yelp(call_twice(5, add_three)) // prints 11
 
 // closures
-new_adder := \x { 
-    \n { x + n } 
+new_adder := \x {
+    \n { x + n }
 }
 add_two := new_adder(2)
 yelp(add_two(5)) // prints 7
@@ -162,7 +167,7 @@ yolo {
     yelp([1, 2, 3] * 3) // prints [3, 6, 9]
 
     // this works even though new_var hasn't been declared first
-    new_var = 5 
+    new_var = 5
 
     // but even in yolo mode, division by zero doesn't end well
     yelp("weee" / 0) // prints "Stare at the abyss long enough, and it starts to stare back at you."
@@ -172,7 +177,7 @@ yolo {
 
 # Usage
 
-Build with 
+Build with
 
 ```
 $ go build
@@ -184,7 +189,7 @@ Run a YY script
 $ ./yy [--debug] filename
 ```
 
-Or start a REPL session 
+Or start a REPL session
 
 ```
 $ ./yy [--debug]
@@ -197,10 +202,10 @@ Note: `--debug` flag is optional
 
 - **Two data structures.** YY supports arrays and hashmaps, providing more data structure options than Lua.
 - **Very basic data types**. YY supports the basic data types of yinteger, string, bool and null. And yes, null isn't technically a data type.
-- **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (since semicolons are so 1970s). 
+- **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (since semicolons are so 1970s).
 - **Garbage collected**. YY uses automated memory management, meaning you don't have to worry about freeing up memory that is no longer being used. It's like having a personal janitor for your code!
 - **Not Object-Oriented**. You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy.
-- **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism). 
+- **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).
 - **Built-in functions.** YY includes a number of built-in functions for common tasks.
 
 
