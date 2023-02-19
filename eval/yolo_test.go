@@ -2,6 +2,8 @@ package eval
 
 import (
 	"testing"
+
+	"yy/object"
 )
 
 func TestYoloExpressions(t *testing.T) {
@@ -31,8 +33,8 @@ func TestYoloExpressions(t *testing.T) {
 		{`yolo { "   tree   " * 3 }`, "forest"},
 		{`yolo { "crow" * 3 }`, "murder"},
 		{`yolo { "test" * 0 }`, ""},
-		{`yolo { "test" * -5 }`, ABYSS.Value},
-		{`yolo { "test" / 0 }`, ABYSS.Value},
+		{`yolo { "test" * -5 }`, object.ABYSS.Value},
+		{`yolo { "test" / 0 }`, object.ABYSS.Value},
 		{`yolo { 2 + "troll" }`, "2troll"},
 
 		// bools
@@ -52,6 +54,6 @@ func TestYoloExpressions(t *testing.T) {
 		// prefix
 		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
 		{`yolo { -[1, 2, 3]}`, []int64{-1, -2, -3}},
-		{`yolo { -null }`, ABYSS.Value},
+		{`yolo { -null }`, object.ABYSS.Value},
 	})
 }

@@ -53,11 +53,16 @@ var objectTypes = [...]string{
 	RETURN_VALUE_OBJ: "RETURN_VALUE",
 }
 
+var (
+	NULL  = &Null{}
+	TRUE  = &Boolean{Value: true}
+	FALSE = &Boolean{Value: false}
+	ABYSS = &String{Value: "Stare at the abyss long enough, and it starts to stare back at you."}
+)
+
 func (ot ObjectType) String() string {
 	return objectTypes[ot]
 }
-
-const YoloKey = "$$yolo"
 
 type Integer struct {
 	Value int64

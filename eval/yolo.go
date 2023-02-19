@@ -12,7 +12,7 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 	case "-":
 		switch right := right.(type) {
 		case *object.Null:
-			return ABYSS
+			return object.ABYSS
 
 		case *object.String:
 			result := strings.Map(rot13, right.Value)
@@ -90,7 +90,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 		switch op {
 		case "*":
 			if left.Value < 0 {
-				return ABYSS
+				return object.ABYSS
 			}
 
 			if collective, ok := collectiveNouns[strings.TrimSpace(right.Value)]; ok {
@@ -102,7 +102,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 
 		case "/":
 			if left.Value <= 0 {
-				return ABYSS
+				return object.ABYSS
 			}
 
 			ss := strings.Split(right.Value, "")

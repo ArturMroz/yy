@@ -8,13 +8,6 @@ import (
 	"yy/object"
 )
 
-var (
-	NULL  = &object.Null{}
-	TRUE  = &object.Boolean{Value: true}
-	FALSE = &object.Boolean{Value: false}
-	ABYSS = &object.String{Value: "Stare at the abyss long enough, and it starts to stare back at you."}
-)
-
 func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
@@ -67,7 +60,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if ok := env.Update(node.Name.Value, val); ok {
 			return val
 		}
-		if env.YoloMode() {
+		if env.IsYoloMode() {
 			env.Set(node.Name.Value, val)
 			return val
 		}
@@ -90,7 +83,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpression(node.Operator, right, env.YoloMode())
+		return evalPrefixExpression(node.Operator, right, env.IsYoloMode())
 
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
@@ -103,7 +96,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return right
 		}
 
-		return evalInfixExpression(node.Operator, left, right, env.YoloMode())
+		return evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
 
 	case *ast.YifExpression:
 		condition := Eval(node.Condition, env)
@@ -116,45 +109,14 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		} else if node.Alternative != nil {
 			return Eval(node.Alternative, env)
 		} else {
-			return NULL
+			return object.NULL
 		}
 
 	case *ast.YoloExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
-		env.Set(object.YoloKey, TRUE)
-
+		env.SetYoloMode()
 		result := Eval(node.Body, extendedEnv)
 		return result
-
-	case *ast.YoyoExpression:
-		extendedEnv := object.NewEnclosedEnvironment(env)
-		if node.Initialiser != nil {
-			init := Eval(node.Initialiser, extendedEnv)
-			if isError(init) {
-				return init
-			}
-		}
-
-		var result object.Object
-		for {
-			condition := Eval(node.Condition, extendedEnv)
-			if isError(condition) {
-				return condition
-			}
-
-			if !isTruthy(condition) {
-				return result
-			}
-
-			result = Eval(node.Body, extendedEnv)
-
-			if node.Post != nil {
-				post := Eval(node.Post, extendedEnv)
-				if isError(post) {
-					return post
-				}
-			}
-		}
 
 	case *ast.YetExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
@@ -285,7 +247,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			i := idx.(*object.Integer).Value
 			a := left.(*object.Array)
 			if i < 0 || i >= int64(len(a.Elements)) {
-				return NULL
+				return object.NULL
 			}
 			return a.Elements[i]
 
@@ -298,7 +260,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 			pair, ok := hashMap.Pairs[key.HashKey()]
 			if !ok {
-				return NULL
+				return object.NULL
 			}
 			return pair.Value
 
@@ -307,7 +269,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 
 	case *ast.Null:
-		return NULL
+		return object.NULL
 
 	case nil:
 		return newError("unexpected error: something most likely went wrong at the parsing stage")
@@ -484,7 +446,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 func isTruthy(obj object.Object) bool {
 	// Ruby's truthiness rule: nil & false are falsy, everything else is truthy
 	switch obj {
-	case NULL, FALSE:
+	case object.NULL, object.FALSE:
 		return false
 	default:
 		return true
@@ -493,9 +455,9 @@ func isTruthy(obj object.Object) bool {
 
 func toYeetBool(b bool) object.Object {
 	if b {
-		return TRUE
+		return object.TRUE
 	}
-	return FALSE
+	return object.FALSE
 }
 
 func isError(obj object.Object) bool {

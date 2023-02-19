@@ -44,7 +44,13 @@ func (e *Environment) Update(name string, val Object) bool {
 	return false
 }
 
-func (e *Environment) YoloMode() bool {
-	_, ok := e.Get(YoloKey)
+const yoloKey = "$$yolo"
+
+func (e *Environment) SetYoloMode() {
+	e.Set(yoloKey, TRUE)
+}
+
+func (e *Environment) IsYoloMode() bool {
+	_, ok := e.Get(yoloKey)
 	return ok
 }

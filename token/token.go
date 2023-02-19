@@ -110,7 +110,6 @@ var tokens = [...]string{
 	YIF:   "YIF",
 	YELS:  "YELS",
 	YEET:  "YEET",
-	YOYO:  "YOYO",
 	YOLO:  "YOLO",
 	YALL:  "YALL",
 	YET:   "YET",
@@ -121,17 +120,16 @@ func (tok TokenType) String() string {
 }
 
 var keywords = map[string]TokenType{
-	"yo":    YO,
 	"true":  TRUE,
 	"false": FALSE,
+	"null":  NULL,
+	"yo":    YO,
 	"yif":   YIF,
 	"yels":  YELS,
 	"yeet":  YEET,
-	"yoyo":  YOYO,
 	"yolo":  YOLO,
 	"yet":   YET,
 	"yall":  YALL,
-	"null":  NULL,
 }
 
 func LookupIdent(ident string) TokenType {

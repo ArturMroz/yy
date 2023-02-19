@@ -50,7 +50,7 @@ var builtins = map[string]*object.Builtin{
 			if length > 0 {
 				return arr.Elements[length-1]
 			}
-			return NULL
+			return object.NULL
 		},
 	},
 
@@ -67,7 +67,7 @@ var builtins = map[string]*object.Builtin{
 				copy(newElements, arr.Elements[1:length])
 				return &object.Array{Elements: newElements}
 			}
-			return NULL
+			return object.NULL
 		},
 	},
 
@@ -107,7 +107,7 @@ var builtins = map[string]*object.Builtin{
 					pos = int(args[1].(*object.Integer).Value)
 				}
 				if pos >= len(arg.Elements) {
-					return NULL
+					return object.NULL
 				}
 
 				elt := arg.Elements[pos]
@@ -120,7 +120,7 @@ var builtins = map[string]*object.Builtin{
 					pos = int(args[1].(*object.Integer).Value)
 				}
 				if pos >= len(arg.Value) {
-					return NULL
+					return object.NULL
 				}
 
 				elt := arg.Value[pos]
@@ -143,7 +143,7 @@ var builtins = map[string]*object.Builtin{
 				fmt.Println(strings.ToUpper(arg.String()))
 			}
 			fmt.Println()
-			return NULL
+			return object.NULL
 		},
 	},
 
@@ -151,7 +151,7 @@ var builtins = map[string]*object.Builtin{
 		Fn: func(args ...object.Object) object.Object {
 			msg := spaceSeparatedArgs(args...)
 			fmt.Println(msg)
-			return NULL
+			return object.NULL
 		},
 	},
 
@@ -182,7 +182,7 @@ var builtins = map[string]*object.Builtin{
 			}
 
 			if isTruthy(args[0]) {
-				return NULL // all good, nothing to see here
+				return object.NULL // all good, nothing to see here
 			}
 
 			msg := "yassert failed"

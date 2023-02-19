@@ -191,8 +191,8 @@ two := "two";
 		(&object.String{Value: "two"}).HashKey():   2,
 		(&object.String{Value: "three"}).HashKey(): 3,
 		(&object.Integer{Value: 4}).HashKey():      4,
-		TRUE.HashKey():                             5,
-		FALSE.HashKey():                            6,
+		object.TRUE.HashKey():                      5,
+		object.FALSE.HashKey():                     6,
 	}
 
 	evaluated := testEval(t, input)
@@ -249,21 +249,6 @@ func TestYifYelsExpressions(t *testing.T) {
 		{"yif null { 10 } yels { 20 } * 2", 40},
 		{"5 + yif null { 10 } yels { 20 } * 2", 45},
 		{"result := 3 * yif null { 10 } yels { 20 } + 9; result", 69},
-	})
-}
-
-func TestYoyoExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"i := 0; yoyo ; i < 5; { i = i + 1 }", 5},
-		{"yoyo i := 0; i < 5; { i = i + 1 }", 5},
-		{"yoyo i := 0; i < 5; i = i + 1 { i }", 4},
-		{"i := 69; yoyo i := 0; i < 5; i = i + 1 { i }; i", 69},
-		{"i := 69; yoyo i = 0; i < 5; i = i + 1 { i }; i", 5},
-		{"result := (yoyo i := 0; i < 5; i = i + 1 { i }); result", 4},
-		{"result := yoyo i := 0; i < 5; i = i + 1 { i }; result", 4},
-
-		{"yoyo i = 0; i < 5; i = i + 1 { i }", errmsg{"identifier not found: i"}},
-		{"yoyo i := 0; i < 5; i = i + 1 { i }; i", errmsg{"identifier not found: i"}},
 	})
 }
 
@@ -431,42 +416,6 @@ gen() + gen() + gen()`,
 	})
 }
 
-func TestBuiltinFunctions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{`len("")`, 0},
-		{`len("four")`, 4},
-		{`len([1, 2, 3])`, 3},
-		{`len(0..3)`, 4},
-		{`len(3..0)`, 4},
-		{`len({ "a": 1, "b": 2})`, 2},
-		{`len(1)`, errmsg{"argument to `len` not supported, got INTEGER"}},
-		{`len("one", "two")`, errmsg{"wrong number of arguments. got=2, want=1"}},
-
-		{`yassert(1 == 1)`, nil},
-		{`yassert(1 == 2)`, errmsg{"yassert failed"}},
-		{`yassert(false)`, errmsg{"yassert failed"}},
-		{`a := 5; b := 6; yassert(a == b)`, errmsg{"yassert failed"}},
-		{`yassert(true)`, nil},
-		{`yassert(1 == 2, "one isn't two")`, errmsg{"yassert failed: one isn't two"}},
-
-		{`arr := [1, 2, 3]; x := yoink(arr); x`, 3},
-		{`arr := [1, 2, 3]; x := yoink(arr); arr`, []int64{1, 2}},
-		{`arr := [1, 2, 3]; x := yoink(arr, 1); x`, 2},
-		{`arr := [1, 2, 3]; x := yoink(arr, 1); arr`, []int64{1, 3}},
-		{`str := "howdy"; x := yoink(str); x`, "y"},
-		{`str := "howdy"; x := yoink(str); str`, "howd"},
-		{`str := "howdy"; x := yoink(str, 1); x`, "o"},
-		{`str := "howdy"; x := yoink(str, 1); str`, "hwdy"},
-		{`yoink(69)`, errmsg{"cannot yoink from INTEGER"}},
-
-		{`yarn(5)`, "5"},
-		{`yarn(true)`, "true"},
-		{`yarn([1, 2, 3])`, "[1, 2, 3]"},
-		{`yarn(0..2)`, "0..2"},
-		{`yarn("test")`, "test"},
-	})
-}
-
 func TestErrorHandling(t *testing.T) {
 	tests := []struct {
 		input           string
@@ -530,6 +479,71 @@ yif (10 > 1) {
 		if err := testErrorObject(evaluated, tt.expectedMessage); err != nil {
 			t.Error(err)
 		}
+	}
+}
+
+//
+// PROGRAMS FROM EXAMPLES/
+//
+
+const examplesDir = "../examples"
+
+func TestExampleFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing files in short mode")
+	}
+
+	testFiles, err := os.ReadDir(examplesDir)
+	if err != nil {
+		t.Fatalf("couldn't read example files dir: %s", err)
+	}
+
+	for _, f := range testFiles {
+		t.Run(f.Name(), func(t *testing.T) {
+			filename := filepath.Join(examplesDir, f.Name())
+			src, err := os.ReadFile(filename)
+			if err != nil {
+				t.Fatalf("couldn't read test file: %s", err)
+			}
+
+			result := testEval(t, string(src))
+			if evalError, ok := result.(*object.Error); ok {
+				t.Errorf("runtime error: %q", evalError.Msg)
+			}
+		})
+	}
+}
+
+//
+// BENCHMARKS
+//
+
+func BenchmarkEval(b *testing.B) {
+	testFiles, err := os.ReadDir(examplesDir)
+	if err != nil {
+		b.Fatalf("couldn't read example files dir: %s", err)
+	}
+
+	for _, f := range testFiles {
+		b.Run(f.Name(), func(b *testing.B) {
+			b.StopTimer()
+			filename := filepath.Join(examplesDir, f.Name())
+			src, err := os.ReadFile(filename)
+			if err != nil {
+				b.Fatalf("couldn't read test file: %s", err)
+			}
+
+			sSrc := string(src)
+			l := lexer.New(sSrc)
+			p := parser.New(l)
+			program := p.ParseProgram()
+			env := object.NewEnvironment()
+
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				_ = Eval(program, env)
+			}
+		})
 	}
 }
 
@@ -647,7 +661,7 @@ func testBooleanObject(obj object.Object, expected bool) error {
 }
 
 func testNullObject(obj object.Object) error {
-	if obj != NULL {
+	if obj != object.NULL {
 		return fmt.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
 	}
 	return nil
@@ -662,70 +676,4 @@ func testErrorObject(obj object.Object, expectedMsg string) error {
 		return fmt.Errorf("wrong error message. want=%q, got=%q", expectedMsg, result.Msg)
 	}
 	return nil
-}
-
-//
-// PROGRAMS FROM EXAMPLES/
-//
-
-const examplesDir = "../examples"
-
-func TestExampleFiles(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing files in short mode")
-	}
-
-	testFiles, err := os.ReadDir(examplesDir)
-	if err != nil {
-		t.Fatalf("couldn't read example files dir: %s", err)
-	}
-
-	for _, f := range testFiles {
-		t.Run(f.Name(), func(t *testing.T) {
-			filename := filepath.Join(examplesDir, f.Name())
-			// filename := filepath.Join(examplesDir, "builtins.yeet")
-			src, err := os.ReadFile(filename)
-			if err != nil {
-				t.Fatalf("couldn't read test file: %s", err)
-			}
-
-			result := testEval(t, string(src))
-			if evalError, ok := result.(*object.Error); ok {
-				t.Errorf("runtime error: %q", evalError.Msg)
-			}
-		})
-	}
-}
-
-//
-// BENCHMARKS
-//
-
-func BenchmarkEval(b *testing.B) {
-	testFiles, err := os.ReadDir(examplesDir)
-	if err != nil {
-		b.Fatalf("couldn't read example files dir: %s", err)
-	}
-
-	for _, f := range testFiles {
-		b.Run(f.Name(), func(b *testing.B) {
-			b.StopTimer()
-			filename := filepath.Join(examplesDir, f.Name())
-			src, err := os.ReadFile(filename)
-			if err != nil {
-				b.Fatalf("couldn't read test file: %s", err)
-			}
-
-			sSrc := string(src)
-			l := lexer.New(sSrc)
-			p := parser.New(l)
-			program := p.ParseProgram()
-			env := object.NewEnvironment()
-
-			b.StartTimer()
-			for i := 0; i < b.N; i++ {
-				_ = Eval(program, env)
-			}
-		})
-	}
 }

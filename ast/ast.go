@@ -256,21 +256,6 @@ func (ye *YoloExpression) String() string {
 	return fmt.Sprintf("yolo { %s }", ye.Body.String())
 }
 
-type YoyoExpression struct {
-	Token       token.Token // The 'yoyo' token
-	Initialiser Expression
-	Condition   Expression
-	Post        Expression
-	Body        *BlockStatement
-}
-
-func (ye *YoyoExpression) expressionNode()      {}
-func (ye *YoyoExpression) TokenLiteral() string { return ye.Token.Literal }
-func (ye *YoyoExpression) String() string {
-	return fmt.Sprintf("yoyo %s; %s; %s; { %s }",
-		ye.Initialiser.String(), ye.Condition.String(), ye.Post.String(), ye.Body.String())
-}
-
 type YetExpression struct {
 	Token     token.Token
 	Condition Expression
