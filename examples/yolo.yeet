@@ -1,0 +1,53 @@
+// YOLO MODE
+
+// When you're ready to let loose and have some fun, switch on YOLO mode and ignore those pesky
+// compiler errors. YY will try its best to execute the code, but results may vary.
+// Play stupid games, win stupid prizes.
+
+// mixing types would normally cause an error:
+// c := 8 * "string" // runtime error: 'type mismatch: STRING * INTEGER'
+//
+// assignment to a variable that hasn't been declared would normally error:
+// new_var = 5 // runtime error: 'identifier not found: new_var'
+//
+// but in Yolo Mode, anything goes:
+
+yolo {
+    // assignment works even though new_var hasn't been declared first
+    new_var = 5
+
+    // strings can be multiplied
+    yassert("tree" * 18 == "forest")
+    yassert("2" * 5 == 10)
+    yassert("troll" * 3 == "trolltrolltroll")
+
+    // arrays and integers are friends
+    yassert([1, 2, 3] * 3 == [3, 6, 9])
+    yassert([1, 2, 3] + 3 == [4, 5, 6])
+
+    // but even in yolo mode, division by zero doesn't end well
+    yassert("oh boy" / 0 == "Stare at the abyss long enough, and it starts to stare back at you.")
+}
+
+
+// functions in yolo mode
+yolo {
+    // you can add an integer to a function
+    max := \a, b {
+        yif a > b {
+            yeet a
+        }
+        yeet b
+    }
+
+    max_plus := max + 5
+    yassert(max_plus(2, 10) == 15)
+
+    // baking in variables
+    greet     := \name { "Hello, " + name + "!" }
+    yassert(greet("Yosef") == "Hello, Yosef!") 
+    
+    greet_yan := greet + "Yan"; // baking in args 
+    // notice how greet_yan doesn't take any arguments
+    yassert(greet_yan() == "Hello, Yan!") 
+}

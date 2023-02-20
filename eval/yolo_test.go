@@ -68,6 +68,28 @@ func TestYoloExpressions(t *testing.T) {
 			}`,
 			[]int64{4, 12},
 		},
+		{
+			`yolo {
+				max := \a b {
+					yif a > b {
+						yeet a
+					}
+					yeet b
+				};
+				max_plus := max + 5;
+				[max(2, 10), max_plus(2, 10)]
+			}`,
+			[]int64{10, 15},
+		},
+		{
+			`yolo {
+				fn := \a { a + "hello" };
+				fn2 := fn + "bake"; // baking in args 
+				fn("test") // prints "testhello"
+				fn2()	   // prints "bakehello", notice empty arg list
+			}`,
+			"bakehello",
+		},
 
 		// auto declaring variables if they don't exsist
 		{"a = 1; a", errmsg{"identifier not found: a"}},

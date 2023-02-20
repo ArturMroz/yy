@@ -162,6 +162,33 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			return &object.Range{Start: intVal / rng.Start, End: intVal / rng.End}
 		}
 
+	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.STRING_OBJ:
+		fn := left.(*object.Function)
+		right := right.(*object.String)
+
+		// special case where fn only takes one arg
+		if len(fn.Parameters) == 1 && op == "+" {
+			newFn := &object.Function{
+				Parameters: []*ast.Identifier{},
+				Env:        fn.Env,
+				Body:       &ast.BlockStatement{},
+			}
+
+			// TODO find a way to inject var directly into fn env wo breaking recursion and leaking vars
+			statements := []ast.Statement{
+				&ast.ExpressionStatement{
+					Expression: &ast.AssignExpression{
+						IsInit: true,
+						Name:   fn.Parameters[0],
+						Value:  &ast.StringLiteral{Value: right.Value},
+					},
+				},
+			}
+
+			newFn.Body.Statements = append(statements, fn.Body.Statements...)
+			return newFn
+		}
+
 	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.INTEGER_OBJ:
 		return yoloInfixExpression(op, right, left) // handle below
 
