@@ -137,7 +137,7 @@ var builtins = map[string]*object.Builtin{
 
 	// PRINT
 
-	"yell": {
+	"yowl": {
 		Fn: func(args ...object.Object) object.Object {
 			for _, arg := range args {
 				fmt.Println(strings.ToUpper(arg.String()))
@@ -147,21 +147,11 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
-	"yelp": {
+	"yap": {
 		Fn: func(args ...object.Object) object.Object {
 			msg := spaceSeparatedArgs(args...)
 			fmt.Println(msg)
 			return object.NULL
-		},
-	},
-
-	// DEBUG
-
-	// throws an error, effectively terminating the program
-	"yikes": {
-		Fn: func(args ...object.Object) object.Object {
-			msg := spaceSeparatedArgs(args...)
-			return newError(msg)
 		},
 	},
 
@@ -172,6 +162,19 @@ var builtins = map[string]*object.Builtin{
 				return newError("wrong number of arguments for `yarn`. got=%d, want=1", len(args))
 			}
 			return &object.String{Value: args[0].String()}
+		},
+	},
+
+	// ERROR THROWING
+
+	// throws an error, effectively terminating the program
+	"yikes": {
+		Fn: func(args ...object.Object) object.Object {
+			msg := spaceSeparatedArgs(args...)
+			if msg == "" {
+				msg = "yikes!"
+			}
+			return newError(msg)
 		},
 	},
 

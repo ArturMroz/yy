@@ -16,7 +16,7 @@ yif 2*2 < 1 {
 // yall (Y'all) yeeterates over a collection (array, string or range)
 // and declares 'yt' (short for yeeterator) variable automatically in the loop's scope
 yall 0..3 {
-    yelp(yt) // prints '0', '1', '2', '3'
+    yap(yt) // prints '0', '1', '2', '3'
 }
 
 sum := 0
@@ -104,7 +104,7 @@ result := yet j < 4 {
     j += 1
 }
 
-yelp("result: ", result, " j: ", j)
+yap("result: ", result, " j: ", j)
 yassert(result == 4)
 
 arr := []
@@ -118,7 +118,7 @@ yassert(arr == [1, 4, 7, 10, 13])
 
 yet len(arr) > 0 {
     arr = rest(arr)
-    yelp(arr)
+    yap(arr)
 }
 
 yassert(arr == [])

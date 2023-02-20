@@ -4,6 +4,12 @@
 // (if you squint hard enough, '\' looks kinda like lambda 'λ')
 // named functions are not supported
 
+yassert_eq := \a, b { 
+    yif a != b {
+        yikes("yassert failed: {a} != {b}")
+    }
+}
+
 max := \x y {
     yif x > y {
         yeet x // yeets the value and returns from the function
@@ -14,6 +20,7 @@ max := \x y {
 a := 3
 b := 18
 yassert(max(a, b) == b)
+yassert_eq(max(a, b), b)
 
 // 'yeet' keyword can be omitted, last statement in a block is yeeted implicitly
 max2 := \x y {
@@ -24,12 +31,13 @@ max2 := \x y {
     }
 }
 
-yassert(max(a, b) == max2(a, b))
+yassert_eq(max(a, b), max2(a, b))
 
 // and again, as a one liner
 max3 := \x y { yif x > y { x } yels { y } }
 
 yassert(max2(a, b) == max3(a, b))
+yassert_eq(max2(a, b), max3(a, b))
 
 
 // RECURSION
@@ -43,6 +51,8 @@ fib := \n {
 }
 
 yassert(fib(18) == 2584)
+yassert_eq(fib(18),  2584)
+
 // yassert() accepts optional error message for more context
 yassert(fib(20) == 6765, "fibonacci didn't quite work")
 
@@ -84,7 +94,7 @@ newGenerator := \ {
 }
 
 gen := newGenerator()
-yelp("generating:", gen(), gen(), gen()) // prints 'generating: 2 4 6'
+yap("generating:", gen(), gen(), gen()) // prints 'generating: 2 4 6'
 yassert(gen() == 8)
 
 

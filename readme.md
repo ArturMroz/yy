@@ -22,10 +22,10 @@ For more details, check out [examples](examples) directory.
 ## Hello world
 
 ```c
-// print with 'yelp()' (or 'yell()' if urgent)
+// print with 'yap()' (or 'yowl()' if urgent)
 name := "Yennefer"
-yelp("Hello, {name}!") // prints "Hello, Yennefer!"
-yell("Hello, {name}!") // prints "HELLO, YENNEFER!"
+yap("Hello, {name}!")  // prints "Hello, Yennefer!"
+yowl("Hello, {name}!") // prints "HELLO, YENNEFER!"
 ```
 
 ## Variables
@@ -59,7 +59,7 @@ yif 2 * 2 > 10 {
 // yall (y'all) yeeterates over a collection
 // variable 'yt' (short for yeeterator) is created automatically in the loop's scope
 yall 0..3 {
-    yelp(yt) // prints '0', '1', '2', '3'
+    yap(yt) // prints '0', '1', '2', '3'
 }
 
 yarray := [1, 2, 3]
@@ -68,7 +68,7 @@ yall elt: yarray { // optionally, you can name the yeeterator
     sum += elt
 }
 
-yelp(sum) // prints 6
+yap(sum) // prints 6
 ```
 
 
@@ -101,7 +101,7 @@ my_hashmap := {
     42:      "yes, definitely",
 }
 
-yelp(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Yakub the Yak is 2 years old."
+yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Yakub the Yak is 2 years old."
 ```
 
 ## Functions
@@ -138,15 +138,15 @@ factorial := \n {
 
 // higher-order functions
 add_three  := \x { x + 3 }
-call_twice := \x fn { fn(fn(x)) }
-yelp(call_twice(5, add_three)) // prints 11
+call_twice := \fn x { fn(fn(x)) }
+yap(call_twice(add_three, 5)) // prints 11
 
 // closures
 new_adder := \x {
     \n { x + n }
 }
 add_two := new_adder(2)
-yelp(add_two(5)) // prints 7
+yap(add_two(5)) // prints 7
 ```
 
 ## Yolo Mode
@@ -161,16 +161,16 @@ new_var = 5 // runtime error: 'identifier not found: new_var'
 // but in Yolo Mode, anything goes:
 
 yolo {
-    yelp("tree" * 18)   // prints 'forest'
-    yelp("2" * 5)       // prints 10
-    yelp("troll" * 3)   // prints 'trolltrolltroll'
-    yelp([1, 2, 3] * 3) // prints [3, 6, 9]
+    yap("tree" * 18)   // prints 'forest'
+    yap("2" * 5)       // prints 10
+    yap("troll" * 3)   // prints 'trolltrolltroll'
+    yap([1, 2, 3] * 3) // prints [3, 6, 9]
 
     // this works even though new_var hasn't been declared first
     new_var = 5
 
     // but even in yolo mode, division by zero doesn't end well
-    yelp("weee" / 0) // prints "Stare at the abyss long enough, and it starts to stare back at you."
+    yap("weee" / 0) // prints "Stare at the abyss long enough, and it starts to stare back at you."
 }
 ```
 

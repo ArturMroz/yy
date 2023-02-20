@@ -558,12 +558,12 @@ func TestYoloExpression(t *testing.T) {
 			"{ (i = (i + 1)) }",
 		},
 		{
-			"yolo { yell() }",
-			"{ yell() }",
+			"yolo { yowl() }",
+			"{ yowl() }",
 		},
 		{
-			"yolo { yell(); 5; yelp(); 2 + 2; }",
-			"{ yell(); 5; yelp(); (2 + 2) }",
+			"yolo { yowl(); 5; yap(); 2 + 2; }",
+			"{ yowl(); 5; yap(); (2 + 2) }",
 		},
 	}
 
@@ -593,9 +593,9 @@ func TestYetExpression(t *testing.T) {
 			"{ (i = (i + 1)) }",
 		},
 		{
-			"yet true { yell() }",
+			"yet true { yowl() }",
 			"true",
-			"{ yell() }",
+			"{ yowl() }",
 		},
 	}
 

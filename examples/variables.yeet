@@ -59,9 +59,9 @@ yarn     := "how long is a piece of string?"
 yup      := true
 the_void := null
 
-// print with 'yelp()' (or 'yell()' if urgent)
-yelp("Hello, world!")       // prints "Hello, world!"
-yell("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
+// print with 'yap()' (or 'yowl()' if urgent)
+yap("Hello, world!")       // prints "Hello, world!"
+yowl("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
 
 
 // DATA STRUCTURES
@@ -76,7 +76,7 @@ my_array2 := [1, true, "hello", yarn, yup]
 
 // arrays can be concatenated
 mega_array := my_array + my_array2
-yelp(mega_array)
+yap(mega_array)
 yassert(mega_array == my_array + my_array2)
 yassert(mega_array == [1, 2, 3, 4, 1, true, "hello", yarn, yup])
 yassert(mega_array == [1, 2, 3, 4, 1, true, "hello", "how long is a piece of string?", true])
@@ -92,7 +92,7 @@ friend := {
 
 yassert(friend["name"] == "Jon the Zebra")
 yassert(friend["alive"] == true)
-yelp(friend["name"], " is ", friend["age"], " years old.") // prints "Jon the Zebra is 2 years old."
+yap(friend["name"], " is ", friend["age"], " years old.") // prints "Jon the Zebra is 2 years old."
 
 // a key to a hashmap can be a string, an integer, or a bool
 foe := { 

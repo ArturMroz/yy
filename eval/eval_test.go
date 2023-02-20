@@ -39,13 +39,16 @@ func TestEvalIntegerExpression(t *testing.T) {
 func TestStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`"piece of yarn"`, "piece of yarn"},
-		{`"Greetings, Earth!"`, "Greetings, Earth!"},
+		{`"Żółć ∈ 陽子, ようこ ヨウコ"`, "Żółć ∈ 陽子, ようこ ヨウコ"},
 	})
 }
 
 func TestTemplateStringLiteral(t *testing.T) {
+	// TODO fix failing tests
 	runEvalTests(t, []evalTestCase{
 		{`age := 69; "i'm {age} yr old"`, "i'm 69 yr old"},
+		{`age := 69; "i'm { age } yr old"`, "i'm 69 yr old"},
+		// {`age := 69; "i'm {{age}} yr old"`, "i'm {age} yr old"},
 		{
 			`n1 := 69; n2 := 8; "i've got {n1} apples and {n2} pears"`,
 			"i've got 69 apples and 8 pears",
@@ -380,6 +383,29 @@ func TestLambdaApplication(t *testing.T) {
 		{`\x y { x * y }(3+2 5+1)`, 30},
 		{`\x y { x * y }(3 + 2 5 + 1)`, 30},
 		{`\x y { x * y }(3 + 2, 5 + 1)`, 30},
+	})
+}
+
+func TestRecursion(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{
+			`
+fib := \n {
+    yif n < 2 { n } yels { fib(n-1) + fib(n-2) }
+};
+[fib(0), fib(1), fib(2), fib(3), fib(4), fib(18)]
+`,
+			[]int64{0, 1, 1, 2, 3, 2584},
+		},
+		{
+			`
+factorial := \n { 
+    yif n == 0 { 1 } yels { n * factorial(n-1) }
+};
+[factorial(0), factorial(1), factorial(5)]
+`,
+			[]int64{1, 1, 120},
+		},
 	})
 }
 

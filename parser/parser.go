@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"yy/ast"
 	"yy/lexer"
@@ -240,9 +241,11 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 	}
 
 	replaced := tempStringRe.ReplaceAllString(lit, "%s")
+	// TODO support expr in templated strings (currently only Identifiers work)
 	idents := []ast.Expression{}
 	for _, m := range matches {
 		noBraces := m[1 : len(m)-1]
+		noBraces = strings.TrimSpace(noBraces)
 		idents = append(idents, &ast.Identifier{Value: noBraces})
 	}
 
