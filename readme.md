@@ -22,11 +22,11 @@ For more details, check out [examples](examples) directory.
 ## Hello world
 
 ```c
-// print with 'yap()' 
+// print with yap() 
 name := "Yennefer"
 yap("Hello, {name}!") // "Hello, Yennefer!"
 
-// or 'yowl()' if urgent
+// or yowl() if urgent
 yowl("Hello, {name}!") // "HELLO, YENNEFER!"
 ```
 
@@ -91,7 +91,7 @@ my_yarray := [7, true, "hello", null, [2, "inception"]]
 ```
 
 ```c
-my_hashmap := {
+my_hashmap := %{
     name:  "Yakub the Yak",
     age:   2,
     alive: true,
@@ -106,19 +106,19 @@ yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // "Yakub the Yak
 ```c
 // anonymous functions (lambdas) are declared using '\'
 // (if you squint hard enough, '\' looks kinda like a lambda 'λ')
-max := \x y {
-    yif x > y {
-        yeet x // yeets the value and returns from the function
+max := \a b {
+    yif a > b {
+        yeet a // yeets the value and returns from the function
     }
-    yeet y
+    yeet b
 }
 
 // 'yeet' keyword can be omitted, last statement in a block is yeeted implicitly
-max2 := \x y {
-    yif x > y {
-        x
+max2 := \a b {
+    yif a > b {
+        a
     } yels {
-        y
+        b
     }
 }
 max(20, 5) // 20
@@ -172,14 +172,14 @@ yolo {
     // this works even though new_var hasn't been declared first
     new_var = 5
 
-    // variables can be baked into a function by adding them
+    // variables can be baked into a function
     greet     := \name { "Hello, {name}!" }
     greet_yan := greet + "Yan"
     greet_yan() // "Hello, Yan!"
 
     // you can specify which argument you want to bake in by adding a function to a hashmap
     add   := \a, b { a + b }
-    add11 := add + { "b": 11 } // baking 'b' into 'add'
+    add11 := add + %{ "b": 11 } // baking 'b' into 'add'
     // line above creates function equivalent to:
     // add11 := \a { a + 11 }
     add11(6) // 17

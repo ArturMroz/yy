@@ -76,17 +76,18 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.IDENT:     p.parseIdentifier,
-		token.INT:       p.parseIntegerLiteral,
-		token.STRING:    p.parseStringLiteral,
-		token.MINUS:     p.parsePrefixExpression,
-		token.BANG:      p.parsePrefixExpression,
-		token.TRUE:      p.parseBoolean,
-		token.FALSE:     p.parseBoolean,
-		token.NULL:      p.parseNull,
-		token.LPAREN:    p.parseGroupedExpression,
-		token.LBRACKET:  p.parseArrayLiteral,
-		token.LBRACE:    p.parseHashLiteral,
+		token.IDENT:    p.parseIdentifier,
+		token.INT:      p.parseIntegerLiteral,
+		token.STRING:   p.parseStringLiteral,
+		token.MINUS:    p.parsePrefixExpression,
+		token.BANG:     p.parsePrefixExpression,
+		token.TRUE:     p.parseBoolean,
+		token.FALSE:    p.parseBoolean,
+		token.NULL:     p.parseNull,
+		token.LPAREN:   p.parseGroupedExpression,
+		token.LBRACKET: p.parseArrayLiteral,
+		// token.LBRACE:    p.parseHashLiteral,
+		token.PERCENT:   p.parsePercent,
 		token.YIF:       p.parseYifExpression,
 		token.YOLO:      p.parseYoloExpression,
 		token.YALL:      p.parseYallExpression,
@@ -377,6 +378,16 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	}
 
 	return arr
+}
+
+func (p *Parser) parsePercent() ast.Expression {
+	if p.peekIs(token.LBRACE) {
+		p.advance()
+		return p.parseHashLiteral()
+	}
+
+	p.newError("token '%%' can only be followed by token '{'")
+	return nil
 }
 
 func (p *Parser) parseHashLiteral() ast.Expression {

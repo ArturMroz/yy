@@ -60,7 +60,7 @@ yup      := true
 the_void := null
 
 // print with 'yap()' (or 'yowl()' if urgent)
-yap("Hello, world!")       // prints "Hello, world!"
+yap("Hello, world!")        // prints "Hello, world!"
 yowl("Hello, cruel world!") // prints "HELLO, CRUEL WORLD!"
 
 
@@ -83,22 +83,14 @@ yassert(mega_array == [1, 2, 3, 4, 1, true, "hello", "how long is a piece of str
 
 // hashmaps
 
-friend := { 
+friend := %{ 
     "name":    "Jon the Zebra", 
     "age":     2, 
     "alive":   true,
     "colours": ["black", "white"], 
+    42:        "integer key",
 }
 
 yassert(friend["name"] == "Jon the Zebra")
 yassert(friend["alive"] == true)
 yap(friend["name"], " is ", friend["age"], " years old.") // prints "Jon the Zebra is 2 years old."
-
-// a key to a hashmap can be a string, an integer, or a bool
-foe := { 
-    "name": "Giant Chicken", 
-    true:   "bool as a key!?",
-    42:     "an integer works too",
-}
-
-yassert(foe[true] == "bool as a key!?")

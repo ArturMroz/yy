@@ -50,8 +50,8 @@ fib := \n {
     }
 }
 
-yassert(fib(18) == 2584)
-yassert_eq(fib(18),  2584)
+yassert(fib(8) == 21)
+yassert_eq(fib(8),  21)
 
 // yassert() accepts optional error message for more context
 yassert(fib(20) == 6765, "fibonacci didn't quite work")

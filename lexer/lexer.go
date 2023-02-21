@@ -43,6 +43,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.RBRACKET, ch)
 	case '\\':
 		tok = newToken(token.BACKSLASH, ch)
+	case '%':
+		tok = newToken(token.PERCENT, ch)
 
 	case '+':
 		tok = l.switch2(token.PLUS, token.ADD_ASSIGN)

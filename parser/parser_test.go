@@ -217,13 +217,32 @@ func TestRangeLiteral(t *testing.T) {
 	}
 }
 
-func TestParsingHashLiteralsStringKeys(t *testing.T) {
-	input := `{"one": 1, "two": 2, "three": 3}`
-	expected := map[string]int64{
-		"one":   1,
-		"two":   2,
-		"three": 3,
+func TestParsingHashLiterals(t *testing.T) {
+	tests := []struct {
+		input string
+		pairs int
+	}{
+		{"%{}", 0},
+		{`%{"a": 1 }`, 1},
+		{`%{"a": 1, "b": 2 }`, 2},
+		{`%{"a": 1, "b": 2, 3: 3 }`, 3},
 	}
+
+	for _, tt := range tests {
+		stmt := parseSingleExprStmt(t, tt.input)
+		hash, ok := stmt.Expression.(*ast.HashLiteral)
+		if !ok {
+			t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
+		}
+		if len(hash.Pairs) != tt.pairs {
+			t.Errorf("hash.Pairs has wrong length. want=%d, got=%d", tt.pairs, len(hash.Pairs))
+		}
+	}
+}
+
+func TestParsingHashLiteralsStringKeys(t *testing.T) {
+	input := `%{"one": 1, "two": 2, "three": 3}`
+	expected := map[string]int64{"one": 1, "two": 2, "three": 3}
 
 	stmt := parseSingleExprStmt(t, input)
 	hash, ok := stmt.Expression.(*ast.HashLiteral)
@@ -246,22 +265,8 @@ func TestParsingHashLiteralsStringKeys(t *testing.T) {
 	}
 }
 
-func TestParsingHashLiterals(t *testing.T) {
-	// TODO more test cases
-	input := "{}"
-
-	stmt := parseSingleExprStmt(t, input)
-	hash, ok := stmt.Expression.(*ast.HashLiteral)
-	if !ok {
-		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
-	}
-	if len(hash.Pairs) != 0 {
-		t.Errorf("hash.Pairs has wrong length. got=%d", len(hash.Pairs))
-	}
-}
-
 func TestParsingHashLiteralsWithExpressions(t *testing.T) {
-	input := `{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}`
+	input := `%{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}`
 	stmt := parseSingleExprStmt(t, input)
 	hash, ok := stmt.Expression.(*ast.HashLiteral)
 	if !ok {

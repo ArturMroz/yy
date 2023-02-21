@@ -24,6 +24,7 @@ const (
 	BANG
 	ASTERISK
 	SLASH
+	PERCENT
 	LT
 	GT
 	EQ
@@ -78,6 +79,7 @@ var tokens = [...]string{
 	BANG:       "!",
 	ASTERISK:   "*",
 	SLASH:      "/",
+	PERCENT:    "%",
 	LT:         "<",
 	GT:         ">",
 	EQ:         "==",

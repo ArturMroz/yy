@@ -191,21 +191,17 @@ func TestArrayIndexExpressions(t *testing.T) {
 func TestHashLiterals(t *testing.T) {
 	input := `
 two := "two";
-{
+%{
 	"one": 10 - 9,
 	two: 1 + 1,
 	"thr" + "ee": 6 / 2,
 	4: 4,
-	true: 5,
-	false: 6
 }`
 	expected := map[object.HashKey]int64{
 		(&object.String{Value: "one"}).HashKey():   1,
 		(&object.String{Value: "two"}).HashKey():   2,
 		(&object.String{Value: "three"}).HashKey(): 3,
 		(&object.Integer{Value: 4}).HashKey():      4,
-		object.TRUE.HashKey():                      5,
-		object.FALSE.HashKey():                     6,
 	}
 
 	evaluated := testEval(t, input)
@@ -229,16 +225,14 @@ two := "two";
 
 func TestHashIndexExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{`{"foo": 5}["foo"]`, 5},
-		{`{"foo": 5}["bar"]`, nil},
-		{`key := "foo"; {"foo": 5}[key]`, 5},
-		{`{}["foo"]`, nil},
-		{`{5: 5}[5]`, 5},
-		{`{true: 5}[true]`, 5},
-		{`{false: 5}[false]`, 5},
+		{`%{"foo": 5}["foo"]`, 5},
+		{`%{"foo": 5}["bar"]`, nil},
+		{`key := "foo"; %{"foo": 5}[key]`, 5},
+		{`%{}["foo"]`, nil},
+		{`%{5: 5}[5]`, 5},
 
 		{
-			`{"name": "Vars McVariable"}[\x { x }];`,
+			`%{"name": "Vars McVariable"}[\x { x }];`,
 			errmsg{"key not hashable: FUNCTION"},
 		},
 	})

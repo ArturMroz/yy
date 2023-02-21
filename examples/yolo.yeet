@@ -49,7 +49,7 @@ yolo {
 
     // you can specify which argument you want to bake in by adding a function to a hashmap
     add   := \a, b { a + b }
-    add11 := add + { "b": 11 } // baking 'b' into 'add'
+    add11 := add + %{ "b": 11 } // baking 'b' into 'add'
     // line above is equivalent to:
     // add11 := \a { a + 11 }
     yassert(add11(6) == 17) 

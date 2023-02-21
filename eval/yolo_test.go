@@ -141,7 +141,7 @@ func TestYoloFunctionObjects(t *testing.T) {
 		{
 			`yolo {
 				add   := \a, b { a + b }
-				add11 := add + { "a": 11 }
+				add11 := add + %{ "a": 11 }
 				// above line is equivalent to:
 				// add11 := \b { 11 + b }  
 				add11(6)
@@ -151,7 +151,7 @@ func TestYoloFunctionObjects(t *testing.T) {
 		{
 			`yolo {
 				add   := \a, b { a + b }
-				add11 := { "a": 11 } + add
+				add11 := %{ "a": 11 } + add
 				add11(6)
 			}`,
 			17,
@@ -159,7 +159,7 @@ func TestYoloFunctionObjects(t *testing.T) {
 		{
 			`yolo {
 				add      := \a, b { a + b }
-				add11to5 := add + { "a": 11, "b": 5 }
+				add11to5 := add + %{ "a": 11, "b": 5 }
 				// above line is equivalent to:
 				// add11to5 := \ { 11 + 5 }  
 				add11to5()
@@ -169,7 +169,7 @@ func TestYoloFunctionObjects(t *testing.T) {
 		{
 			`yolo {
 				add      := \a, b { a + b }
-				add11to5 := add + { "a": 11, "b": 5 }
+				add11to5 := add + %{ "a": 11, "b": 5 }
 				// above line is equivalent to:
 				// add11to5 := \ { 11 + 5 }  
 				add11to5()
