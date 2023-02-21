@@ -17,6 +17,25 @@ func TestYoloNormal(t *testing.T) {
 	})
 }
 
+func TestYoloDeclarations(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		// legit operations in yolo mode are still ok
+		{"yolo { 2 + 2 }", 4},
+		{"yolo { 2 + 2; 8 }", 8},
+		{"yolo { a := 1; a }", 1},
+		{"yolo { a := 1; b := 2; a + b }", 3},
+		{"result := yolo { a := 1; b := 2; a + b }; result", 3},
+
+		// auto declaring variables if they don't exsist
+		{"a = 1; a", errmsg{"identifier not found: a"}},
+		{"yolo { a = 1; a };", 1},
+		{"a := 5; yolo { a = 69 }; a", 69},
+
+		// what happens in yolo, stays in yolo
+		{"yolo { a := 1 }; a", errmsg{"identifier not found: a"}},
+	})
+}
+
 func TestYoloPrefixExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
@@ -30,13 +49,6 @@ func TestYoloPrefixExpressions(t *testing.T) {
 
 func TestYoloInfixExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		// normal operations in yolo mode are still ok
-		{"yolo { 2 + 2 }", 4},
-		{"yolo { 2 + 2; 8 }", 8},
-		{"yolo { a := 1; a }", 1},
-		{"yolo { a := 1; b := 2; a + b }", 3},
-		{"result := yolo { a := 1; b := 2; a + b }; result", 3},
-
 		// arrays
 		{"yolo { 3 + [1, 2, 3] }", []int64{4, 5, 6}},
 		{"yolo { [1, 2, 3] + 4 }", []int64{5, 6, 7}},
@@ -71,66 +83,46 @@ func TestYoloInfixExpressions(t *testing.T) {
 		{`yolo { (0..5) + 5 }`, rng{5, 10}},
 		{`yolo { 5 - (0..5) }`, rng{5, 0}},
 		{`yolo { (0..5) - 5 }`, rng{-5, 0}},
-
-		// auto declaring variables if they don't exsist
-		{"a = 1; a", errmsg{"identifier not found: a"}},
-		{"yolo { a = 1; a };", 1},
-		{"a := 5; yolo { a = 69 }; a", 69},
-
-		// what happens in yolo, stays in yolo
-		{"yolo { a := 1; a }; a", errmsg{"identifier not found: a"}},
-
-		// prefix
-		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
-		{`yolo { -[1, 2, 3]}`, []int64{-1, -2, -3}},
-		{`yolo { -null }`, object.ABYSS.Value},
 	})
 }
 
 func TestYoloFunctionObjects(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`5 + \x { x + 2 } `, errmsg{"type mismatch: INTEGER + FUNCTION"}},
+
+		// ints
 		{
-			`yolo { 
-				fn := \a { x := 2; yeet a + x };
-				fn2 := 69 + fn;
-				[fn(1), fn2(1)]
+			`yolo {
+				add   := \a, b { a + b }
+				add11 := add + 11
+				// above line is equivalent to:
+				// add11 := \b { 11 + b }  
+				add11(6)
 			}`,
-			[]int64{3, 72},
-		},
-		{
-			`yolo { 
-				double 			  := \a { yeet a * 2 };
-				triple_the_double := double * 3;
-				[double(2), triple_the_double(2)]
-			}`,
-			[]int64{4, 12},
+			17,
 		},
 		{
 			`yolo {
-				max := \a b {
-					yif a > b {
-						yeet a
-					}
-					yeet b
-				};
-				max_plus := max + 5;
-				[max(2, 10), max_plus(2, 10)]
+				add   := \a, b { a + b }
+				add11 := 11 + add
+				add11(6)
 			}`,
-			[]int64{10, 15},
+			17,
 		},
+
+		// strings
 		{
 			`yolo {
 				fn := \a { a + "hello" };
 				fn2 := fn + "bake"; // baking in args 
 				fn("test") // prints "testhello"
-				fn2()	   // prints "bakehello", notice empty arg list
+				fn2()      // prints "bakehello", notice empty arg list
 			}`,
 			"bakehello",
 		},
 		{
 			`yolo {
-				greet 	  := \name { "Hello, {name}!" }
+				greet     := \name { "Hello, {name}!" }
 				greet_yan := greet + "Yan"; // baking arg "Yan" into function 
 				greet_yan()
 			}`,
@@ -138,10 +130,28 @@ func TestYoloFunctionObjects(t *testing.T) {
 		},
 		{
 			`yolo {
+				greet     := \name { "Hello, {name}!" }
+				greet_yan := "Yan" + greet 
+				greet_yan()
+			}`,
+			"Hello, Yan!",
+		},
+
+		// hashmaps
+		{
+			`yolo {
 				add   := \a, b { a + b }
 				add11 := add + { "a": 11 }
 				// above line is equivalent to:
 				// add11 := \b { 11 + b }  
+				add11(6)
+			}`,
+			17,
+		},
+		{
+			`yolo {
+				add   := \a, b { a + b }
+				add11 := { "a": 11 } + add
 				add11(6)
 			}`,
 			17,
@@ -155,6 +165,68 @@ func TestYoloFunctionObjects(t *testing.T) {
 				add11to5()
 			}`,
 			16,
+		},
+		{
+			`yolo {
+				add      := \a, b { a + b }
+				add11to5 := add + { "a": 11, "b": 5 }
+				// above line is equivalent to:
+				// add11to5 := \ { 11 + 5 }  
+				add11to5()
+			}`,
+			16,
+		},
+
+		// arrays
+		{
+			`yolo {
+				add     := \a b c { a + b + c }
+				add_all := add + [1, 2, 3]
+				add_all()
+			}`,
+			6,
+		},
+		{
+			`yolo {
+				add     := \a b c { a + b + c }
+				add_all := add + [1, 2]
+				add_all(3)
+			}`,
+			6,
+		},
+		{
+			`yolo {
+				add     := \a b c { a + b + c }
+				add_all := [1, 2, 3] + add
+				add_all()
+			}`,
+			6,
+		},
+		{
+			`yolo {
+				add     := \a b c { a + b + c }
+				add_all := [1, 2, 3, 4, 5] + add // surplus is ignored
+				add_all()
+			}`,
+			6,
+		},
+		{
+			`yolo {
+				add     := \a b c { a + b + c }
+				add_all := [1, 2] + add
+				add_all(3)
+			}`,
+			6,
+		},
+
+		// null
+		{
+			`yolo {
+				add      := \a, b { a + b }
+				add_null := add + null
+				add_null(5, 6)
+			}`,
+			11,
 		},
 	})
 }

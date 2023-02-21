@@ -166,84 +166,64 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			return &object.Range{Start: intVal / rng.Start, End: intVal / rng.End}
 		}
 
-	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.INTEGER_OBJ:
-		return yoloInfixExpression(op, right, left) // handle below
-
-	case left.Type() == object.INTEGER_OBJ && right.Type() == object.FUNCTION_OBJ:
-		intVal := left.(*object.Integer).Value
-		fn := right.(*object.Function)
-
-		switch op {
-		case "+", "*":
-			result := &object.Function{
-				Parameters: fn.Parameters,
-				Env:        fn.Env,
-				Body:       &ast.BlockStatement{},
-			}
-
-			for _, stmt := range fn.Body.Statements {
-				if yeetStmt, ok := stmt.(*ast.YeetStatement); ok {
-					yeetStmtCopy := &ast.YeetStatement{
-						ReturnValue: &ast.InfixExpression{
-							Left:     &ast.IntegerLiteral{Value: intVal},
-							Right:    yeetStmt.ReturnValue,
-							Operator: op,
-						},
-					}
-					result.Body.Statements = append(result.Body.Statements, yeetStmtCopy)
-				} else {
-					result.Body.Statements = append(result.Body.Statements, stmt)
-				}
-			}
-
-			return result
-
-		case "<":
-			return toYeetBool(true)
-		case ">":
-			return toYeetBool(false)
-		}
-
-	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.HASH_OBJ && op == "+":
+	case left.Type() == object.FUNCTION_OBJ && op == "+":
 		fn := left.(*object.Function)
-		hash := right.(*object.Hash)
+		return bakeArgs(fn, right)
 
-		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-		newParams := []*ast.Identifier{}
+	case right.Type() == object.FUNCTION_OBJ && op == "+":
+		fn := right.(*object.Function)
+		return bakeArgs(fn, left)
+	}
 
+	// catch all: just convert to string and concatenate
+	return &object.String{Value: left.String() + right.String()}
+}
+
+func bakeArgs(fn *object.Function, right object.Object) object.Object {
+	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+	newParams := []*ast.Identifier{}
+
+	switch right := right.(type) {
+	case *object.Hash:
 		for _, p := range fn.Parameters {
 			key := (&object.String{Value: p.Value}).HashKey()
-			if val, ok := hash.Pairs[key]; ok {
+			if val, ok := right.Pairs[key]; ok {
 				extendedEnv.Set(p.Value, val.Value)
 			} else {
 				newParams = append(newParams, p)
 			}
 		}
 
-		return &object.Function{
-			Parameters: newParams,
-			Env:        extendedEnv,
-			Body:       fn.Body,
-		}
-
-	case left.Type() == object.FUNCTION_OBJ && op == "+": // && right.Type() == object.STRING_OBJ:
-		fn := left.(*object.Function)
-
-		// special case where fn only takes one arg
-		if len(fn.Parameters) == 1 && op == "+" {
-			extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-			extendedEnv.Set(fn.Parameters[0].Value, right)
-
-			return &object.Function{
-				Parameters: []*ast.Identifier{},
-				Env:        extendedEnv,
-				Body:       fn.Body,
+	case *object.Array:
+		num_set := 0
+		for i, v := range right.Elements {
+			if i >= len(fn.Parameters) {
+				break
 			}
+			extendedEnv.Set(fn.Parameters[i].Value, v)
+			num_set++
+		}
+		newParams = fn.Parameters[num_set:]
+
+	case *object.Null:
+		return fn
+
+	case *object.Function:
+		// TODO handle properly
+		return fn
+
+	default:
+		if len(fn.Parameters) > 0 {
+			extendedEnv.Set(fn.Parameters[0].Value, right)
+			newParams = fn.Parameters[1:]
 		}
 	}
 
-	// catch all: just convert to string and concatenate
-	return &object.String{Value: left.String() + right.String()}
+	return &object.Function{
+		Parameters: newParams,
+		Env:        extendedEnv,
+		Body:       fn.Body,
+	}
 }
 
 func rot13(ch rune) rune {

@@ -32,17 +32,6 @@ yolo {
 
 // functions in yolo mode
 yolo {
-    // you can add an integer to a function
-    max := \a, b {
-        yif a > b {
-            yeet a
-        }
-        yeet b
-    }
-
-    max_plus := max + 5
-    yassert(max_plus(2, 10) == 15)
-
     // baking in variables
     greet := \name { "Hello, {name}!" }
     yassert(greet("Yosef") == "Hello, Yosef!") 
@@ -51,10 +40,17 @@ yolo {
     // notice how greet_yan doesn't take any arguments
     yassert(greet_yan() == "Hello, Yan!") 
 
+    // you can bake multiple args by adding a function to an array
+    add     := \a b c { a + b + c }
+    add_all := add + [1, 2]
+    // line above is equivalent to:
+    // add_all := \c { 1 + 2 + c }
+    yassert(add_all(3), 6) 
+
     // you can specify which argument you want to bake in by adding a function to a hashmap
     add   := \a, b { a + b }
-    add11 := add + { "a": 11 } // baking 'a' into 'add'
+    add11 := add + { "b": 11 } // baking 'b' into 'add'
     // line above is equivalent to:
-    // add11 := \b { 11 + b }
+    // add11 := \a { a + 11 }
     yassert(add11(6) == 17) 
 }

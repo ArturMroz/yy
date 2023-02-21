@@ -22,17 +22,19 @@ For more details, check out [examples](examples) directory.
 ## Hello world
 
 ```c
-// print with 'yap()' (or 'yowl()' if urgent)
+// print with 'yap()' 
 name := "Yennefer"
-yap("Hello, {name}!")  // prints "Hello, Yennefer!"
-yowl("Hello, {name}!") // prints "HELLO, YENNEFER!"
+yap("Hello, {name}!") // "Hello, Yennefer!"
+
+// or 'yowl()' if urgent
+yowl("Hello, {name}!") // "HELLO, YENNEFER!"
 ```
 
 ## Variables
 
 ```c
-a := 5 // variables are declared and assigned using walrus operator ':='
-a = 10 // variable assignment, variables must be declared before use
+a := 5 // variables are declared and assigned using walrus operator
+a = 9  // variable assignment, variables must be declared before use
 
 // supported types: integer, string, bool, null
 my_yinteger := 5
@@ -59,7 +61,7 @@ yif 2 * 2 > 10 {
 // yall (y'all) yeeterates over a collection
 // variable 'yt' (short for yeeterator) is created automatically in the loop's scope
 yall 0..3 {
-    yap(yt) // prints '0', '1', '2', '3'
+    yap(yt) // 0, 1, 2, 3
 }
 
 yarray := [1, 2, 3]
@@ -68,7 +70,7 @@ yall elt: yarray { // optionally, you can name the yeeterator
     sum += elt
 }
 
-yap(sum) // prints 6
+yap(sum) // 6
 ```
 
 
@@ -84,24 +86,19 @@ yet i < 5 {
 ## Data structures
 
 ```c
-my_yarray := [1, 2, 3, 4]
-
-// yarray can hold values of different types
-my_yarray2 := [1, true, "hello"]
-
-// yarrays can be concatenated
-mega_yarray := my_yarray + my_yarray2
+// arrays can hold values of different types
+my_yarray := [7, true, "hello", null, [2, "inception"]]
 ```
 
 ```c
 my_hashmap := {
-    "name":  "Yakub the Yak",
-    "age":   2,
-    "alive": true,
+    name:  "Yakub the Yak",
+    age:   2,
+    alive: true,
     42:      "yes, definitely",
 }
 
-yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // prints "Yakub the Yak is 2 years old."
+yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // "Yakub the Yak is 2 years old."
 ```
 
 ## Functions
@@ -124,6 +121,7 @@ max2 := \x y {
         y
     }
 }
+max(20, 5) // 20
 ```
 
 ```c
@@ -135,18 +133,23 @@ factorial := \n {
         n * factorial(n-1)
     }
 }
+factorial(5) // 120
+```
 
+```c
 // higher-order functions
 add_three  := \x { x + 3 }
 call_twice := \fn x { fn(fn(x)) }
-yap(call_twice(add_three, 5)) // prints 11
+call_twice(add_three, 5) // 11
+```
 
+```c
 // closures
 new_adder := \x {
     \n { x + n }
 }
 add_two := new_adder(2)
-yap(add_two(5)) // prints 7
+add_two(5) // 7
 ```
 
 ## Yolo Mode
@@ -161,28 +164,28 @@ new_var = 5 // runtime error: 'identifier not found: new_var'
 // but in Yolo Mode, anything goes:
 
 yolo {
-    yap("tree" * 18)   // prints 'forest'
-    yap("2" * 5)       // prints 10
-    yap("troll" * 3)   // prints 'trolltrolltroll'
-    yap([1, 2, 3] * 3) // prints [3, 6, 9]
+    yap("tree" * 18)   // "forest"
+    yap("troll" * 3)   // "trolltrolltroll"
+    yap("2" * 5)       // 10
+    yap([1, 2, 3] * 3) // [3, 6, 9]
 
     // this works even though new_var hasn't been declared first
     new_var = 5
 
     // variables can be baked into a function by adding them
-    greet 	  := \name { "Hello, {name}!" }
-    greet_yan := greet + "Yan" // baking in the arg
+    greet     := \name { "Hello, {name}!" }
+    greet_yan := greet + "Yan"
     greet_yan() // "Hello, Yan!"
 
     // you can specify which argument you want to bake in by adding a function to a hashmap
     add   := \a, b { a + b }
-    add11 := add + { "a": 11 } // baking 'a' into 'add'
+    add11 := add + { "b": 11 } // baking 'b' into 'add'
     // line above creates function equivalent to:
-    // add11 := \b { 11 + b }
+    // add11 := \a { a + 11 }
     add11(6) // 17
 
     // but even in yolo mode, division by zero doesn't end well
-    yap("weee" / 0) // prints "Stare at the abyss long enough, and it starts to stare back at you."
+    yap("weee" / 0) // "Stare at the abyss long enough, and it starts to stare back at you."
 }
 ```
 
