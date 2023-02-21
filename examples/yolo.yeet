@@ -44,10 +44,17 @@ yolo {
     yassert(max_plus(2, 10) == 15)
 
     // baking in variables
-    greet     := \name { "Hello, " + name + "!" }
+    greet := \name { "Hello, {name}!" }
     yassert(greet("Yosef") == "Hello, Yosef!") 
     
     greet_yan := greet + "Yan"; // baking in args 
     // notice how greet_yan doesn't take any arguments
     yassert(greet_yan() == "Hello, Yan!") 
+
+    // you can specify which argument you want to bake in by adding a function to a hashmap
+    add   := \a, b { a + b }
+    add11 := add + { "a": 11 } // baking 'a' into 'add'
+    // line above is equivalent to:
+    // add11 := \b { 11 + b }
+    yassert(add11(6) == 17) 
 }

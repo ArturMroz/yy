@@ -126,11 +126,9 @@ type HashKey struct {
 }
 
 func (b *Boolean) HashKey() HashKey {
-	var value uint64
+	var value uint64 = 0
 	if b.Value {
 		value = 1
-	} else {
-		value = 0
 	}
 
 	return HashKey{Type: b.Type(), Value: value}

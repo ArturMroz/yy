@@ -169,6 +169,18 @@ yolo {
     // this works even though new_var hasn't been declared first
     new_var = 5
 
+    // variables can be baked into a function by adding them
+    greet 	  := \name { "Hello, {name}!" }
+    greet_yan := greet + "Yan" // baking in the arg
+    greet_yan() // "Hello, Yan!"
+
+    // you can specify which argument you want to bake in by adding a function to a hashmap
+    add   := \a, b { a + b }
+    add11 := add + { "a": 11 } // baking 'a' into 'add'
+    // line above creates function equivalent to:
+    // add11 := \b { 11 + b }
+    add11(6) // 17
+
     // but even in yolo mode, division by zero doesn't end well
     yap("weee" / 0) // prints "Stare at the abyss long enough, and it starts to stare back at you."
 }
@@ -200,9 +212,9 @@ Note: `--debug` flag is optional
 
 # More features
 
-- **Two data structures.** YY supports arrays and hashmaps, providing more data structure options than Lua.
+- **Two data structures.** YY supports arrays and hashmaps, providing twice as many data structures as Lua.
 - **Very basic data types**. YY supports the basic data types of yinteger, string, bool and null. And yes, null isn't technically a data type.
-- **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (since semicolons are so 1970s).
+- **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (semicolons are so 1970s anyway).
 - **Garbage collected**. YY uses automated memory management, meaning you don't have to worry about freeing up memory that is no longer being used. It's like having a personal janitor for your code!
 - **Not Object-Oriented**. You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy.
 - **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).

@@ -237,16 +237,16 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 	matches := tempStringRe.FindAllString(lit, -1)
 
 	if len(matches) == 0 {
-		return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+		return &ast.StringLiteral{Token: p.curToken, Value: lit}
 	}
 
 	replaced := tempStringRe.ReplaceAllString(lit, "%s")
 	// TODO support expr in templated strings (currently only Identifiers work)
-	idents := []ast.Expression{}
-	for _, m := range matches {
+	idents := make([]ast.Expression, len(matches))
+	for i, m := range matches {
 		noBraces := m[1 : len(m)-1]
 		noBraces = strings.TrimSpace(noBraces)
-		idents = append(idents, &ast.Identifier{Value: noBraces})
+		idents[i] = &ast.Identifier{Value: noBraces}
 	}
 
 	return &ast.TemplateStringLiteral{

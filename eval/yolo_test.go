@@ -6,7 +6,29 @@ import (
 	"yy/object"
 )
 
-func TestYoloExpressions(t *testing.T) {
+func TestYoloNormal(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		// normal operations in yolo mode are still ok and yolo block returns a value
+		{"yolo { 2 + 2 }", 4},
+		{"yolo { 2 + 2; 8 }", 8},
+		{"yolo { a := 1; a }", 1},
+		{"yolo { a := 1; b := 2; a + b }", 3},
+		{"result := yolo { a := 1; b := 2; a + b }; result", 3},
+	})
+}
+
+func TestYoloPrefixExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
+		{`yolo { -[1, 2, 3]}`, []int64{-1, -2, -3}},
+		{`yolo { -null }`, object.ABYSS.Value},
+		// {`yolo { -null }`, int64(^uint(0) >> 1)}, // max int value
+		{`yolo { -(0..5) }`, rng{5, 0}},
+		{`yolo { -(5..0) }`, rng{0, 5}},
+	})
+}
+
+func TestYoloInfixExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		// normal operations in yolo mode are still ok
 		{"yolo { 2 + 2 }", 4},
@@ -50,7 +72,23 @@ func TestYoloExpressions(t *testing.T) {
 		{`yolo { 5 - (0..5) }`, rng{5, 0}},
 		{`yolo { (0..5) - 5 }`, rng{-5, 0}},
 
-		// functions
+		// auto declaring variables if they don't exsist
+		{"a = 1; a", errmsg{"identifier not found: a"}},
+		{"yolo { a = 1; a };", 1},
+		{"a := 5; yolo { a = 69 }; a", 69},
+
+		// what happens in yolo, stays in yolo
+		{"yolo { a := 1; a }; a", errmsg{"identifier not found: a"}},
+
+		// prefix
+		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
+		{`yolo { -[1, 2, 3]}`, []int64{-1, -2, -3}},
+		{`yolo { -null }`, object.ABYSS.Value},
+	})
+}
+
+func TestYoloFunctionObjects(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
 		{`5 + \x { x + 2 } `, errmsg{"type mismatch: INTEGER + FUNCTION"}},
 		{
 			`yolo { 
@@ -90,18 +128,33 @@ func TestYoloExpressions(t *testing.T) {
 			}`,
 			"bakehello",
 		},
-
-		// auto declaring variables if they don't exsist
-		{"a = 1; a", errmsg{"identifier not found: a"}},
-		{"yolo { a = 1; a };", 1},
-		{"a := 5; yolo { a = 69 }; a", 69},
-
-		// what happens in yolo, stays in yolo
-		{"yolo { a := 1; a }; a", errmsg{"identifier not found: a"}},
-
-		// prefix
-		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
-		{`yolo { -[1, 2, 3]}`, []int64{-1, -2, -3}},
-		{`yolo { -null }`, object.ABYSS.Value},
+		{
+			`yolo {
+				greet 	  := \name { "Hello, {name}!" }
+				greet_yan := greet + "Yan"; // baking arg "Yan" into function 
+				greet_yan()
+			}`,
+			"Hello, Yan!",
+		},
+		{
+			`yolo {
+				add   := \a, b { a + b }
+				add11 := add + { "a": 11 }
+				// above line is equivalent to:
+				// add11 := \b { 11 + b }  
+				add11(6)
+			}`,
+			17,
+		},
+		{
+			`yolo {
+				add      := \a, b { a + b }
+				add11to5 := add + { "a": 11, "b": 5 }
+				// above line is equivalent to:
+				// add11to5 := \ { 11 + 5 }  
+				add11to5()
+			}`,
+			16,
+		},
 	})
 }

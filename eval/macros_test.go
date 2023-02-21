@@ -95,9 +95,9 @@ func TestExpandMacros(t *testing.T) {
                 })
             }
 
-            unless(69 > 7, yelp("not greater"), yelp("greater"))
+            unless(69 > 7, yap("not greater"), yap("greater"))
             `,
-			`yif (!(69 > 7)) { yelp("not greater") } yels { yelp("greater") }`,
+			`yif (!(69 > 7)) { yap("not greater") } yels { yap("greater") }`,
 		},
 	}
 

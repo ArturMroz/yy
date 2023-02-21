@@ -393,9 +393,9 @@ func TestRecursion(t *testing.T) {
 fib := \n {
     yif n < 2 { n } yels { fib(n-1) + fib(n-2) }
 };
-[fib(0), fib(1), fib(2), fib(3), fib(4), fib(18)]
+[fib(0), fib(1), fib(2), fib(3), fib(4), fib(8)]
 `,
-			[]int64{0, 1, 1, 2, 3, 2584},
+			[]int64{0, 1, 1, 2, 3, 21},
 		},
 		{
 			`

@@ -32,14 +32,18 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 			// TODO reverse keys with values
 
 		case *object.Range:
-			// TODO invert
+			return &object.Range{
+				Start: right.End,
+				End:   right.Start,
+			}
 
 		case *object.Function:
 			// TODO negate return value?
 		}
 	}
 
-	return newError("unknown operator: %s%s", op, right.Type())
+	// catch all: convert to string
+	return &object.String{Value: op + right.String()}
 }
 
 func yoloInfixExpression(op string, left, right object.Object) object.Object {
@@ -162,33 +166,6 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			return &object.Range{Start: intVal / rng.Start, End: intVal / rng.End}
 		}
 
-	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.STRING_OBJ:
-		fn := left.(*object.Function)
-		right := right.(*object.String)
-
-		// special case where fn only takes one arg
-		if len(fn.Parameters) == 1 && op == "+" {
-			newFn := &object.Function{
-				Parameters: []*ast.Identifier{},
-				Env:        fn.Env,
-				Body:       &ast.BlockStatement{},
-			}
-
-			// TODO find a way to inject var directly into fn env wo breaking recursion and leaking vars
-			statements := []ast.Statement{
-				&ast.ExpressionStatement{
-					Expression: &ast.AssignExpression{
-						IsInit: true,
-						Name:   fn.Parameters[0],
-						Value:  &ast.StringLiteral{Value: right.Value},
-					},
-				},
-			}
-
-			newFn.Body.Statements = append(statements, fn.Body.Statements...)
-			return newFn
-		}
-
 	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.INTEGER_OBJ:
 		return yoloInfixExpression(op, right, left) // handle below
 
@@ -227,7 +204,42 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			return toYeetBool(false)
 		}
 
-		// TODO handle other type combinations
+	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.HASH_OBJ && op == "+":
+		fn := left.(*object.Function)
+		hash := right.(*object.Hash)
+
+		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+		newParams := []*ast.Identifier{}
+
+		for _, p := range fn.Parameters {
+			key := (&object.String{Value: p.Value}).HashKey()
+			if val, ok := hash.Pairs[key]; ok {
+				extendedEnv.Set(p.Value, val.Value)
+			} else {
+				newParams = append(newParams, p)
+			}
+		}
+
+		return &object.Function{
+			Parameters: newParams,
+			Env:        extendedEnv,
+			Body:       fn.Body,
+		}
+
+	case left.Type() == object.FUNCTION_OBJ && op == "+": // && right.Type() == object.STRING_OBJ:
+		fn := left.(*object.Function)
+
+		// special case where fn only takes one arg
+		if len(fn.Parameters) == 1 && op == "+" {
+			extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+			extendedEnv.Set(fn.Parameters[0].Value, right)
+
+			return &object.Function{
+				Parameters: []*ast.Identifier{},
+				Env:        extendedEnv,
+				Body:       fn.Body,
+			}
+		}
 	}
 
 	// catch all: just convert to string and concatenate
