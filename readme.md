@@ -95,7 +95,7 @@ my_hashmap := %{
     name:  "Yakub the Yak",
     age:   2,
     alive: true,
-    42:      "yes, definitely",
+    42:    "integer key works too",
 }
 
 yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // "Yakub the Yak is 2 years old."
@@ -121,6 +121,7 @@ max2 := \a b {
         b
     }
 }
+
 max(20, 5) // 20
 ```
 
@@ -133,6 +134,7 @@ factorial := \n {
         n * factorial(n-1)
     }
 }
+
 factorial(5) // 120
 ```
 
@@ -148,6 +150,7 @@ call_twice(add_three, 5) // 11
 new_adder := \x {
     \n { x + n }
 }
+
 add_two := new_adder(2)
 add_two(5) // 7
 ```
@@ -178,13 +181,13 @@ yolo {
     greet_yan() // "Hello, Yan!"
 
     // you can specify which argument you want to bake in by adding a function to a hashmap
-    add   := \a, b { a + b }
+    add   := \a b { a + b }
     add11 := add + %{ "b": 11 } // baking 'b' into 'add'
     // line above creates function equivalent to:
     // add11 := \a { a + 11 }
     add11(6) // 17
 
-    // but even in yolo mode, division by zero doesn't end well
+    // but even in yolo mode, division by zero doesn't end well (what did you expect?)
     yap("weee" / 0) // "Stare at the abyss long enough, and it starts to stare back at you."
 }
 ```
@@ -218,10 +221,12 @@ Note: `--debug` flag is optional
 - **Two data structures.** YY supports arrays and hashmaps, providing twice as many data structures as Lua.
 - **Very basic data types**. YY supports the basic data types of yinteger, string, bool and null. And yes, null isn't technically a data type.
 - **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (semicolons are so 1970s anyway).
-- **Garbage collected**. YY uses automated memory management, meaning you don't have to worry about freeing up memory that is no longer being used. It's like having a personal janitor for your code!
-- **Not Object-Oriented**. You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy.
+- **Garbage collected.** YY's automated memory management, also known as the code-cleaning yak, takes care of freeing up memory so you don't have to. It's like having a furry friend who loves to tidy up after you, without the added hassle of having to feed it.
+- **Not Object-Oriented.** You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy. Also, OOP is dead, haven't you heard the news. 
 - **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).
-- **Built-in functions.** YY includes a number of built-in functions for common tasks.
+- **Built-in functions.** YY's built-in functions are so reliable, you could trust them with your firstborn child. Just kidding, please don't do that. 
+- **No dependencies.** Unlike your needy ex, YY doesn't rely on anyone else. With no bloated third-party libraries weighing it down, YY is as nimble as a young yak frolicking in a field. Also, you won't need to worry about some random person in Nebraska giving up on thanklessly maintaining a package you depend on.
+- **Implemented using tree walking interpreter.** YY's interpreter may not be the most efficient, but it sure is leisurely. Sit back, relax, and let YY take its time to execute your code. You deserve a break anyway.
 
 
 # FAQ
