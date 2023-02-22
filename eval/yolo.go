@@ -28,8 +28,28 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 			}
 			return result
 
+		case *object.Boolean:
+			if right == object.TRUE {
+				return object.FALSE
+			}
+			return object.TRUE
+
 		case *object.Hash:
-			// TODO reverse keys with values
+			newHash := &object.Hash{
+				Pairs: map[object.HashKey]object.HashPair{},
+			}
+
+			for _, pair := range right.Pairs {
+				if hashable, ok := pair.Value.(object.Hashable); ok {
+					key := hashable.HashKey()
+					newHash.Pairs[key] = object.HashPair{
+						Key:   pair.Value,
+						Value: pair.Key,
+					}
+				}
+			}
+
+			return newHash
 
 		case *object.Range:
 			return &object.Range{

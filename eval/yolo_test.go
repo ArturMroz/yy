@@ -41,9 +41,13 @@ func TestYoloPrefixExpressions(t *testing.T) {
 		{`yolo { -"Gurer'f Lrrg va rirel Lbvax."}`, "There's Yeet in every Yoink."},
 		{`yolo { -[1, 2, 3]}`, []int64{-1, -2, -3}},
 		{`yolo { -null }`, object.ABYSS.Value},
-		// {`yolo { -null }`, int64(^uint(0) >> 1)}, // max int value
+		{`yolo { -true }`, false},
+		{`yolo { -false }`, true},
 		{`yolo { -(0..5) }`, rng{5, 0}},
 		{`yolo { -(5..0) }`, rng{0, 5}},
+		{`yolo { hash := %{ "a": "z" }; (-hash)["z"] }`, "a"},
+		{`yolo { hash := %{ "a": 6, "b": 9 }; (-hash)[6] }`, "a"},
+		{`yolo { hash := %{ "a": 5, "c": [2, 3] }; len(-hash) }`, 1},
 	})
 }
 
