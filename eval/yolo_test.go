@@ -48,6 +48,16 @@ func TestYoloPrefixExpressions(t *testing.T) {
 		{`yolo { hash := %{ "a": "z" }; (-hash)["z"] }`, "a"},
 		{`yolo { hash := %{ "a": 6, "b": 9 }; (-hash)[6] }`, "a"},
 		{`yolo { hash := %{ "a": 5, "c": [2, 3] }; len(-hash) }`, 1},
+
+		{`yolo { fn := \a { 2 * a }; fn_neg := -fn; fn_neg(5) }`, -10},
+		{
+			`yolo { 
+				fn     := \a b { yif a > b { a } yels { b } }
+				fn_neg := -fn;
+				[fn_neg(5, 8), fn_neg(15, 8)]
+			}`,
+			[]int64{-8, -15},
+		},
 	})
 }
 
@@ -90,7 +100,60 @@ func TestYoloInfixExpressions(t *testing.T) {
 	})
 }
 
-func TestYoloFunctionObjects(t *testing.T) {
+func TestYoloInfixFunctionObject(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{
+			`yolo { 
+				fn  := \a b { yif a > b { a } yels { b } }
+				fn2 := fn * 3;
+				[fn2(5, 8), fn2(15, 8)]
+			}`,
+			[]int64{24, 45},
+		},
+		{
+			`yolo { 
+				fn  := \a b { yif a > b { a } yels { b } }
+				fn2 := 3 * fn;
+				[fn2(5, 8), fn2(15, 8)]
+			}`,
+			[]int64{24, 45},
+		},
+		{
+			`yolo { 
+				fn  := \a b { yif a > b { a } yels { b } }
+				fn2 := fn / 3;
+				[fn2(6, 9), fn2(15, 9)]
+			}`,
+			[]int64{3, 5},
+		},
+		{
+			`yolo { 
+				fn  := \a b { yif a > b { a } yels { b } }
+				fn2 := 15 / fn;
+				[fn2(5, 3), fn2(15, 9)]
+			}`,
+			[]int64{3, 1},
+		},
+		{
+			`yolo { 
+				fn  := \a b { yif a > b { a } yels { b } }
+				fn2 := fn - 3;
+				[fn2(6, 9), fn2(15, 9)]
+			}`,
+			[]int64{6, 12},
+		},
+		{
+			`yolo { 
+				fn  := \a b { yif a > b { a } yels { b } }
+				fn2 := 3 - fn;
+				[fn2(6, 9), fn2(15, 9)]
+			}`,
+			[]int64{-6, -12},
+		},
+	})
+}
+
+func TestYoloFunctionBaking(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`5 + \x { x + 2 } `, errmsg{"type mismatch: INTEGER + FUNCTION"}},
 

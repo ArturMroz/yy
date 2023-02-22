@@ -58,7 +58,22 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 			}
 
 		case *object.Function:
-			// TODO negate return value?
+			newBody := &ast.BlockStatement{
+				Statements: []ast.Statement{
+					&ast.ExpressionStatement{
+						Expression: &ast.PrefixExpression{
+							Operator: op,
+							Right:    right.Body,
+						},
+					},
+				},
+			}
+
+			return &object.Function{
+				Parameters: right.Parameters,
+				Env:        right.Env,
+				Body:       newBody,
+			}
 		}
 	}
 
@@ -193,6 +208,46 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	case right.Type() == object.FUNCTION_OBJ && op == "+":
 		fn := right.(*object.Function)
 		return bakeArgs(fn, left)
+
+	case left.Type() == object.FUNCTION_OBJ:
+		fn := left.(*object.Function)
+		newBody := &ast.BlockStatement{
+			Statements: []ast.Statement{
+				&ast.ExpressionStatement{
+					Expression: &ast.InfixExpression{
+						Left:     fn.Body,
+						Operator: op,
+						Right:    objectToASTNode(right).(ast.Expression),
+					},
+				},
+			},
+		}
+
+		return &object.Function{
+			Parameters: fn.Parameters,
+			Env:        fn.Env,
+			Body:       newBody,
+		}
+
+	case right.Type() == object.FUNCTION_OBJ:
+		fn := right.(*object.Function)
+		newBody := &ast.BlockStatement{
+			Statements: []ast.Statement{
+				&ast.ExpressionStatement{
+					Expression: &ast.InfixExpression{
+						Left:     objectToASTNode(left).(ast.Expression),
+						Operator: op,
+						Right:    fn.Body,
+					},
+				},
+			},
+		}
+
+		return &object.Function{
+			Parameters: fn.Parameters,
+			Env:        fn.Env,
+			Body:       newBody,
+		}
 	}
 
 	// catch all: just convert to string and concatenate
