@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"syscall/js"
 
 	"yy/eval"
 	"yy/lexer"
@@ -18,7 +20,14 @@ const version = "v0.0.1"
 var debug = flag.Bool("debug", false, "turns on debug mode")
 
 func main() {
+	// fmt.Println("args", os.Args)
 	flag.Parse()
+	if len(os.Args) == 1 && os.Args[0] == "js" {
+		fmt.Println("web ass baby, interpret")
+		js.Global().Set("interpret", interpretWrapper())
+		<-make(chan bool)
+		return
+	}
 
 	switch len(flag.Args()) {
 	case 0:
@@ -125,4 +134,50 @@ func repl() {
 			io.WriteString(out, "\n")
 		}
 	}
+}
+
+func interpretWrapper() js.Func {
+	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 {
+			return "no arguments passed"
+		}
+
+		input := args[0].String()
+		fmt.Printf("input %s\n", input)
+
+		output, err := interpret(input)
+		if err != nil {
+			return map[string]any{
+				"error": fmt.Sprintf("error: %s\n", err),
+			}
+		}
+		return output
+	})
+
+	return jsonFunc
+}
+
+func interpret(src string) (string, error) {
+	l := lexer.New(src)
+	p := parser.New(l)
+	program := p.ParseProgram()
+	if len(p.Errors()) > 0 {
+		for _, msg := range p.Errors() {
+			fmt.Printf("parser error: %q\n", msg)
+		}
+		fmt.Println()
+		os.Exit(1)
+	}
+
+	env := object.NewEnvironment()
+	macroEnv := object.NewEnvironment()
+
+	eval.DefineMacros(program, macroEnv)
+	expanded := eval.ExpandMacros(program, macroEnv)
+
+	result := eval.Eval(expanded, env)
+	if evalError, ok := result.(*object.Error); ok {
+		return "", errors.New(fmt.Sprintf("runtime error: %s\n", evalError.Msg))
+	}
+	return result.String(), nil
 }

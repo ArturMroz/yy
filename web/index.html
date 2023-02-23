@@ -1,0 +1,158 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("yy.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        });
+    </script>
+
+
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background-color: #4A148C;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            box-sizing: border-box;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        header {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        header h1 {
+            flex: 1;
+            font-family: Helvetica, sans-serif;
+            color: #F3E5F5;
+        }
+
+        header button {
+            padding: 10px 60px;
+            background-color: #4CAF50;
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        header select {
+            padding: 8px;
+        }
+
+        textarea {
+            flex: 1;
+            padding: clamp(12px, 2vw, 28px);
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 0 0 clamp(5px, 1.5vw, 12px) rgba(0, 0, 0, 0.1);
+            color: #222;
+            opacity: .9;
+            font-size: 16px;
+            resize: none;
+        }
+
+        #source {
+            flex: 2;
+        }
+
+        #output {
+            opacity: .7;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <header>
+            <h1>The YeetYoink Playground</h1>
+            <button onclick="run(source.value)">Run</button>
+            <select id="sample-select"></select>
+        </header>
+
+        <textarea id="source"></textarea>
+        <textarea id="output" readonly></textarea>
+    </main>
+</body>
+
+<script>
+    function run(input) {
+        // console.log("input", input)
+        if (!input) return;
+
+        const result = interpret(input)
+        console.log(result);
+        output.value = result;
+    }
+
+    function setSample(sampleName) {
+        const { content } = samples[sampleName] || samples['hello'];
+        source.value = content;
+    }
+
+    function setupSampleSelect() {
+        const sampleSelect = document.querySelector('#sample-select')
+
+        for (const sample in samples) {
+            const option = document.createElement('option')
+            option.value = sample
+            option.textContent = sample
+            sampleSelect.appendChild(option)
+        }
+
+        sampleSelect.addEventListener('change', e => {
+            const sampleName = e.target.value
+            setSample(sampleName)
+        })
+    }
+
+    const samples = {
+        'hello': { content: 'name := "Yan"\nyap("Hello, {name}!")' },
+        'fibonacci': {
+            content:
+                `// recursion
+fib1 := \\n {
+    yif n < 2 { n } yels { fib1(n-1) + fib1(n-2) }
+};
+
+yap(fib1(8))
+
+// closure
+fib2 := \\{
+    a := 0
+    b := 1
+    \\{
+        temp := a
+        a = b
+        b += temp
+    }
+}
+
+f := fib2()
+yap(f(), f(), f())
+f()
+` },
+    }
+
+    setupSampleSelect()
+    setSample('hello')
+</script>
+
+</html>
