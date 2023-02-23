@@ -49,7 +49,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			args = append(args, evaluated)
 		}
 
-		return applyFunction(fn, args)
+		return applyFunction(node.Function.TokenLiteral(), fn, args)
 
 	case *ast.AssignExpression:
 		val := Eval(node.Value, env)
@@ -329,9 +329,13 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 	return result
 }
 
-func applyFunction(fn object.Object, args []object.Object) object.Object {
+func applyFunction(fnName string, fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
+		if len(fn.Parameters) != len(args) {
+			return newError("wrong number of args passed to %s. want=%d, got=%d", fnName, len(fn.Parameters), len(args))
+		}
+
 		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 		for paramIdx, param := range fn.Parameters {
 			extendedEnv.Set(param.Value, args[paramIdx])

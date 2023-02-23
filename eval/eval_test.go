@@ -483,6 +483,22 @@ yif (10 > 1) {
 			"foobar2(x, y)",
 			"identifier not found: foobar2",
 		},
+		{
+			`f := \a b { a }; f()`,
+			"wrong number of args passed to f. want=2, got=0",
+		},
+		{
+			`fn := \a b { a }; fn(5)`,
+			"wrong number of args passed to fn. want=2, got=1",
+		},
+		{
+			`f := \a b { a }; f(5, 6, 7)`,
+			"wrong number of args passed to f. want=2, got=3",
+		},
+		{
+			`fun := \{ 8 }; fun(5)`,
+			"wrong number of args passed to fun. want=0, got=1",
+		},
 	}
 
 	for _, tt := range tests {
