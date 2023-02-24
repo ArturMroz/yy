@@ -485,19 +485,19 @@ yif (10 > 1) {
 		},
 		{
 			`f := \a b { a }; f()`,
-			"wrong number of args passed to f. want=2, got=0",
+			"wrong number of args for f (got 0, want 2)",
 		},
 		{
 			`fn := \a b { a }; fn(5)`,
-			"wrong number of args passed to fn. want=2, got=1",
+			"wrong number of args for fn (got 1, want 2)",
 		},
 		{
 			`f := \a b { a }; f(5, 6, 7)`,
-			"wrong number of args passed to f. want=2, got=3",
+			"wrong number of args for f (got 3, want 2)",
 		},
 		{
 			`fun := \{ 8 }; fun(5)`,
-			"wrong number of args passed to fun. want=0, got=1",
+			"wrong number of args for fun (got 1, want 0)",
 		},
 	}
 

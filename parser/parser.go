@@ -504,8 +504,8 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression {
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
-		// TODO support assignment to indnex expr ie array[2] = 5;
-		p.newError("can only assign to an Identifier (got '%s', type of %T)", maybeIdent, maybeIdent)
+		// TODO support assignment to index expr ie array[2] = 5;
+		p.newError("can only assign to an Identifier (got '%s')", maybeIdent)
 		return nil
 	}
 

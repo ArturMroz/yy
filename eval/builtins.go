@@ -11,7 +11,7 @@ var builtins = map[string]*object.Builtin{
 	"len": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of arguments. got=%d, want=1", len(args))
+				return newError("wrong number of args for len (got %d, want 1)", len(args))
 			}
 
 			switch arg := args[0].(type) {
@@ -74,7 +74,7 @@ var builtins = map[string]*object.Builtin{
 	"push": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 2 {
-				return newError("wrong number of arguments. got=%d, want=2", len(args))
+				return newError("wrong number of args for push (got %d, want 2)", len(args))
 			}
 			if args[0].Type() != object.ARRAY_OBJ {
 				return newError("argument to `push` must be ARRAY, got %s", args[0].Type())
@@ -94,7 +94,7 @@ var builtins = map[string]*object.Builtin{
 	"yoink": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 && len(args) != 2 {
-				return newError("wrong number of arguments for `yoink`. got=%d, want=1 or 2", len(args))
+				return newError("wrong number of args for yoink (got %d, want 1 or 2)", len(args))
 			}
 			if len(args) == 2 && args[1].Type() != object.INTEGER_OBJ {
 				return newError("second argument to `yoink` must be INTEGER, got %s", args[1].Type())
@@ -159,7 +159,7 @@ var builtins = map[string]*object.Builtin{
 	"yarn": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of arguments for `yarn`. got=%d, want=1", len(args))
+				return newError("wrong number of args for yarn (got %d, want 1)", len(args))
 			}
 			return &object.String{Value: args[0].String()}
 		},
@@ -181,7 +181,7 @@ var builtins = map[string]*object.Builtin{
 	"yassert": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 && len(args) != 2 {
-				return newError("wrong number of arguments for `yassert`. got=%d, want=1 or 2", len(args))
+				return newError("wrong number of args for yassert (got %d, want 1 or 2)", len(args))
 			}
 
 			if isTruthy(args[0]) {
@@ -201,7 +201,7 @@ var builtins = map[string]*object.Builtin{
 
 func checkArray(fnName string, args ...object.Object) (*object.Array, error) {
 	if len(args) != 1 {
-		return nil, fmt.Errorf("wrong number of arguments to `%s`. got=%d, want=1", fnName, len(args))
+		return nil, fmt.Errorf("wrong number of args for `%s` (got %d, want 1)", fnName, len(args))
 	}
 	if args[0].Type() != object.ARRAY_OBJ {
 		return nil, fmt.Errorf("argument to `%s` must be ARRAY, got %s", fnName, args[0].Type())

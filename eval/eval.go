@@ -23,33 +23,15 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return &object.ReturnValue{Value: val}
 
+	case *ast.CallExpression:
+		return applyFunction(node, env)
+
 	case *ast.FunctionLiteral:
 		return &object.Function{
 			Parameters: node.Parameters,
 			Body:       node.Body,
 			Env:        env,
 		}
-
-	case *ast.CallExpression:
-		if node.Function.TokenLiteral() == "quote" { // TODO this is ugly
-			return quote(node.Arguments[0], env) // quote only supprots 1 arg
-		}
-
-		fn := Eval(node.Function, env)
-		if isError(fn) {
-			return fn
-		}
-
-		var args []object.Object
-		for _, a := range node.Arguments {
-			evaluated := Eval(a, env)
-			if isError(evaluated) {
-				return evaluated
-			}
-			args = append(args, evaluated)
-		}
-
-		return applyFunction(node.Function.TokenLiteral(), fn, args)
 
 	case *ast.AssignExpression:
 		val := Eval(node.Value, env)
@@ -119,8 +101,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.YoloExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
 		env.SetYoloMode()
-		result := Eval(node.Body, extendedEnv)
-		return result
+		return Eval(node.Body, extendedEnv)
 
 	case *ast.YetExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
@@ -329,11 +310,30 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 	return result
 }
 
-func applyFunction(fnName string, fn object.Object, args []object.Object) object.Object {
+func applyFunction(callExpr *ast.CallExpression, env *object.Environment) object.Object {
+	if callExpr.Function.TokenLiteral() == "quote" { // TODO this is ugly
+		return quote(callExpr.Arguments[0], env) // quote only supprots 1 arg
+	}
+
+	fn := Eval(callExpr.Function, env)
+	if isError(fn) {
+		return fn
+	}
+
+	var args []object.Object
+	for _, a := range callExpr.Arguments {
+		evaluated := Eval(a, env)
+		if isError(evaluated) {
+			return evaluated
+		}
+		args = append(args, evaluated)
+	}
+
 	switch fn := fn.(type) {
 	case *object.Function:
 		if len(fn.Parameters) != len(args) {
-			return newError("wrong number of args passed to %s. want=%d, got=%d", fnName, len(fn.Parameters), len(args))
+			return newError("wrong number of args for %s (got %d, want %d)",
+				callExpr.Function.TokenLiteral(), len(args), len(fn.Parameters))
 		}
 
 		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
