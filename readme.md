@@ -86,16 +86,17 @@ yet i < 5 {
 ## Data structures
 
 ```c
-// arrays can hold values of different types
-my_yarray := [7, true, "hello", null, [2, "inception"]]
+my_array := [7, true, "hello", null, [2, "inception"]]
+
+yap(my_array[2]) // "hello"
 ```
 
 ```c
 my_hashmap := %{
-    name:  "Yakub the Yak",
-    age:   2,
-    alive: true,
-    42:    "integer key works too",
+    "name":  "Yakub the Yak",
+    "age":   2,
+    "alive": true,
+    42:      "integer key works too",
 }
 
 yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // "Yakub the Yak is 2 years old."
@@ -204,16 +205,14 @@ $ go build
 Run a YY script
 
 ```
-$ ./yy [--debug] filename
+$ ./yy filename
 ```
 
 Or start a REPL session
 
 ```
-$ ./yy [--debug]
+$ ./yy 
 ```
-
-Note: `--debug` flag is optional
 
 
 # More features

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -15,22 +14,18 @@ import (
 
 const version = "v0.0.1"
 
-var debug = flag.Bool("debug", false, "turns on debug mode")
+var debug = false
 
 func main() {
-	flag.Parse()
-
-	switch len(flag.Args()) {
-	case 0:
+	switch len(os.Args) {
+	case 1:
 		repl()
 
-	case 1:
-		runFile(flag.Args()[0])
+	case 2:
+		runFile(os.Args[1])
 
 	default:
-		fmt.Println("usage: yy [--debug] [path_to_script] ")
-		// TODO work around this limitation for better UX (this is how Go stdlib flag parsing works)
-		fmt.Println("note that the --debug flag must come before the path to the script")
+		fmt.Println("usage: yy [path_to_script] ")
 	}
 }
 
@@ -58,7 +53,7 @@ func runFile(f string) {
 	eval.DefineMacros(program, macroEnv)
 	expanded := eval.ExpandMacros(program, macroEnv)
 
-	if *debug {
+	if debug {
 		fmt.Println("after macro expansion:")
 		fmt.Println(expanded)
 		fmt.Println()
@@ -97,7 +92,7 @@ func repl() {
 		p := parser.New(l)
 		program := p.ParseProgram()
 
-		if *debug {
+		if debug {
 			io.WriteString(out, padLeft)
 			io.WriteString(out, program.String())
 			io.WriteString(out, "\n")
@@ -113,7 +108,7 @@ func repl() {
 		eval.DefineMacros(program, macroEnv)
 		expanded := eval.ExpandMacros(program, macroEnv)
 
-		if *debug {
+		if debug {
 			io.WriteString(out, padLeft)
 			io.WriteString(out, expanded.String())
 			io.WriteString(out, "\n")
