@@ -23,8 +23,7 @@ func main() {
 	// fmt.Println("args", os.Args)
 	flag.Parse()
 	if len(os.Args) == 1 && os.Args[0] == "js" {
-		fmt.Println("web ass baby, interpret")
-		js.Global().Set("interpret", interpretWrapper())
+		js.Global().Set("interpret", wasmWrapper())
 		<-make(chan bool)
 		return
 	}
@@ -136,37 +135,17 @@ func repl() {
 	}
 }
 
-func interpretWrapper() js.Func {
-	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) any {
-		if len(args) != 1 {
-			return "no arguments passed"
-		}
-
-		input := args[0].String()
-		fmt.Printf("input %s\n", input)
-
-		output, err := interpret(input)
-		if err != nil {
-			return map[string]any{
-				"error": fmt.Sprintf("error: %s\n", err),
-			}
-		}
-		return output
-	})
-
-	return jsonFunc
-}
-
-func interpret(src string) (string, error) {
+func interpret(src string) error {
 	l := lexer.New(src)
 	p := parser.New(l)
 	program := p.ParseProgram()
+
 	if len(p.Errors()) > 0 {
-		for _, msg := range p.Errors() {
-			fmt.Printf("parser error: %q\n", msg)
+		errMsg := "parser errors:\n"
+		for _, err := range p.Errors() {
+			errMsg += fmt.Sprintf("    %q\n", err)
 		}
-		fmt.Println()
-		os.Exit(1)
+		return errors.New(errMsg)
 	}
 
 	env := object.NewEnvironment()
@@ -177,7 +156,26 @@ func interpret(src string) (string, error) {
 
 	result := eval.Eval(expanded, env)
 	if evalError, ok := result.(*object.Error); ok {
-		return "", errors.New(fmt.Sprintf("runtime error: %s\n", evalError.Msg))
+		// return errors.New(fmt.Sprintf("runtime error: %s\n", evalError.Msg))
+		return fmt.Errorf("runtime error: %s\n", evalError.Msg)
 	}
-	return result.String(), nil
+	return nil
+}
+
+func wasmWrapper() js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 {
+			return map[string]any{
+				"error": fmt.Sprintf("wrong number of args (got %d, want 1)\n", len(args)),
+			}
+		}
+
+		input := args[0].String()
+		if err := interpret(input); err != nil {
+			return map[string]any{
+				"error": fmt.Sprintf("%s\n", err),
+			}
+		}
+		return nil
+	})
 }

@@ -1,15 +1,22 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script src="wasm_exec.js"></script>
     <script>
-        const go = new Go();
+        const go = new Go()
         WebAssembly.instantiateStreaming(fetch("yy.wasm"), go.importObject).then((result) => {
-            go.run(result.instance);
-        });
+            go.run(result.instance)
+        })
     </script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style type="text/css">
         html,
@@ -18,63 +25,143 @@
             margin: 0;
         }
 
+        body,
+        button,
+        select {
+            font-family: Montserrat, 'Open Sans', 'Helvetica', sans-serif;
+        }
+
         body {
-            background-color: #4A148C;
+            background: url('bg.jpg');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-color: #281435;
         }
 
         main {
             display: flex;
             flex-direction: column;
-            gap: 20px;
             height: 100%;
-            box-sizing: border-box;
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px;
+            box-sizing: border-box;
         }
+
+        /* HEADER  */
 
         header {
             display: flex;
             gap: 25px;
             align-items: center;
+            margin-bottom: 30px;
         }
 
         header h1 {
             flex: 1;
-            font-family: Helvetica, sans-serif;
-            color: #F3E5F5;
+            color: white;
+            font-size: 40px;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+
+        header h1 .light {
+            font-weight: 300;
+        }
+
+        header h1 .accent {
+            font-weight: 300;
+            opacity: .75;
+            color: #dd3a5e;
         }
 
         header button {
-            padding: 10px 60px;
-            background-color: #4CAF50;
-            border: 0;
-            border-radius: 5px;
+            padding: 12px 50px;
+            background-color: #dd3a5e;
+            border: none;
+            border-bottom: 3px solid #91263d;
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
+            opacity: .85;
+            transition: opacity .3s;
+        }
+
+        header button:hover {
+            opacity: 1;
         }
 
         header select {
             padding: 8px;
         }
 
-        textarea {
-            flex: 1;
-            padding: clamp(12px, 2vw, 28px);
+        #sample-select {
+            font-size: 15px;
+            padding: 8px 12px;
+            margin: 0;
             border: none;
-            border-radius: 5px;
-            box-shadow: 0 0 0 clamp(5px, 1.5vw, 12px) rgba(0, 0, 0, 0.1);
-            color: #222;
-            opacity: .9;
-            font-size: 16px;
-            resize: none;
+            border-radius: 6px;
         }
 
+        /* SOURCE */
+
         #source {
-            flex: 2;
+            flex: 2.5;
+            padding: clamp(15px, 2vw, 25px);
+            border: none;
+            border-radius: 8px 8px 0px 0px;
+            color: #111;
+            opacity: .92;
+            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
+            font-size: 14px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        #source:focus {
+            outline: none;
+        }
+
+        /* OUTPUT */
+
+        #output-wrapper {
+            flex: 1;
+            padding: clamp(15px, 2vw, 25px);
+            background: white;
+            opacity: .8;
+            border-radius: 0px 0px 8px 8px;
+            border-top: 1px solid #eef;
+            overflow: auto;
+        }
+
+        #output-wrapper pre {
+            margin: 0;
         }
 
         #output {
-            opacity: .7;
+            margin: 0;
+            list-style: none;
+            padding: 0;
+            line-height: 1.4;
+        }
+
+        /* DARK MODE  */
+
+        @media (prefers-color-scheme: dark) {
+            #source {
+                color: white;
+                background: #1b1220;
+            }
+
+            #output-wrapper {
+                color: white;
+                background: #0c060f;
+                border-top: 1px solid #223;
+                opacity: 0.94;
+            }
         }
     </style>
 </head>
@@ -82,77 +169,98 @@
 <body>
     <main>
         <header>
-            <h1>The YeetYoink Playground</h1>
-            <button onclick="run(source.value)">Run</button>
+            <h1>Yeet<span class="light">Yoink</span><span class="accent"> playground</span></h1>
+            <button onclick="run()">&#9658; Run</button>
             <select id="sample-select"></select>
         </header>
 
-        <textarea id="source"></textarea>
-        <textarea id="output" readonly></textarea>
+        <textarea id="source" autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <div id="output-wrapper">
+            <pre><ul id="output"></ul></pre>
+        </div>
     </main>
-</body>
 
-<script>
-    function run(input) {
-        // console.log("input", input)
-        if (!input) return;
+    <script>
+        function run() {
+            if (!source.value) return;
 
-        const result = interpret(input)
-        console.log(result);
-        output.value = result;
-    }
+            output.innerText = ''
 
-    function setSample(sampleName) {
-        const { content } = samples[sampleName] || samples['hello'];
-        source.value = content;
-    }
-
-    function setupSampleSelect() {
-        const sampleSelect = document.querySelector('#sample-select')
-
-        for (const sample in samples) {
-            const option = document.createElement('option')
-            option.value = sample
-            option.textContent = sample
-            sampleSelect.appendChild(option)
+            const result = interpret(source.value)
+            if (result?.error) {
+                output.innerText = result.error
+            }
         }
 
-        sampleSelect.addEventListener('change', e => {
-            const sampleName = e.target.value
-            setSample(sampleName)
-        })
-    }
+        function captureLog(msg) {
+            const li = document.createElement("li")
+            li.innerText = msg
+            output.appendChild(li)
+        }
 
-    const samples = {
-        'hello': { content: 'name := "Yan"\nyap("Hello, {name}!")' },
-        'fibonacci': {
-            content:
-                `// recursion
+        window.console.log = captureLog
+
+        function setSample(sampleName) {
+            const { content } = samples[sampleName] || samples['hello']
+            source.value = content;
+        }
+
+        function setupSampleSelect() {
+            const sampleSelect = document.querySelector('#sample-select')
+
+            for (const sample in samples) {
+                const option = document.createElement('option')
+                option.value = sample
+                option.textContent = sample
+                sampleSelect.appendChild(option)
+            }
+
+            sampleSelect.addEventListener('change', e => {
+                const sampleName = e.target.value
+                setSample(sampleName)
+            })
+        }
+
+        const samples = {
+            'hello': {
+                content:
+                    `// you can edit this code, or select a sample from the dropdown on the right
+// 
+// to run the code click 'Run' button
+
+name := "Yan"\nyap("Hello, {name}!")` },
+
+            'fibonacci': {
+                content:
+                    `// recursion
 fib1 := \\n {
-    yif n < 2 { n } yels { fib1(n-1) + fib1(n-2) }
+  yif n < 2 { n } yels { fib1(n-1) + fib1(n-2) }
 };
 
-yap(fib1(8))
+yap("eight Fibonacci number:", fib1(8))
 
 // closure
 fib2 := \\{
-    a := 0
-    b := 1
-    \\{
-        temp := a
-        a = b
-        b += temp
+  a := 0
+  b := 1
+  \\{
+      temp := a
+      a = b
+      b += temp
+      a
     }
 }
 
 f := fib2()
-yap(f(), f(), f())
-f()
+yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` },
-    }
+        }
 
-    setupSampleSelect()
-    setSample('hello')
-</script>
+        setupSampleSelect()
+        setSample('hello')
+        setTimeout(run, 100)
+    </script>
+
+</body>
 
 </html>
