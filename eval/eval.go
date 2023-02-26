@@ -23,33 +23,15 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return &object.ReturnValue{Value: val}
 
+	case *ast.CallExpression:
+		return evalCallExpr(node, env)
+
 	case *ast.FunctionLiteral:
 		return &object.Function{
 			Parameters: node.Parameters,
 			Body:       node.Body,
 			Env:        env,
 		}
-
-	case *ast.CallExpression:
-		if node.Function.TokenLiteral() == "quote" { // TODO this is ugly
-			return quote(node.Arguments[0], env) // quote only supprots 1 arg
-		}
-
-		fn := Eval(node.Function, env)
-		if isError(fn) {
-			return fn
-		}
-
-		var args []object.Object
-		for _, a := range node.Arguments {
-			evaluated := Eval(a, env)
-			if isError(evaluated) {
-				return evaluated
-			}
-			args = append(args, evaluated)
-		}
-
-		return applyFunction(fn, args)
 
 	case *ast.AssignExpression:
 		val := Eval(node.Value, env)
@@ -119,8 +101,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.YoloExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
 		env.SetYoloMode()
-		result := Eval(node.Body, extendedEnv)
-		return result
+		return Eval(node.Body, extendedEnv)
 
 	case *ast.YetExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
@@ -262,11 +243,19 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		switch {
 		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
 			i := idx.(*object.Integer).Value
-			a := left.(*object.Array)
-			if i < 0 || i >= int64(len(a.Elements)) {
+			arr := left.(*object.Array)
+			if i < 0 || i >= int64(len(arr.Elements)) {
 				return object.NULL
 			}
-			return a.Elements[i]
+			return arr.Elements[i]
+
+		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			str := left.(*object.String)
+			if i < 0 || i >= int64(len(str.Value)) {
+				return object.NULL
+			}
+			return &object.String{Value: string(str.Value[i])}
 
 		case left.Type() == object.HASH_OBJ:
 			hashMap := left.(*object.Hash)
@@ -329,9 +318,32 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 	return result
 }
 
-func applyFunction(fn object.Object, args []object.Object) object.Object {
+func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.Object {
+	if callExpr.Function.TokenLiteral() == "quote" { // TODO this is ugly
+		return quote(callExpr.Arguments[0], env) // quote only supports 1 arg
+	}
+
+	fn := Eval(callExpr.Function, env)
+	if isError(fn) {
+		return fn
+	}
+
+	var args []object.Object
+	for _, a := range callExpr.Arguments {
+		evaluated := Eval(a, env)
+		if isError(evaluated) {
+			return evaluated
+		}
+		args = append(args, evaluated)
+	}
+
 	switch fn := fn.(type) {
 	case *object.Function:
+		if len(fn.Parameters) != len(args) {
+			return newError("wrong number of args for %s (got %d, want %d)",
+				callExpr.Function.TokenLiteral(), len(args), len(fn.Parameters))
+		}
+
 		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 		for paramIdx, param := range fn.Parameters {
 			extendedEnv.Set(param.Value, args[paramIdx])

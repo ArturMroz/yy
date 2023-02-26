@@ -86,16 +86,17 @@ yet i < 5 {
 ## Data structures
 
 ```c
-// arrays can hold values of different types
-my_yarray := [7, true, "hello", null, [2, "inception"]]
+my_array := [7, true, "hello", null, [2, "inception"]]
+
+yap(my_array[2]) // "hello"
 ```
 
 ```c
 my_hashmap := %{
-    name:  "Yakub the Yak",
-    age:   2,
-    alive: true,
-    42:    "integer key works too",
+    "name":  "Yakub the Yak",
+    "age":   2,
+    "alive": true,
+    42:      "integer key works too",
 }
 
 yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // "Yakub the Yak is 2 years old."
@@ -159,10 +160,10 @@ add_two(5) // 7
 
 ```c
 // mixing types would normally cause an error:
-c := 8 * "string" // runtime error: 'type mismatch: STRING * INTEGER'
+c := 8 * "string" // runtime error: "type mismatch: INTEGER * STRING"
 
 // assignment to a variable that hasn't been declared would normally error:
-new_var = 5 // runtime error: 'identifier not found: new_var'
+new_var = 5 // runtime error: "identifier not found: new_var"
 
 // but in Yolo Mode, anything goes:
 
@@ -204,16 +205,14 @@ $ go build
 Run a YY script
 
 ```
-$ ./yy [--debug] filename
+$ ./yy filename
 ```
 
 Or start a REPL session
 
 ```
-$ ./yy [--debug]
+$ ./yy 
 ```
-
-Note: `--debug` flag is optional
 
 
 # More features
@@ -226,7 +225,7 @@ Note: `--debug` flag is optional
 - **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).
 - **Built-in functions.** YY's built-in functions are so reliable, you could trust them with your firstborn child. Just kidding, please don't do that. 
 - **No dependencies.** Unlike your needy ex, YY doesn't rely on anyone else. With no bloated third-party libraries weighing it down, YY is as nimble as a young yak frolicking in a field. Also, you won't need to worry about some random person in Nebraska giving up on thanklessly maintaining a package you depend on.
-- **Implemented using tree walking interpreter.** YY's interpreter may not be the most efficient, but it sure is leisurely. Sit back, relax, and let YY take its time to execute your code. You deserve a break anyway.
+- **Tree walking interpreter.** YY's interpreter may not be the most efficient, but it sure is leisurely. Sit back, relax, and let YY take its time to execute your code. You deserve a break anyway.
 
 
 # FAQ

@@ -45,13 +45,23 @@ func TestStringLiteral(t *testing.T) {
 
 func TestTemplateStringLiteral(t *testing.T) {
 	// TODO fix failing tests
+	// TODO add unhappy path tests
 	runEvalTests(t, []evalTestCase{
 		{`age := 69; "i'm {age} yr old"`, "i'm 69 yr old"},
 		{`age := 69; "i'm { age } yr old"`, "i'm 69 yr old"},
+		{`age := 69; "i'm 陽 {age} 陽 yr old"`, "i'm 陽 69 陽 yr old"},
 		// {`age := 69; "i'm {{age}} yr old"`, "i'm {age} yr old"},
 		{
 			`n1 := 69; n2 := 8; "i've got {n1} apples and {n2} pears"`,
 			"i've got 69 apples and 8 pears",
+		},
+		{
+			`n1 := 69; n2 := 8; n3 := 7; "i've got {n1} apples and {n2}, {n3} other things"`,
+			"i've got 69 apples and 8, 7 other things",
+		},
+		{
+			`n1 := 69; n2 := 8; n3 := 7; "{n1}{n2}{n3}"`,
+			"6987",
 		},
 		// {
 		// 	"n1 := 69; n2 := 8; `i've got {n1 + n2} apples and pears`",
@@ -161,33 +171,6 @@ func TestIntegerArrayLiterals(t *testing.T) {
 	})
 }
 
-func TestArrayIndexExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"[1, 2, 3][0]", 1},
-		{"[1, 2, 3][1]", 2},
-		{"[1, 2, 3][2]", 3},
-		{"[1 2 3][2]", 3},
-		{"i := 0; [1][i];", 1},
-		{"[1, 2, 3][1 + 1];", 3},
-		{
-			"myArray := [1, 2, 3]; myArray[2];",
-			3,
-		},
-		{
-			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
-			6,
-		},
-		{
-			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
-			2,
-		},
-
-		// out of bounds access returns nil
-		{"[1, 2, 3][3]", nil},
-		{"[1, 2, 3][-1]", nil},
-	})
-}
-
 func TestHashLiterals(t *testing.T) {
 	input := `
 two := "two";
@@ -221,6 +204,41 @@ two := "two";
 			t.Error(err)
 		}
 	}
+}
+
+func TestArrayIndexExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"[1, 2, 3][0]", 1},
+		{"[1, 2, 3][1]", 2},
+		{"[1, 2, 3][2]", 3},
+		{"[1 2 3][2]", 3},
+		{"i := 0; [1][i];", 1},
+		{"[1, 2, 3][1 + 1];", 3},
+		{
+			"myArray := [1, 2, 3]; myArray[2];",
+			3,
+		},
+		{
+			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			6,
+		},
+		{
+			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
+			2,
+		},
+
+		// out of bounds access returns nil
+		{"[1, 2, 3][3]", nil},
+		{"[1, 2, 3][-1]", nil},
+	})
+}
+
+func TestStringIndexExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{`"Yolo McYoloface"[2]`, "l"},
+		{`"Yarn"[1 + 1]`, "r"},
+		{`y := "Yarn"; y[1 + 1]`, "r"},
+	})
 }
 
 func TestHashIndexExpressions(t *testing.T) {
@@ -482,6 +500,22 @@ yif (10 > 1) {
 		{
 			"foobar2(x, y)",
 			"identifier not found: foobar2",
+		},
+		{
+			`f := \a b { a }; f()`,
+			"wrong number of args for f (got 0, want 2)",
+		},
+		{
+			`fn := \a b { a }; fn(5)`,
+			"wrong number of args for fn (got 1, want 2)",
+		},
+		{
+			`f := \a b { a }; f(5, 6, 7)`,
+			"wrong number of args for f (got 3, want 2)",
+		},
+		{
+			`fun := \{ 8 }; fun(5)`,
+			"wrong number of args for fun (got 1, want 0)",
 		},
 	}
 

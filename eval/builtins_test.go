@@ -11,7 +11,7 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`len(3..0)`, 4},
 		{`len(%{ "a": 1, "b": 2})`, 2},
 		{`len(1)`, errmsg{"argument to `len` not supported, got INTEGER"}},
-		{`len("one", "two")`, errmsg{"wrong number of arguments. got=2, want=1"}},
+		{`len("one", "two")`, errmsg{"wrong number of args for len (got 2, want 1)"}},
 
 		{`yassert(1 == 1)`, nil},
 		{`yassert(1 == 2)`, errmsg{"yassert failed"}},
