@@ -6,10 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="wasm_exec.js"></script>
+    <script src="web/wasm_exec.js"></script>
+
     <script>
         const go = new Go()
-        WebAssembly.instantiateStreaming(fetch("yy.wasm"), go.importObject).then((result) => {
+        WebAssembly.instantiateStreaming(fetch("web/yy.wasm"), go.importObject).then((result) => {
             go.run(result.instance)
         })
     </script>
@@ -32,7 +33,7 @@
         }
 
         body {
-            background: url('bg.jpg');
+            background: url('web/bg.jpg');
             background-position: center center;
             background-repeat: no-repeat;
             background-color: #281435;
@@ -44,7 +45,7 @@
             height: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 25px;
             box-sizing: border-box;
         }
 
@@ -54,13 +55,13 @@
             display: flex;
             gap: 25px;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         header h1 {
             flex: 1;
             color: white;
-            font-size: 40px;
+            font-size: 36px;
             font-weight: 500;
             margin: 10px 0;
         }
@@ -71,7 +72,7 @@
 
         header h1 .accent {
             font-weight: 300;
-            opacity: .75;
+            opacity: .8;
             color: #dd3a5e;
         }
 
@@ -81,7 +82,7 @@
             border: none;
             border-bottom: 3px solid #91263d;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
@@ -98,7 +99,7 @@
         }
 
         #sample-select {
-            font-size: 15px;
+            font-size: 14px;
             padding: 8px 12px;
             margin: 0;
             border: none;
@@ -108,7 +109,7 @@
         /* SOURCE */
 
         #source {
-            flex: 2.5;
+            flex: 3.5;
             padding: clamp(15px, 2vw, 25px);
             border: none;
             border-radius: 8px 8px 0px 0px;
@@ -237,7 +238,7 @@ fib1 := \\n {
   yif n < 2 { n } yels { fib1(n-1) + fib1(n-2) }
 };
 
-yap("eight Fibonacci number:", fib1(8))
+yap("seventh Fibonacci number:", fib1(7))
 
 // closure
 fib2 := \\{
