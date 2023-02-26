@@ -24,7 +24,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.ReturnValue{Value: val}
 
 	case *ast.CallExpression:
-		return applyFunction(node, env)
+		return evalCallExpr(node, env)
 
 	case *ast.FunctionLiteral:
 		return &object.Function{
@@ -243,11 +243,19 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		switch {
 		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
 			i := idx.(*object.Integer).Value
-			a := left.(*object.Array)
-			if i < 0 || i >= int64(len(a.Elements)) {
+			arr := left.(*object.Array)
+			if i < 0 || i >= int64(len(arr.Elements)) {
 				return object.NULL
 			}
-			return a.Elements[i]
+			return arr.Elements[i]
+
+		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			str := left.(*object.String)
+			if i < 0 || i >= int64(len(str.Value)) {
+				return object.NULL
+			}
+			return &object.String{Value: string(str.Value[i])}
 
 		case left.Type() == object.HASH_OBJ:
 			hashMap := left.(*object.Hash)
@@ -310,9 +318,9 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 	return result
 }
 
-func applyFunction(callExpr *ast.CallExpression, env *object.Environment) object.Object {
+func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.Object {
 	if callExpr.Function.TokenLiteral() == "quote" { // TODO this is ugly
-		return quote(callExpr.Arguments[0], env) // quote only supprots 1 arg
+		return quote(callExpr.Arguments[0], env) // quote only supports 1 arg
 	}
 
 	fn := Eval(callExpr.Function, env)

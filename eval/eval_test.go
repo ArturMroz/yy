@@ -161,33 +161,6 @@ func TestIntegerArrayLiterals(t *testing.T) {
 	})
 }
 
-func TestArrayIndexExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"[1, 2, 3][0]", 1},
-		{"[1, 2, 3][1]", 2},
-		{"[1, 2, 3][2]", 3},
-		{"[1 2 3][2]", 3},
-		{"i := 0; [1][i];", 1},
-		{"[1, 2, 3][1 + 1];", 3},
-		{
-			"myArray := [1, 2, 3]; myArray[2];",
-			3,
-		},
-		{
-			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
-			6,
-		},
-		{
-			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
-			2,
-		},
-
-		// out of bounds access returns nil
-		{"[1, 2, 3][3]", nil},
-		{"[1, 2, 3][-1]", nil},
-	})
-}
-
 func TestHashLiterals(t *testing.T) {
 	input := `
 two := "two";
@@ -221,6 +194,41 @@ two := "two";
 			t.Error(err)
 		}
 	}
+}
+
+func TestArrayIndexExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"[1, 2, 3][0]", 1},
+		{"[1, 2, 3][1]", 2},
+		{"[1, 2, 3][2]", 3},
+		{"[1 2 3][2]", 3},
+		{"i := 0; [1][i];", 1},
+		{"[1, 2, 3][1 + 1];", 3},
+		{
+			"myArray := [1, 2, 3]; myArray[2];",
+			3,
+		},
+		{
+			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			6,
+		},
+		{
+			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
+			2,
+		},
+
+		// out of bounds access returns nil
+		{"[1, 2, 3][3]", nil},
+		{"[1, 2, 3][-1]", nil},
+	})
+}
+
+func TestStringIndexExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{`"Yolo McYoloface"[2]`, "l"},
+		{`"Yarn"[1 + 1]`, "r"},
+		{`y := "Yarn"; y[1 + 1]`, "r"},
+	})
 }
 
 func TestHashIndexExpressions(t *testing.T) {
