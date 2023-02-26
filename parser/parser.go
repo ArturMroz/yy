@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -69,8 +68,6 @@ func getPrecedence(tok token.Token) Precedence {
 	}
 	return LOWEST
 }
-
-var tempStringRe = regexp.MustCompile("{.*?}")
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
@@ -235,19 +232,31 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 func (p *Parser) parseStringLiteral() ast.Expression {
 	lit := p.curToken.Literal
-	matches := tempStringRe.FindAllString(lit, -1)
+
+	// TODO this handles only the happy path
+	matches := []int{}
+	for i, ch := range lit {
+		if ch == '{' || ch == '}' {
+			matches = append(matches, i)
+		}
+	}
 
 	if len(matches) == 0 {
 		return &ast.StringLiteral{Token: p.curToken, Value: lit}
 	}
 
-	replaced := tempStringRe.ReplaceAllString(lit, "%s")
-	// TODO support expr in templated strings (currently only Identifiers work)
-	idents := make([]ast.Expression, len(matches))
-	for i, m := range matches {
-		noBraces := m[1 : len(m)-1]
-		noBraces = strings.TrimSpace(noBraces)
-		idents[i] = &ast.Identifier{Value: noBraces}
+	// TODO support expr in templated strings (currently only Identifiers are supported)
+	idents := make([]ast.Expression, 0, len(matches)/2)
+	replaced := lit
+	offset := 0
+	for i := 0; i < len(matches); i += 2 {
+		fst, snd := matches[i], matches[i+1]
+
+		ident := strings.TrimSpace(lit[fst+1 : snd])
+		replaced = replaced[:fst-offset] + "%s" + replaced[snd+1-offset:]
+		offset += snd - fst - 1
+
+		idents = append(idents, &ast.Identifier{Value: ident})
 	}
 
 	return &ast.TemplateStringLiteral{

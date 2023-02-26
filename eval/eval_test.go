@@ -45,13 +45,23 @@ func TestStringLiteral(t *testing.T) {
 
 func TestTemplateStringLiteral(t *testing.T) {
 	// TODO fix failing tests
+	// TODO add unhappy path tests
 	runEvalTests(t, []evalTestCase{
 		{`age := 69; "i'm {age} yr old"`, "i'm 69 yr old"},
 		{`age := 69; "i'm { age } yr old"`, "i'm 69 yr old"},
+		{`age := 69; "i'm 陽 {age} 陽 yr old"`, "i'm 陽 69 陽 yr old"},
 		// {`age := 69; "i'm {{age}} yr old"`, "i'm {age} yr old"},
 		{
 			`n1 := 69; n2 := 8; "i've got {n1} apples and {n2} pears"`,
 			"i've got 69 apples and 8 pears",
+		},
+		{
+			`n1 := 69; n2 := 8; n3 := 7; "i've got {n1} apples and {n2}, {n3} other things"`,
+			"i've got 69 apples and 8, 7 other things",
+		},
+		{
+			`n1 := 69; n2 := 8; n3 := 7; "{n1}{n2}{n3}"`,
+			"6987",
 		},
 		// {
 		// 	"n1 := 69; n2 := 8; `i've got {n1 + n2} apples and pears`",

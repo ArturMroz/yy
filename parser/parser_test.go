@@ -117,9 +117,19 @@ func TestTemplStringLiteralExpression(t *testing.T) {
 			"i'm %s years old",
 		},
 		{
-			`"i have {apples} apples and {carrots} carrots."`,
-			"i have {apples} apples and {carrots} carrots.",
-			"i have %s apples and %s carrots.",
+			`"i have {apples} apples and {carrots} carrots"`,
+			"i have {apples} apples and {carrots} carrots",
+			"i have %s apples and %s carrots",
+		},
+		{
+			`"i have {apples} apples and {carrots} carrots and {kiwi} kiwis`,
+			"i have {apples} apples and {carrots} carrots and {kiwi} kiwis",
+			"i have %s apples and %s carrots and %s kiwis",
+		},
+		{
+			`"i have fruit: {apples} {carrots} {kiwi}.`,
+			"i have fruit: {apples} {carrots} {kiwi}.",
+			"i have fruit: %s %s %s.",
 		},
 	}
 
@@ -133,7 +143,7 @@ func TestTemplStringLiteralExpression(t *testing.T) {
 			t.Errorf("literal.Value not %q. got=%q", tt.expected, literal.Token.Literal)
 		}
 		if literal.Template != tt.templ {
-			t.Errorf("literal.Template not %q. got=%q", tt.expected, literal.Template)
+			t.Errorf("literal.Template not %q. got=%q", tt.templ, literal.Template)
 		}
 	}
 }
