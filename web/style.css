@@ -1,0 +1,144 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body,
+button,
+select {
+    font-family: Montserrat, 'Open Sans', 'Helvetica', sans-serif;
+}
+
+body {
+    background: url('bg.jpg');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-color: #281435;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+/* HEADER  */
+
+header {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+header h1 {
+    flex: 1;
+    color: white;
+    font-size: 36px;
+    font-weight: 500;
+    margin: 10px 0;
+}
+
+header h1 .light {
+    font-weight: 300;
+}
+
+header h1 .accent {
+    font-weight: 300;
+    opacity: .8;
+    color: #dd3a5e;
+}
+
+header button {
+    padding: 12px 50px;
+    background-color: #dd3a5e;
+    border: none;
+    border-bottom: 3px solid #91263d;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: .85;
+    transition: opacity .3s;
+}
+
+header button:hover {
+    opacity: 1;
+}
+
+header select {
+    padding: 8px;
+}
+
+#sample-select {
+    font-size: 14px;
+    padding: 8px 12px;
+    margin: 0;
+    border: none;
+    border-radius: 6px;
+}
+
+/* SOURCE */
+
+#source {
+    flex: 3.5;
+    padding: clamp(15px, 2vw, 25px);
+    border: none;
+    border-radius: 8px 8px 0px 0px;
+    color: #111;
+    opacity: .92;
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
+    font-size: 14px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+#source:focus {
+    outline: none;
+}
+
+/* OUTPUT */
+
+#output-wrapper {
+    flex: 1;
+    padding: clamp(15px, 2vw, 25px);
+    background: white;
+    opacity: .8;
+    border-radius: 0px 0px 8px 8px;
+    border-top: 1px solid #eef;
+    overflow: auto;
+}
+
+#output-wrapper pre {
+    margin: 0;
+}
+
+#output {
+    margin: 0;
+    list-style: none;
+    padding: 0;
+    line-height: 1.4;
+}
+
+/* DARK MODE  */
+
+@media (prefers-color-scheme: dark) {
+    #source {
+        color: white;
+        background: #1b1220;
+    }
+
+    #output-wrapper {
+        color: white;
+        background: #0c060f;
+        border-top: 1px solid #223;
+        opacity: 0.94;
+    }
+}

@@ -11,16 +11,12 @@ import (
 	"yy/parser"
 )
 
-const version = "v0.0.1"
-
-var debug = false
-
 func main() {
-	js.Global().Set("interpret", wasmWrapper())
+	js.Global().Set("interpret", interpretWrapper())
 	<-make(chan bool)
 }
 
-func wasmWrapper() js.Func {
+func interpretWrapper() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
 		if len(args) != 1 {
 			return map[string]any{
@@ -48,7 +44,7 @@ func interpret(src string) error {
 	} else if len(p.Errors()) > 0 {
 		errMsg := "parser errors:\n"
 		for _, err := range p.Errors() {
-			errMsg += fmt.Sprintf("    %q\n", err)
+			errMsg += fmt.Sprintf("    %s\n", err)
 		}
 		return errors.New(errMsg)
 	}
@@ -61,7 +57,7 @@ func interpret(src string) error {
 
 	result := eval.Eval(expanded, env)
 	if evalError, ok := result.(*object.Error); ok {
-		return fmt.Errorf("yy runtime error: %s\n", evalError.Msg)
+		return errors.New("runtime error: " + evalError.Msg)
 	}
 	return nil
 }
