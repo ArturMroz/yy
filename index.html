@@ -6,20 +6,23 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>YeetYoink playground</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <script src="web/wasm_exec.js"></script>
     <script>
         const go = new Go()
-        WebAssembly.instantiateStreaming(fetch("web/yy.wasm"), go.importObject).then((result) => {
+        WebAssembly.instantiateStreaming(fetch("web/yy.wasm"), go.importObject).then(result => {
             go.run(result.instance)
         })
     </script>
 
-    <script src="web/script.js" defer></script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
     <link href="web/style.css" rel="stylesheet">
+
+    <script src="web/script.js" defer></script>
 </head>
 
 <body>

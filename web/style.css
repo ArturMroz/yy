@@ -1,6 +1,6 @@
 :root {
     --accent: #dd3a5e;
-    --accent2: #26C6DA;
+    --secondary: #779;
 }
 
 html,
@@ -90,6 +90,7 @@ header select {
 #source {
     flex: 3.5;
     padding: clamp(15px, 2vw, 25px);
+    margin: 0;
     border: none;
     border-radius: 8px 8px 0px 0px;
     color: #111;
@@ -130,14 +131,14 @@ header select {
 
 /* SCROLLBARS */
 
-/* Works on Firefox */
+/* works on Firefox */
 #source,
-#output {
+#output-wrapper {
+    scrollbar-color: var(--secondary) transparent;
     scrollbar-width: thin;
-    scrollbar-color: var(--accent2);
 }
 
-/* Works on Chrome, Edge, and Safari */
+/* works on Chrome, Edge, and Safari */
 #source::-webkit-scrollbar,
 #output-wrapper::-webkit-scrollbar {
     width: 6px;
@@ -145,7 +146,7 @@ header select {
 
 #source::-webkit-scrollbar-thumb,
 #output-wrapper::-webkit-scrollbar-thumb {
-    background-color: var(--accent2);
+    background-color: var(--secondary);
     border-radius: 3px;
 }
 
@@ -155,6 +156,7 @@ header select {
     #source {
         color: white;
         background: #1b1220;
+        opacity: .9;
     }
 
     #output-wrapper {
