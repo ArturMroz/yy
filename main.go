@@ -41,7 +41,7 @@ func interpret(src string) error {
 
 	if len(p.Errors()) == 1 {
 		return errors.New("parser error: " + p.Errors()[0])
-	} else if len(p.Errors()) > 0 {
+	} else if len(p.Errors()) > 1 {
 		errMsg := "parser errors:\n"
 		for _, err := range p.Errors() {
 			errMsg += fmt.Sprintf("    %s\n", err)

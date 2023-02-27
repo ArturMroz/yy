@@ -1,3 +1,8 @@
+:root {
+    --accent: #dd3a5e;
+    --accent2: #26C6DA;
+}
+
 html,
 body {
     height: 100%;
@@ -51,17 +56,17 @@ header h1 .light {
 header h1 .accent {
     font-weight: 300;
     opacity: .8;
-    color: #dd3a5e;
+    color: var(--accent);
 }
 
 header button {
     padding: 12px 50px;
-    background-color: #dd3a5e;
+    background-color: var(--accent);
+    color: white;
     border: none;
     border-bottom: 3px solid #91263d;
-    color: white;
-    font-size: 16px;
     border-radius: 8px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     opacity: .85;
@@ -73,10 +78,6 @@ header button:hover {
 }
 
 header select {
-    padding: 8px;
-}
-
-#sample-select {
     font-size: 14px;
     padding: 8px 12px;
     margin: 0;
@@ -125,6 +126,27 @@ header select {
     list-style: none;
     padding: 0;
     line-height: 1.4;
+}
+
+/* SCROLLBARS */
+
+/* Works on Firefox */
+#source,
+#output {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent2);
+}
+
+/* Works on Chrome, Edge, and Safari */
+#source::-webkit-scrollbar,
+#output-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+#source::-webkit-scrollbar-thumb,
+#output-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--accent2);
+    border-radius: 3px;
 }
 
 /* DARK MODE  */
