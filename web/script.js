@@ -17,6 +17,16 @@ function captureLog(msg) {
 
 window.console.log = captureLog
 
+source.addEventListener('keydown', (e) => {
+    if (e.keyCode === 9) { // tab
+        document.execCommand('insertText', false, ' '.repeat(4))
+        // prevent tabbing out from textarea
+        e.preventDefault();
+    } else if (e.keyCode === 13 && e.ctrlKey) { // ctrl + enter
+        run()
+    }
+})
+
 function buildSampleSelect() {
     const sampleSelect = document.querySelector('#sample-select')
 
@@ -27,7 +37,7 @@ function buildSampleSelect() {
         sampleSelect.appendChild(option)
     }
 
-    sampleSelect.addEventListener('change', e => setSample(e.target.value))
+    sampleSelect.addEventListener('change', (e) => setSample(e.target.value))
 }
 
 function setSample(sampleName) {
@@ -38,7 +48,7 @@ const samples = {
     'hello':
         `// You can edit this code, or select a sample from the dropdown on the right.
 //
-// To run the code click 'Run' button.
+// To run the code press Ctrl+Enter or click 'Run' button.
 
 name := "Yennefer"
 yap("Hello, {name}!")`,
@@ -124,8 +134,8 @@ yap("smaller than average:", filter(arr, smol))
 // (Not JavaScript though. JavaScript wouldn't bat an eyelash.)
 
 // Types can be mismatched, strings can be negated, variables don't have to be declared before use.
-// But be warned, the return value is anyone's guess.
-// What about the Principle of Least Surprise you ask? Exactly, what about it?
+// But be warned, the return value is anyone's guess. What about the Principle of Least Surprise you ask? 
+// Exactly, what about it?
 
 // Go ahead and experiment, but remember Uncle Ben's words of wisdom: "Play stupid games, win stupid prizes".
 
