@@ -245,6 +245,8 @@ func TestHashIndexExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`%{"foo": 5}["foo"]`, 5},
 		{`%{"foo": 5}["bar"]`, nil},
+		{`%{"ąźż": 5}["ąźż"]`, 5},
+		{`%{"∈ 陽子": 5}["∈ 陽子"]`, 5},
 		{`key := "foo"; %{"foo": 5}[key]`, 5},
 		{`%{}["foo"]`, nil},
 		{`%{5: 5}[5]`, 5},

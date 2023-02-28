@@ -2,7 +2,6 @@ package object
 
 import (
 	"fmt"
-	"hash/fnv"
 	"strings"
 
 	"yy/ast"
@@ -130,10 +129,17 @@ func (i *Integer) HashKey() HashKey {
 }
 
 func (s *String) HashKey() HashKey {
-	h := fnv.New64a()
-	h.Write([]byte(s.Value))
+	return HashKey{Type: s.Type(), Value: hashString(s.Value)}
+}
 
-	return HashKey{Type: s.Type(), Value: h.Sum64()}
+// hashString hashes a string using FNV-1a algorithm
+func hashString(key string) uint64 {
+	hash := uint64(2166136261)
+	for i := 0; i < len(key); i++ {
+		hash ^= uint64(key[i])
+		hash *= 16777619
+	}
+	return hash
 }
 
 type HashPair struct {
