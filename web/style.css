@@ -46,16 +46,16 @@ header h1 {
     flex: 1;
     color: white;
     font-size: clamp(16px, 2.5vw, 36px);
-    font-weight: 500;
+    font-weight: 600;
     margin: 10px 0;
 }
 
 header h1 .light {
-    font-weight: 300;
+    font-weight: 200;
 }
 
 header h1 .accent {
-    font-weight: 300;
+    font-weight: 400;
     opacity: .8;
     color: var(--accent);
 }
@@ -68,7 +68,7 @@ header button {
     background-color: var(--accent);
     color: white;
     font-size: clamp(12px, 1.5vw, 16px);
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
     opacity: .85;
     transition: opacity .3s;
@@ -78,12 +78,17 @@ header button:hover {
     opacity: 1;
 }
 
+header button:active {
+    border-bottom: none;
+}
+
 header select {
     padding: 0.6em 1em;
     margin: 0;
     border: none;
     border-radius: 6px;
     font-size: clamp(12px, 1.2vw, 14px);
+    font-weight: 500;
 }
 
 /* INPUT / OUTPUT */
