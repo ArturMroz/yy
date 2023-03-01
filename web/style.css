@@ -1,7 +1,7 @@
 :root {
     --accent: #dd3a5e;
     --secondary: #778;
-    --spacing: clamp(10px, 2.5vw, 25px);
+    --spacing: clamp(10px, 2.5vw, 22px);
 }
 
 html,
@@ -39,15 +39,15 @@ header {
     display: flex;
     gap: 25px;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: var(--spacing);
 }
 
 header h1 {
     flex: 1;
     color: white;
-    font-size: clamp(16px, 2.5vw, 36px);
+    font-size: clamp(16px, 2.5vw, 32px);
     font-weight: 600;
-    margin: 10px 0;
+    margin: 0;
 }
 
 header h1 .light {
@@ -61,9 +61,9 @@ header h1 .accent {
 }
 
 header button {
-    padding: 0.8em 2.4em;
+    padding: 0.7em 2em;
     border: none;
-    border-bottom: 3px solid #91263d;
+    border-bottom: 3px solid hsl(347, 58%, 30%);
     border-radius: 8px;
     background-color: var(--accent);
     color: white;
@@ -79,7 +79,8 @@ header button:hover {
 }
 
 header button:active {
-    border-bottom: none;
+    border-color: transparent;
+    transform: translateY(3px);
 }
 
 header select {
