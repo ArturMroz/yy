@@ -91,6 +91,38 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
+	"swap": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 3 {
+				return newError("wrong number of args for swap (got %d, want 3)", len(args))
+			}
+			if args[0].Type() != object.ARRAY_OBJ {
+				return newError("first argument to swap must be ARRAY, got %s", args[0].Type())
+			}
+			if args[1].Type() != object.INTEGER_OBJ {
+				return newError("second argument to swap must be INTEGER, got %s", args[1].Type())
+			}
+			if args[2].Type() != object.INTEGER_OBJ {
+				return newError("third argument to swap must be INTEGER, got %s", args[2].Type())
+			}
+
+			arr := args[0].(*object.Array)
+			i := args[1].(*object.Integer).Value
+			j := args[2].(*object.Integer).Value
+			length := len(arr.Elements)
+
+			if i < 0 || i >= int64(length) || j < 0 || j >= int64(length) {
+				return arr
+			}
+
+			newElements := make([]object.Object, length+1)
+			copy(newElements, arr.Elements)
+			newElements[i], newElements[j] = newElements[j], newElements[i]
+
+			return &object.Array{Elements: newElements}
+		},
+	},
+
 	"yoink": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 && len(args) != 2 {

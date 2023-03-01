@@ -132,8 +132,8 @@ func (s *String) HashKey() HashKey {
 	return HashKey{Type: s.Type(), Value: hashString(s.Value)}
 }
 
-// hashString hashes a string using FNV-1a algorithm
 func hashString(key string) uint64 {
+	// FNV-1a algorithm
 	hash := uint64(2166136261)
 	for i := 0; i < len(key); i++ {
 		hash ^= uint64(key[i])

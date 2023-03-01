@@ -221,7 +221,7 @@ $ ./yy
 - **Two data structures.** YY supports arrays and hashmaps, providing twice as many data structures as Lua.
 - **Very basic data types**. YY supports the basic data types of yinteger, string, bool and null. And yes, null isn't technically a data type.
 - **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (semicolons are so 1970s anyway).
-- **Garbage collected.** YY's automated memory management, also known as the code-cleaning yak, takes care of freeing up memory so you don't have to. It's like having a furry friend who loves to tidy up after you, without the added hassle of having to feed it.
+- **Garbage collected.** YY's automated memory management, also known as the code-cleaning yeti, takes care of freeing up memory so you don't have to. It's like having a furry friend who loves to tidy up after you, without the added hassle of having to feed it.
 - **Not Object-Oriented.** You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy. Also, OOP is dead, haven't you heard the news. 
 - **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).
 - **Built-in functions.** YY's built-in functions are so reliable, you could trust them with your firstborn child. Just kidding, please don't do that. 
