@@ -80,7 +80,7 @@ f := fib2()
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
 
-    'map and co':
+    'map & co':
         `// Map, filter, and reduce are The Three Musketeers of functional programming,
 // banding together to process and transform collections with finesse and style.
 

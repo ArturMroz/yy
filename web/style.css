@@ -1,6 +1,7 @@
 :root {
     --accent: #dd3a5e;
-    --secondary: #779;
+    --secondary: #778;
+    --spacing: clamp(10px, 2.5vw, 25px);
 }
 
 html,
@@ -12,14 +13,14 @@ body {
 body,
 button,
 select {
-    font-family: Montserrat, 'Open Sans', 'Helvetica', sans-serif;
+    font-family: 'Montserrat', 'Open Sans', 'Helvetica', sans-serif;
 }
 
 body {
     background: url('bg.jpg');
+    background-color: #261730;
     background-position: center center;
-    background-repeat: no-repeat;
-    background-color: #281435;
+    background-size: cover;
 }
 
 main {
@@ -28,7 +29,7 @@ main {
     height: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 25px;
+    padding: var(--spacing);
     box-sizing: border-box;
 }
 
@@ -44,7 +45,7 @@ header {
 header h1 {
     flex: 1;
     color: white;
-    font-size: 36px;
+    font-size: clamp(16px, 2.5vw, 36px);
     font-weight: 500;
     margin: 10px 0;
 }
@@ -60,13 +61,13 @@ header h1 .accent {
 }
 
 header button {
-    padding: 12px 50px;
-    background-color: var(--accent);
-    color: white;
+    padding: 0.8em 2.4em;
     border: none;
     border-bottom: 3px solid #91263d;
     border-radius: 8px;
-    font-size: 16px;
+    background-color: var(--accent);
+    color: white;
+    font-size: clamp(12px, 1.5vw, 16px);
     font-weight: bold;
     cursor: pointer;
     opacity: .85;
@@ -78,40 +79,39 @@ header button:hover {
 }
 
 header select {
-    font-size: 14px;
-    padding: 8px 12px;
+    padding: 0.6em 1em;
     margin: 0;
     border: none;
     border-radius: 6px;
+    font-size: clamp(12px, 1.2vw, 14px);
 }
 
-/* SOURCE */
+/* INPUT / OUTPUT */
+
+#source,
+#output-wrapper {
+    padding: var(--spacing);
+    margin: 0;
+    border: none;
+    background: white;
+    color: #111;
+    resize: none;
+    box-sizing: border-box;
+    font-size: clamp(12px, 1vw, 14px);
+}
 
 #source {
     flex: 3.5;
-    padding: clamp(15px, 2vw, 25px);
-    margin: 0;
-    border: none;
     border-radius: 8px 8px 0px 0px;
-    color: #111;
-    opacity: .92;
-    -webkit-backdrop-filter: blur(15px);
-    backdrop-filter: blur(20px);
-    font-size: 14px;
-    resize: none;
-    box-sizing: border-box;
+    opacity: .91;
 }
 
 #source:focus {
     outline: none;
 }
 
-/* OUTPUT */
-
 #output-wrapper {
     flex: 1;
-    padding: clamp(15px, 2vw, 25px);
-    background: white;
     opacity: .8;
     border-radius: 0px 0px 8px 8px;
     border-top: 1px solid #eef;
@@ -124,8 +124,8 @@ header select {
 
 #output {
     margin: 0;
-    list-style: none;
     padding: 0;
+    list-style: none;
     line-height: 1.4;
 }
 
@@ -142,6 +142,7 @@ header select {
 #source::-webkit-scrollbar,
 #output-wrapper::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
 }
 
 #source::-webkit-scrollbar-thumb,
@@ -156,7 +157,6 @@ header select {
     #source {
         color: white;
         background: #1b1220;
-        opacity: .9;
     }
 
     #output-wrapper {
