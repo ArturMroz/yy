@@ -4,6 +4,7 @@
 
 YeetYoink (YY for short) is a dynamically typed programming language that combines functional and imperative programming paradigms.
 
+Take YY out for a spin in [the interactive playground](https://mroz.dev/yy).
 
 # Key features
 
@@ -37,10 +38,10 @@ a := 5 // variables are declared and assigned using walrus operator
 a = 9  // variable assignment, variables must be declared before use
 
 // supported types: integer, string, bool, null
-my_yinteger := 5
-my_yarn     := "how long is a piece of string?"
-my_yup      := true
-my_void     := null
+my_yint := 5
+my_yarn := "how long is a piece of string?"
+my_yup  := true
+my_void := null
 ```
 
 ## Control flow

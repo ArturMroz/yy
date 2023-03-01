@@ -312,7 +312,7 @@ func (p *Parser) parseYifExpression() ast.Expression {
 				},
 			}
 		} else {
-			p.newError("expected 'yif' or '{' after 'yels', found '%s'", p.peekToken.Literal)
+			p.newError("expected yif statement or block after 'yels', found '%s'", p.peekToken.Literal)
 			return nil
 		}
 	}
