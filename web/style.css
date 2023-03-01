@@ -17,7 +17,7 @@ select {
 }
 
 body {
-    background: url('bg.jpg');
+    background: url('bg.webp');
     background-color: #261730;
     background-position: center center;
     background-size: cover;
@@ -103,7 +103,7 @@ header select {
 #source {
     flex: 3.5;
     border-radius: 8px 8px 0px 0px;
-    opacity: .91;
+    opacity: .9;
 }
 
 #source:focus {

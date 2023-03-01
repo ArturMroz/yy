@@ -19,9 +19,8 @@ window.console.log = captureLog
 
 source.addEventListener('keydown', (e) => {
     if (e.keyCode === 9) { // tab
-        document.execCommand('insertText', false, ' '.repeat(4))
-        // prevent tabbing out from textarea
-        e.preventDefault();
+        document.execCommand('insertText', false, '    ') // tab is 4 spaces
+        e.preventDefault(); // prevent tabbing out from textarea
     } else if (e.keyCode === 13 && e.ctrlKey) { // ctrl + enter
         run()
     }
@@ -80,7 +79,7 @@ f := fib2()
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
 
-    'map & co':
+    'map et al':
         `// Map, filter, and reduce are The Three Musketeers of functional programming,
 // banding together to process and transform collections with finesse and style.
 
@@ -131,12 +130,12 @@ yap("smaller than average:", filter(arr, smol))
 
     'yolo':
         `// Yolo Mode allows you to do things that would make other self-respecting languages blush.
-// (Not JavaScript though. JavaScript wouldn't bat an eyelash.)
-
+// (Not JavaScript though. JavaScript wouldn't bat an eye.)
+//
 // Types can be mismatched, strings can be negated, variables don't have to be declared before use.
 // But be warned, the return value is anyone's guess. What about the Principle of Least Surprise you ask? 
 // Exactly, what about it?
-
+//
 // Go ahead and experiment, but remember Uncle Ben's words of wisdom: "Play stupid games, win stupid prizes".
 
 yolo {

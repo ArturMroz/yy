@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="YeetYoink Interactive Playground">
+    <meta name="keywords" content="YeetYoink, Playground, Interpreter, Yolo">
+    <meta name="theme-color" content="#261730" />
 
     <title>YeetYoink playground</title>
     <link rel="icon" href="web/favicon.ico" />
@@ -20,7 +23,7 @@
         })
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&display=swap&text=abcdefghijklomnpqrstuvwxyzYR" rel="stylesheet">
     <link href="web/style.css" rel="stylesheet">
 
     <script src="web/script.js" defer></script>
@@ -31,10 +34,10 @@
         <header>
             <h1>Yeet<span class="light">Yoink</span><span class="accent"> playground</span></h1>
             <button onclick="run()">&#9658; Run</button>
-            <select id="sample-select"></select>
+            <select id="sample-select" aria-label="Code examples"></select>
         </header>
 
-        <textarea id="source" autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <textarea id="source" autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Try YY"></textarea>
         <div id="output-wrapper">
             <pre><ul id="output"></ul></pre>
         </div>
