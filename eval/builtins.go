@@ -115,7 +115,7 @@ var builtins = map[string]*object.Builtin{
 				return arr
 			}
 
-			newElements := make([]object.Object, length+1)
+			newElements := make([]object.Object, length)
 			copy(newElements, arr.Elements)
 			newElements[i], newElements[j] = newElements[j], newElements[i]
 

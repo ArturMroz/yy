@@ -162,7 +162,55 @@ yolo {
 
     // but even in yolo mode, division by zero doesn't end well (what did you expect?)
     yap("division by zero:", "weee" / 0) 
+}`,
+
+    'sort':
+        `// Sorting algorithms of different sorts.
+
+// To start we capture this unexpecting array from the wild, and make it our unwilling test subject.
+nums := [6, 3, 9, 1, 0, 7, 2, 5, 8, 4]
+
+// Bubble sort: silly name, sillier algorithm (O(n^2)). It is a staple though.
+bubble_sort := \\arr {
+    yall i: len(arr) - 1..0 {
+        yall j: 0..i {
+            yif arr[j] > arr[j+1] {
+                arr = swap(arr, j, j+1)
+            }
+        }
+    }
+    arr
 }
+
+yap("Bubble sorted nums:", bubble_sort(nums))
+yap("Original array is still there, untouched:", nums)
+
+// Quick sort, unlike bubble sort, is quick and nimble like a young yak frolicking in a field (O(n log n)).
+// It uses divide-and-conquer strategy to slice and dice an array into smaller, more manageable pieces.
+qsort := \\arr {
+    yif len(arr) < 2 {
+        yeet arr
+    }
+
+    pivot  := arr[len(arr) / 2]
+    left   := []
+    right  := []
+    middle := []
+
+    yall arr {
+        yif yt < pivot {
+            left = push(left, yt)
+        } yels yif yt > pivot {
+            right = push(right, yt)
+        } yels {
+            middle = push(middle, yt)
+        }
+    }
+
+    qsort(left) + middle + qsort(right)
+}
+
+yap("Quick sorted nums:", qsort(nums))
 `
 }
 

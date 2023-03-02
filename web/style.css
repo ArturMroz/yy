@@ -47,7 +47,7 @@ header h1 {
     color: white;
     font-size: clamp(16px, 2.5vw, 32px);
     font-weight: 600;
-    margin: 0;
+    margin: 5px 0;
 }
 
 header h1 .light {
