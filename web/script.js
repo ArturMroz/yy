@@ -150,7 +150,7 @@ yolo {
     // you can negate a string
     yap("-'i am a string' =", -"i am a string")
 
-    // you can do useful stuff too, like baking an argument into a function
+    // you can do useful stuff too, like bake an argument into a function
     greet     := \\name { yap("Hello, {name}!") }
     greet_yan := greet + "Yan"
     greet_yan() // look ma, no args!
@@ -167,10 +167,10 @@ yolo {
     'sort':
         `// Sorting algorithms of different sorts.
 
-// To start we capture this unexpecting array from the wild, and make it our unwilling test subject.
 nums := [6, 3, 9, 1, 0, 7, 2, 5, 8, 4]
 
-// Bubble sort: silly name, sillier algorithm (O(n^2)). It is a staple though.
+// Bubble sort: silly name, sillier algorithm (O(n^2)). 
+// As useful as 'g' in 'lasagna'. But it is a staple.
 bubble_sort := \\arr {
     yall i: len(arr) - 1..0 {
         yall j: 0..i {
@@ -179,15 +179,16 @@ bubble_sort := \\arr {
             }
         }
     }
+
     arr
 }
 
 yap("Bubble sorted nums:", bubble_sort(nums))
 yap("Original array is still there, untouched:", nums)
 
-// Quick sort, unlike bubble sort, is quick and nimble like a young yak frolicking in a field (O(n log n)).
-// It uses divide-and-conquer strategy to slice and dice an array into smaller, more manageable pieces.
-qsort := \\arr {
+// Quick sort, unlike bubble sort, is quick and nimble
+// like a young yak yodelling in a yurt (O(n log n)).
+quick_sort := \\arr {
     yif len(arr) < 2 {
         yeet arr
     }
@@ -207,12 +208,71 @@ qsort := \\arr {
         }
     }
 
-    qsort(left) + middle + qsort(right)
+    quick_sort(left) + middle + quick_sort(right)
 }
 
-yap("Quick sorted nums:", qsort(nums))
+yap("Quick sorted nums:", quick_sort(nums))
+`,
+
+    "random":
+        `// A password generator so good, it'll make even the most nefarious hackers throw in the towel.
+
+alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+digits   := "0123456789"
+special  := "!@#$%"
+charset  := alphabet + digits + special
+
+length   := 16
+password := ""
+
+// Builtin yahtzee, the magical randomiser, is responsible for generating all things unpredictable.
+// Like a genie, yahtzee accepts integers, ranges, arrays, and even strings as offerings to its unpredictable power.
+
+yall 0..length {
+    ch := yahtzee(charset)
+    password += ch
+}
+
+yap("your first top secret password is:", password)
+
+// We can rewrite the generator to use charset's lenght (integer) as input to yahtzee:
+
+password = ""
+
+yall 0..length {
+    idx := yahtzee(len(charset)-1)
+    password += charset[idx]
+}
+
+yap("your other top secret password is:", password)
+`,
+
+    "fizzbuzz":
+        `// YY doesn't support '%' modulo operator at the moment, but that's alright.
+// We don't need no built-in modulo operator anyways. 
+// We can do it ourselves, like true strong and independent programmers.
+
+mod := \\num div {
+    res := num / div
+    num - (res * div)
+}
+
+// Instead of printing the traditional FizzBuzz, we'll print YeetYoink, as it just fits much better.
+
+yall 1..100 {
+    yif mod(yt, 15) == 0 {
+        yap("YeetYoink")
+    } yels yif mod(yt, 3) == 0 {
+        yap("Yeet")
+    } yels yif mod(yt, 5) == 0 {
+        yap("Yoink")
+    } yels {
+        yap(yt)
+    }
+}
 `
 }
+
 
 buildSampleSelect()
 setSample('hello')

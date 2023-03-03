@@ -1,5 +1,5 @@
 :root {
-    --accent: #dd3a5e;
+    --accent: hsl(347, 56%, 50%);
     --secondary: #778;
     --spacing: clamp(10px, 2.5vw, 22px);
 }
@@ -47,7 +47,7 @@ header h1 {
     color: white;
     font-size: clamp(16px, 2.5vw, 32px);
     font-weight: 600;
-    margin: 5px 0;
+    margin: 0.2em 0;
 }
 
 header h1 .light {
@@ -56,21 +56,21 @@ header h1 .light {
 
 header h1 .accent {
     font-weight: 400;
-    opacity: .8;
     color: var(--accent);
+    opacity: .9;
 }
 
 header button {
     padding: 0.7em 2em;
     border: none;
-    border-bottom: 3px solid hsl(347, 58%, 30%);
     border-radius: 8px;
+    box-shadow: 0 0.25em hsl(347, 58%, 30%);
     background-color: var(--accent);
     color: white;
     font-size: clamp(12px, 1.5vw, 16px);
     font-weight: 600;
     cursor: pointer;
-    opacity: .85;
+    opacity: .9;
     transition: opacity .3s;
 }
 
@@ -79,8 +79,8 @@ header button:hover {
 }
 
 header button:active {
-    border-color: transparent;
-    transform: translateY(3px);
+    box-shadow: none;
+    transform: translateY(0.25em);
 }
 
 header select {
@@ -109,7 +109,7 @@ header select {
 #source {
     flex: 3.5;
     border-radius: 8px 8px 0px 0px;
-    opacity: .9;
+    opacity: .92;
 }
 
 #source:focus {
@@ -137,14 +137,14 @@ header select {
 
 /* SCROLLBARS */
 
-/* works on Firefox */
+/* Firefox */
 #source,
 #output-wrapper {
     scrollbar-color: var(--secondary) transparent;
     scrollbar-width: thin;
 }
 
-/* works on Chrome, Edge, and Safari */
+/* Chrome, Edge, and Safari */
 #source::-webkit-scrollbar,
 #output-wrapper::-webkit-scrollbar {
     width: 6px;
