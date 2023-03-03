@@ -1,0 +1,34 @@
+// Built-in function yahtzee is responsible for generating all things random.
+// Yahtzee accepts integers, ranges, arrays and strings as an argument.
+
+yap("random int 69:", yahtzee(69))
+yap("random range 8..29:", yahtzee(8..29))
+yap("random array [1, 2, 3, 4, 5]", yahtzee([1, 2, 3, 4, 5]))
+yap("random string 'lazydog'", yahtzee("lazydog"))
+
+// RANDOM PASSWORD GENERATOR
+
+alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+digits   := "0123456789"
+special  := "!@#$%"
+charset  := alphabet + digits + special
+
+length   := 16
+password := ""
+
+yall 0..length {
+    ch := yahtzee(charset)
+    password += ch
+}
+
+yap("your first top secret password is:", password)
+
+// so the above could be rewritten to use charset lenghts (integer)
+password = ""
+
+yall 0..length {
+    idx := yahtzee(len(charset)-1)
+    password += charset[idx]
+}
+
+yap("your other top secret password is:", password)

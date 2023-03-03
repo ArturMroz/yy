@@ -186,7 +186,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
-		p.noPrefixParseFnError(p.curToken.Type)
+		p.noPrefixParseFnError()
 		return nil
 	}
 
@@ -390,13 +390,10 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 }
 
 func (p *Parser) parsePercent() ast.Expression {
-	if p.peekIs(token.LBRACE) {
-		p.advance()
-		return p.parseHashLiteral()
+	if !p.eat(token.LBRACE, "token '%' can only be followed by token '{'") {
+		return nil
 	}
-
-	p.newError("token '%%' can only be followed by token '{'")
-	return nil
+	return p.parseHashLiteral()
 }
 
 func (p *Parser) parseHashLiteral() ast.Expression {
@@ -626,15 +623,17 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
+	msg := fmt.Sprintf("[line %d] %s (expected '%s', found '%s')", p.curToken.Line, errMsg, t, p.peekToken.Literal)
 	p.errors = append(p.errors, msg)
 }
 
-func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("unexpected token '%s'", t)
+func (p *Parser) noPrefixParseFnError() {
+	msg := fmt.Sprintf("[line %d] unexpected token '%s' near '%s'", p.curToken.Line, p.curToken.Literal, p.peekToken.Literal)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) newError(format string, args ...any) {
-	p.errors = append(p.errors, fmt.Sprintf(format, args...))
+	msg := fmt.Sprintf(format, args...)
+	msg = fmt.Sprintf("[line %d] %s", p.curToken.Line, msg)
+	p.errors = append(p.errors, msg)
 }

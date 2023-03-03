@@ -3,7 +3,7 @@ package token
 type Token struct {
 	Type    TokenType
 	Literal string
-	// TODO add line info for better error reporting
+	Line    int
 }
 
 type TokenType int

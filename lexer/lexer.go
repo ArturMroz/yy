@@ -6,11 +6,12 @@ type Lexer struct {
 	input        string
 	position     int  // current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
+	line         int  // current line
 	ch           byte // current char under examination
 }
 
 func New(input string) *Lexer {
-	l := &Lexer{input: input}
+	l := &Lexer{input: input, line: 1}
 	l.advance()
 	return l
 }
@@ -18,33 +19,33 @@ func New(input string) *Lexer {
 func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
-	var tok token.Token
+	tok := token.Token{Line: l.line}
 
-	switch ch := l.ch; ch {
+	switch l.ch {
 	case '<':
-		tok = newToken(token.LT, ch)
+		tok = l.newTokenByType(token.LT)
 	case '>':
-		tok = newToken(token.GT, ch)
+		tok = l.newTokenByType(token.GT)
 	case ';':
-		tok = newToken(token.SEMICOLON, ch)
+		tok = l.newTokenByType(token.SEMICOLON)
 	case '(':
-		tok = newToken(token.LPAREN, ch)
+		tok = l.newTokenByType(token.LPAREN)
 	case ')':
-		tok = newToken(token.RPAREN, ch)
+		tok = l.newTokenByType(token.RPAREN)
 	case ',':
-		tok = newToken(token.COMMA, ch)
+		tok = l.newTokenByType(token.COMMA)
 	case '{':
-		tok = newToken(token.LBRACE, ch)
+		tok = l.newTokenByType(token.LBRACE)
 	case '}':
-		tok = newToken(token.RBRACE, ch)
+		tok = l.newTokenByType(token.RBRACE)
 	case '[':
-		tok = newToken(token.LBRACKET, ch)
+		tok = l.newTokenByType(token.LBRACKET)
 	case ']':
-		tok = newToken(token.RBRACKET, ch)
+		tok = l.newTokenByType(token.RBRACKET)
 	case '\\':
-		tok = newToken(token.BACKSLASH, ch)
+		tok = l.newTokenByType(token.BACKSLASH)
 	case '%':
-		tok = newToken(token.PERCENT, ch)
+		tok = l.newTokenByType(token.PERCENT)
 
 	case '+':
 		tok = l.switch2(token.PLUS, token.ADD_ASSIGN)
@@ -64,37 +65,32 @@ func (l *Lexer) NextToken() token.Token {
 	case '.':
 		if l.peek() == '.' {
 			l.advance()
-			tok = token.Token{Type: token.RANGE, Literal: token.RANGE.String()}
+			tok = l.newToken(token.RANGE, token.RANGE.String())
 		}
 
 	case '@':
 		if l.peek() == '\\' {
 			l.advance()
-			tok = token.Token{Type: token.MACRO, Literal: token.MACRO.String()}
+			tok = l.newToken(token.MACRO, token.MACRO.String())
 		}
 
 	case '"':
-		literal := l.readString()
-		tok = token.Token{Type: token.STRING, Literal: literal}
+		tok = l.newToken(token.STRING, l.readString())
 
 	case 0:
-		tok = token.Token{Type: token.EOF, Literal: ""}
+		tok = l.newToken(token.EOF, "EOF")
 
 	default:
 		switch {
-		case isLetter(ch):
-			ident := l.readIdentifier()
-			return token.Token{
-				Type:    token.LookupIdent(ident),
-				Literal: ident,
-			}
-		case isDigit(ch):
-			return token.Token{
-				Type:    token.INT,
-				Literal: l.readNumber(),
-			}
+		case isLetter(l.ch):
+			identifier := l.readIdentifier()
+			return l.newToken(token.LookupIdent(identifier), identifier)
+
+		case isDigit(l.ch):
+			return l.newToken(token.INT, l.readNumber())
+
 		default:
-			tok = newToken(token.ILLEGAL, ch)
+			tok = l.newTokenByType(token.ILLEGAL)
 		}
 	}
 
@@ -102,8 +98,20 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
-func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
+func (l *Lexer) newToken(tokenType token.TokenType, literal string) token.Token {
+	return token.Token{Type: tokenType, Literal: literal, Line: l.line}
+}
+
+func (l *Lexer) newTokenByType(tokenType token.TokenType) token.Token {
+	return l.newToken(tokenType, string(l.ch))
+}
+
+func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
+	if l.peek() == '=' {
+		l.advance()
+		return l.newToken(tok2, tok2.String())
+	}
+	return l.newToken(tok1, tok1.String())
 }
 
 func (l *Lexer) advance() {
@@ -146,6 +154,9 @@ func (l *Lexer) readString() string {
 
 	start := l.position
 	for l.ch != '"' && l.ch != 0 {
+		if l.ch == '\n' {
+			l.line++
+		}
 		l.advance()
 	}
 	// TODO handle unterminated strings
@@ -155,7 +166,11 @@ func (l *Lexer) readString() string {
 func (l *Lexer) skipWhitespace() {
 	for {
 		switch l.ch {
-		case ' ', '\t', '\n', '\r':
+		case ' ', '\t', '\r':
+			l.advance()
+
+		case '\n':
+			l.line++
 			l.advance()
 
 		case '/':
@@ -172,14 +187,6 @@ func (l *Lexer) skipWhitespace() {
 			return
 		}
 	}
-}
-
-func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
-	if l.peek() == '=' {
-		l.advance()
-		return token.Token{Type: tok2, Literal: tok2.String()}
-	}
-	return token.Token{Type: tok1, Literal: tok1.String()}
 }
 
 // utils
