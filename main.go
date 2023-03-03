@@ -39,11 +39,16 @@ func runFile(f string) {
 	l := lexer.New(string(src))
 	p := parser.New(l)
 	program := p.ParseProgram()
-	if len(p.Errors()) > 0 {
-		for _, msg := range p.Errors() {
-			fmt.Printf("parser error: %q\n", msg)
+
+	if len(p.Errors()) == 1 {
+		fmt.Println("parser error: " + p.Errors()[0])
+		os.Exit(1)
+	} else if len(p.Errors()) > 1 {
+		errMsg := "parser errors:\n"
+		for _, err := range p.Errors() {
+			errMsg += err + "\n"
 		}
-		fmt.Println()
+		fmt.Println(errMsg)
 		os.Exit(1)
 	}
 

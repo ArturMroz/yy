@@ -25,7 +25,7 @@ func TestNextToken(t *testing.T) {
 				{Type: token.RBRACE, Literal: "}"},
 				{Type: token.LBRACKET, Literal: "["},
 				{Type: token.RBRACKET, Literal: "]"},
-				{Type: token.EOF, Literal: ""},
+				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func TestNextToken(t *testing.T) {
 				{Type: token.IDENT, Literal: "second"},
 				{Type: token.ASSIGN, Literal: "="},
 				{Type: token.STRING, Literal: "other string"},
-				{Type: token.EOF, Literal: ""},
+				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func TestNextToken(t *testing.T) {
 				{Type: token.COLON, Literal: ":"},
 				{Type: token.STRING, Literal: "value"},
 				{Type: token.RBRACE, Literal: "}"},
-				{Type: token.EOF, Literal: ""},
+				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
 		{
@@ -66,7 +66,7 @@ func TestNextToken(t *testing.T) {
 				{Type: token.PLUS, Literal: "+"},
 				{Type: token.IDENT, Literal: "y"},
 				{Type: token.RBRACE, Literal: "}"},
-				{Type: token.EOF, Literal: ""},
+				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
 		{
@@ -80,7 +80,7 @@ func TestNextToken(t *testing.T) {
 				{Type: token.PLUS, Literal: "+"},
 				{Type: token.IDENT, Literal: "y"},
 				{Type: token.RBRACE, Literal: "}"},
-				{Type: token.EOF, Literal: ""},
+				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
 	}
