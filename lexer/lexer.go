@@ -19,7 +19,7 @@ func New(input string) *Lexer {
 func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
-	var tok token.Token
+	tok := token.Token{Line: l.line}
 
 	switch l.ch {
 	case '<':

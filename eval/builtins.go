@@ -2,6 +2,7 @@ package eval
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"yy/object"
@@ -163,6 +164,43 @@ var builtins = map[string]*object.Builtin{
 				// TODO support more types
 				return newError("cannot yoink from %s", args[0].Type())
 
+			}
+		},
+	},
+
+	"yahtzee": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of args for yahtzee (got %d, want 1)", len(args))
+			}
+
+			switch arg := args[0].(type) {
+			case *object.Integer:
+				if arg.Value <= 0 {
+					return newError("negative integer not supported by yahtzee")
+				}
+				return &object.Integer{Value: rand.Int63n(arg.Value)}
+
+			case *object.Array:
+				max := len(arg.Elements) - 1
+				i := rand.Intn(max)
+				return arg.Elements[i]
+
+			case *object.String:
+				max := len(arg.Value) - 1
+				i := rand.Intn(max)
+				return &object.String{Value: string(arg.Value[i])}
+
+			case *object.Range:
+				min, max := arg.Start, arg.End
+				if min > max {
+					min, max = max, min
+				}
+				v := min + rand.Int63n(max-min)
+				return &object.Integer{Value: v}
+
+			default:
+				return newError("argument passed to yahtzee not supported, got %s", args[0].Type())
 			}
 		},
 	},
