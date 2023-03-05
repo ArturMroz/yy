@@ -37,6 +37,8 @@ const (
 	SUB_ASSIGN
 	MUL_ASSIGN
 	DIV_ASSIGN
+	MOD_ASSIGN
+	HASHMAP
 
 	// Delimiters
 	COMMA
@@ -92,6 +94,8 @@ var tokens = [...]string{
 	SUB_ASSIGN: "-=",
 	MUL_ASSIGN: "*=",
 	DIV_ASSIGN: "/=",
+	MOD_ASSIGN: "%=",
+	HASHMAP:    "%{",
 
 	// Delimiters
 	COMMA:     ",",

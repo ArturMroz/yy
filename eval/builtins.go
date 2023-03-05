@@ -22,7 +22,7 @@ var builtins = map[string]*object.Builtin{
 			case *object.String:
 				return &object.Integer{Value: int64(len(arg.Value))}
 
-			case *object.Hash:
+			case *object.Hashmap:
 				return &object.Integer{Value: int64(len(arg.Pairs))}
 
 			case *object.Range:

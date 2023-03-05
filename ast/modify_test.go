@@ -154,7 +154,7 @@ func TestModify(t *testing.T) {
 		}
 	}
 
-	hashLiteral := &HashLiteral{
+	hashLiteral := &HashmapLiteral{
 		Pairs: map[Expression]Expression{
 			one(): one(),
 			one(): one(),

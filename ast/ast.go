@@ -173,14 +173,14 @@ func (rl *RangeLiteral) String() string {
 	return fmt.Sprintf("(%s..%s)", rl.Start, rl.End)
 }
 
-type HashLiteral struct {
+type HashmapLiteral struct {
 	Token token.Token // the '{' token
 	Pairs map[Expression]Expression
 }
 
-func (hl *HashLiteral) expressionNode()      {}
-func (hl *HashLiteral) TokenLiteral() string { return hl.Token.Literal }
-func (hl *HashLiteral) String() string {
+func (hl *HashmapLiteral) expressionNode()      {}
+func (hl *HashmapLiteral) TokenLiteral() string { return hl.Token.Literal }
+func (hl *HashmapLiteral) String() string {
 	var b strings.Builder
 	pairs := []string{}
 	for key, value := range hl.Pairs {

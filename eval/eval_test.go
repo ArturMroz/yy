@@ -33,6 +33,10 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"3 * 3 * 3 + 10", 37},
 		{"3 * (3 * 3) + 10", 37},
 		{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
+		{"5 % 5", 0},
+		{"5 % 3", 2},
+		{"5 % 5 + 7", 7},
+		{"7 + 5 % 5", 7},
 	})
 }
 
@@ -188,7 +192,7 @@ two := "two";
 	}
 
 	evaluated := testEval(t, input)
-	result, ok := evaluated.(*object.Hash)
+	result, ok := evaluated.(*object.Hashmap)
 	if !ok {
 		t.Fatalf("Eval didn't return Hash. got=%T (%+v)", evaluated, evaluated)
 	}
@@ -361,6 +365,7 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := 8; a -= 2; a", 6},
 		{"a := 8; a *= 2; a", 16},
 		{"a := 8; a /= 2; a", 4},
+		{"a := 8; a %= 5; a", 3},
 
 		{"a = 8", errmsg{"identifier not found: a"}},
 		{"a += 8", errmsg{"identifier not found: a"}},
