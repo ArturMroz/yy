@@ -10,6 +10,11 @@ import (
 	"yy/token"
 )
 
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
 type Parser struct {
 	l      *lexer.Lexer
 	errors []string
@@ -21,10 +26,47 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
-type (
-	prefixParseFn func() ast.Expression
-	infixParseFn  func(ast.Expression) ast.Expression
-)
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) advance() {
+	p.curToken = p.peekToken
+	p.peekToken = p.l.NextToken()
+}
+
+func (p *Parser) curIs(t token.TokenType) bool {
+	return p.curToken.Type == t
+}
+
+func (p *Parser) peekIs(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+
+func (p *Parser) eat(t token.TokenType, errMsg string) bool {
+	if p.peekIs(t) {
+		p.advance()
+		return true
+	}
+	p.peekError(t, errMsg)
+	return false
+}
+
+func (p *Parser) peekError(t token.TokenType, errMsg string) {
+	msg := fmt.Sprintf("[line %d] %s (expected '%s', found '%s')", p.curToken.Line, errMsg, t, p.peekToken.Literal)
+	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) noPrefixParseFnError() {
+	msg := fmt.Sprintf("[line %d] unexpected token '%s' near '%s'", p.curToken.Line, p.curToken.Literal, p.peekToken.Literal)
+	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) newError(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	msg = fmt.Sprintf("[line %d] %s", p.curToken.Line, msg)
+	p.errors = append(p.errors, msg)
+}
 
 type Precedence int
 
@@ -590,46 +632,3 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 }
 
 // utils
-
-func (p *Parser) advance() {
-	p.curToken = p.peekToken
-	p.peekToken = p.l.NextToken()
-}
-
-func (p *Parser) curIs(t token.TokenType) bool {
-	return p.curToken.Type == t
-}
-
-func (p *Parser) peekIs(t token.TokenType) bool {
-	return p.peekToken.Type == t
-}
-
-func (p *Parser) eat(t token.TokenType, errMsg string) bool {
-	// TODO return error instead of bool?
-	if p.peekIs(t) {
-		p.advance()
-		return true
-	}
-	p.peekError(t, errMsg) // TODO move this up?
-	return false
-}
-
-func (p *Parser) Errors() []string {
-	return p.errors
-}
-
-func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("[line %d] %s (expected '%s', found '%s')", p.curToken.Line, errMsg, t, p.peekToken.Literal)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) noPrefixParseFnError() {
-	msg := fmt.Sprintf("[line %d] unexpected token '%s' near '%s'", p.curToken.Line, p.curToken.Literal, p.peekToken.Literal)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) newError(format string, args ...any) {
-	msg := fmt.Sprintf(format, args...)
-	msg = fmt.Sprintf("[line %d] %s", p.curToken.Line, msg)
-	p.errors = append(p.errors, msg)
-}

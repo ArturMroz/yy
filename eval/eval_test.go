@@ -289,6 +289,7 @@ func TestYetExpressions(t *testing.T) {
 		{"sum := 0; i := 1; yet i < 5 { sum = sum + i; i = i + 1 }; sum", 10},
 		{"sum := 0; i := 1; yet i < 5 { sum += i; i += 1 }; sum", 10},
 		{"i := 1; yet false { i = 69 }; i", 1},
+		{"i := 0; yet i < 5 { i += 1; yif i == 2 { yeet 69 }; -1 }", 69},
 	})
 }
 
@@ -307,6 +308,11 @@ func TestYallExpressions(t *testing.T) {
 		{`sum := 0; yall 1..4 { sum += yt }; sum`, 10},
 		{`yall i: 0..5 { i }`, 5},
 		{`sum := 0; yall j: 1..4 { sum += j }; sum`, 10},
+
+		{`yall 1..4 { yif yt == 1 { yeet 69 }; -1 }`, 69},
+		{`yall 4..1 { yif yt == 3 { yeet 69 }; -1 }`, 69},
+		{`yall [1, 2, 3] { yif yt == 1 { yeet 69 }; -1 }`, 69},
+		{`yall "testme" { yif yt == "t" { yeet 69 }; -1 }`, 69},
 
 		{`yall 0..5 { x }`, errmsg{"identifier not found: x"}},
 		{`yall i: 0..5 { yt }`, errmsg{"identifier not found: yt"}},
