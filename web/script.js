@@ -5,7 +5,7 @@ function run() {
 
     const result = interpret(source.value)
     if (result?.error) {
-        output.innerText = result.error
+        output.innerText += "\n" + result.error
     }
 }
 
@@ -17,12 +17,15 @@ function captureLog(msg) {
 
 window.console.log = captureLog
 
+// for better UX, we listen for ctrl+enter on the main window rather than textbox only
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) run()
+})
+
 source.addEventListener('keydown', (e) => {
-    if (e.keyCode === 9) { // tab
+    if (e.key === 'Tab') {
         document.execCommand('insertText', false, '    ') // tab is 4 spaces
         e.preventDefault(); // prevent tabbing out from textarea
-    } else if (e.keyCode === 13 && e.ctrlKey) { // ctrl + enter
-        run()
     }
 })
 
@@ -41,30 +44,51 @@ function buildSampleSelect() {
 
 function setSample(sampleName) {
     source.value = samples[sampleName]
+    source.scrollTo(0, 0)
 }
 
 const samples = {
-    'hello':
+    'hello world':
         `// You can edit this code, or select a sample from the dropdown on the right.
 //
 // To run the code press Ctrl+Enter or click 'Run' button.
 
 name := "Yennefer"
-yap("Hello, {name}!")`,
+yap("Yo, {name}!")`,
+
+    "fizzbuzz":
+        `// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
+// interviews. But fear not, for YY is here to help you slay this beast. And rather than printing
+// the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead, for it truly captures
+// the essence of YY.
+
+yall 1..100 {
+    yif yt % 15 == 0 {
+        yap("YeetYoink")
+    } yels yif yt % 3 == 0 {
+        yap("Yeet")
+    } yels yif yt % 5 == 0 {
+        yap("Yoink")
+    } yels {
+        yap(yt)
+    }
+}
+`,
 
     'fibonacci':
-        `// Implementation of Fibbonacci nubmers using two ways: recursion and closure.
-// And yes, these aren't the most efficent ways to calculate the sequence but they make the demo more interesting.
+        `// Implementation of Fibbonacci numbers using two ways: recursion and closure. Just like choosing
+// between pizza and tacos, there is no right or wrong way to do it, both are equally satisfying.
+// And while these methods may not be the fastest, they add some spicy flavor to this demo.
 
 // Recursion
-fib1 := \\n {
-    yif n < 2 { n } yels { fib1(n-1) + fib1(n-2) }
+fib := \\n {
+    yif n < 2 { n } yels { fib(n-1) + fib(n-2) }
 }
 
-yap("seventh Fibonacci number:", fib1(7))
+yap("seventh Fibonacci number:", fib(7))
 
 // Closure
-fib2 := \\{
+fib_gen := \\{
     a := 0
     b := 1
     \\{
@@ -75,13 +99,60 @@ fib2 := \\{
     }
 }
 
-f := fib2()
+f := fib_gen()
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
 
+    'sort':
+        `// Sorting algorithms of different sorts.
+
+// Bubble sort: silly name, sillier algorithm (O(n^2)). As useful as 'g' in 'lasagna'. But it is a staple.
+bubble_sort := \\arr {
+    yall i: len(arr)-2..0 {
+        yall j: 0..i {
+            yif arr[j] > arr[j+1] {
+                arr = swap(arr, j, j+1)
+            }
+        }
+    }
+
+    arr
+}
+
+// Quick sort, unlike bubble sort, is quick and nimble like a young yak yodelling in a yurt (O(n log n)).
+quick_sort := \\arr {
+    yif len(arr) < 2 {
+        yeet arr
+    }
+
+    pivot  := arr[len(arr) / 2]
+    left   := []
+    right  := []
+    middle := []
+
+    yall arr {
+        yif yt < pivot {
+            left = push(left, yt)
+        } yels yif yt > pivot {
+            right = push(right, yt)
+        } yels {
+            middle = push(middle, yt)
+        }
+    }
+
+    quick_sort(left) + middle + quick_sort(right)
+}
+
+nums := [3, 6, 9, 1, 5, 4, 2, 0, 8, 7]
+
+yap("Bubble sorted:", bubble_sort(nums))
+yap("Quick sorted: ", quick_sort(nums))
+yap("Btw, original array is still there, untouched:", nums)
+`,
+
     'map et al':
-        `// Map, filter, and reduce are The Three Musketeers of functional programming,
-// banding together to process and transform collections with finesse and style.
+        `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together 
+// to process and transform collections with finesse and style.
 
 arr := [1, 2, 3, 4, 5]
 yap("original array:", arr)
@@ -133,7 +204,7 @@ yap("smaller than average:", filter(arr, smol))
 // (Not JavaScript though. JavaScript wouldn't bat an eye.)
 //
 // Types can be mismatched, strings can be negated, variables don't have to be declared before use.
-// But be warned, the return value is anyone's guess. What about the Principle of Least Surprise you ask? 
+// But be warned, the return value is anyone's guess. What about the Principle of Least Surprise you ask?
 // Exactly, what about it?
 //
 // Go ahead and experiment, but remember Uncle Ben's words of wisdom: "Play stupid games, win stupid prizes".
@@ -144,8 +215,8 @@ yolo {
     yap("'troll' * 3 =", "troll" * 3)
     yap("'2' * 5 =", "2" * 5)
 
-    // you can multiply an array by an integer 
-    yap("[1, 2, 3] * 3 = ", [1, 2, 3] * 3) 
+    // you can multiply an array by an integer
+    yap("[1, 2, 3] * 3 = ", [1, 2, 3] * 3)
 
     // you can negate a string
     yap("-'i am a string' =", -"i am a string")
@@ -161,81 +232,31 @@ yolo {
     add11(6) // 17
 
     // but even in yolo mode, division by zero doesn't end well (what did you expect?)
-    yap("division by zero:", "weee" / 0) 
+    yap("division by zero:", "weee" / 0)
 }`,
-
-    'sort':
-        `// Sorting algorithms of different sorts.
-
-nums := [6, 3, 9, 1, 0, 7, 2, 5, 8, 4]
-
-// Bubble sort: silly name, sillier algorithm (O(n^2)). 
-// As useful as 'g' in 'lasagna'. But it is a staple.
-bubble_sort := \\arr {
-    yall i: len(arr) - 1..0 {
-        yall j: 0..i {
-            yif arr[j] > arr[j+1] {
-                arr = swap(arr, j, j+1)
-            }
-        }
-    }
-
-    arr
-}
-
-yap("Bubble sorted nums:", bubble_sort(nums))
-yap("Original array is still there, untouched:", nums)
-
-// Quick sort, unlike bubble sort, is quick and nimble
-// like a young yak yodelling in a yurt (O(n log n)).
-quick_sort := \\arr {
-    yif len(arr) < 2 {
-        yeet arr
-    }
-
-    pivot  := arr[len(arr) / 2]
-    left   := []
-    right  := []
-    middle := []
-
-    yall arr {
-        yif yt < pivot {
-            left = push(left, yt)
-        } yels yif yt > pivot {
-            right = push(right, yt)
-        } yels {
-            middle = push(middle, yt)
-        }
-    }
-
-    quick_sort(left) + middle + quick_sort(right)
-}
-
-yap("Quick sorted nums:", quick_sort(nums))
-`,
 
     "random":
         `// A password generator so good, it'll make even the most nefarious hackers throw in the towel.
 
 alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 digits   := "0123456789"
-special  := "!@#$%"
+special  := "!?^&*~@#$%"
 charset  := alphabet + digits + special
 
-length   := 16
+length   := 12
 password := ""
 
 // Builtin yahtzee, the magical randomiser, is responsible for generating all things unpredictable.
-// Like a genie, yahtzee accepts integers, ranges, arrays, and even strings as offerings to its unpredictable power.
 
 yall 0..length {
-    ch := yahtzee(charset)
-    password += ch
+    password += yahtzee(charset)
 }
 
-yap("your first top secret password is:", password)
+yap("your first secret password:", password)
 
-// We can rewrite the generator to use charset's lenght (integer) as input to yahtzee:
+// Like a genie, yahtzee accepts integers, ranges, arrays, and even strings as offerings to its
+// unpredictable power. Just for shit and giggles, we can rewrite the generator to use charset's
+// length (integer) as input to yahtzee:
 
 password = ""
 
@@ -244,35 +265,90 @@ yall 0..length {
     password += charset[idx]
 }
 
-yap("your other top secret password is:", password)
+yap("your other secret password:", password)
 `,
 
-    "fizzbuzz":
-        `// YY doesn't support '%' modulo operator at the moment, but that's alright.
-// We don't need no built-in modulo operator anyways. 
-// We can do it ourselves, like true strong and independent programmers.
+    "palindrome":
+        `// Mirror words, also known as palindromes, are the true testament to the power of written word.
+// With every letter and syllable, they silently reflect their greatness back at us.
 
-mod := \\num div {
-    res := num / div
-    num - (res * div)
+is_palindrome := \\str {
+    n := len(str)
+    yall 0..n/2 {
+        yif str[yt] != str[n-yt-1] {
+            yeet false
+        }
+    }
+
+    true
 }
 
-// Instead of printing the traditional FizzBuzz, we'll print YeetYoink, as it just fits much better.
-
-yall 1..100 {
-    yif mod(yt, 15) == 0 {
-        yap("YeetYoink")
-    } yels yif mod(yt, 3) == 0 {
-        yap("Yeet")
-    } yels yif mod(yt, 5) == 0 {
-        yap("Yoink")
+yall ["racecar", "level", "hello", "world", "1221", "1337"] {
+    yif is_palindrome(yt) {
+        yap(yt, "is a palindrome")
     } yels {
-        yap(yt)
+        yap(yt, "is not a palindrome")
     }
 }
+`,
+
+    'primes':
+        `// If you ever wondered if your favorite number is a prime, wonder no more! YY is here for you to do
+// the heavy lifting and separate the primes from the imposter numbers, in a very inefficient manner.
+
+is_prime := \\n {
+    yif n < 2  { yeet false }
+    yif n == 2 { yeet true }
+
+    yif n % 2 == 0 { yeet false }
+
+    yall 3 .. n/2 + 1 {
+        yif n % yt == 0 { yeet false }
+    }
+
+    true
+}
+
+yall 1..20 {
+    yif is_prime(yt) {
+        yap("number", yt, "is prime")
+    }
+}
+`,
+
+    'bin conv':
+        `// Don't you just hate it when you're sorting a box of uncooked spaghetti by length, and sudddenly a
+// stranger comes up to you with a piece of paper covered in ones and zeros? Like, seriously, dude,
+// can't you see I'm busy here? But alas, you know you can't resist the temptation of converting
+// that binary number to decimal right then and there. Thankfully, with YY, you can swiftly convert
+// those ones and zeros without losing your precious pasta-sorting momentum.
+
+bin_to_dec := \\bin {
+    dec := 0
+    pow := 1
+
+    yall len(bin)-1..0 {
+        digit := yif bin[yt] == "0" {
+            0 
+        } yels yif bin[yt] == "1" {
+            1
+        } yels {
+            yikes("good heavens,", bin, "is not a valid binary number!")
+        }
+
+        dec += digit * pow
+        pow *= 2
+    }
+
+    dec
+}
+
+
+bin := "1000101"
+dec := bin_to_dec(bin)
+yap(bin, "in binary equals", dec, "in decimal") 
 `
 }
 
-
 buildSampleSelect()
-setSample('hello')
+setSample('hello world')

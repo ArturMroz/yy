@@ -18,6 +18,12 @@ func main() {
 
 func interpretWrapper() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("something went very wrong:", r)
+			}
+		}()
+
 		if len(args) != 1 {
 			return map[string]any{
 				"error": fmt.Sprintf("wrong number of args (got %d, want 1)\n", len(args)),
