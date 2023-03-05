@@ -23,29 +23,27 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '<':
-		tok = l.newTokenByType(token.LT)
+		tok = l.newToken(token.LT)
 	case '>':
-		tok = l.newTokenByType(token.GT)
+		tok = l.newToken(token.GT)
 	case ';':
-		tok = l.newTokenByType(token.SEMICOLON)
+		tok = l.newToken(token.SEMICOLON)
 	case '(':
-		tok = l.newTokenByType(token.LPAREN)
+		tok = l.newToken(token.LPAREN)
 	case ')':
-		tok = l.newTokenByType(token.RPAREN)
+		tok = l.newToken(token.RPAREN)
 	case ',':
-		tok = l.newTokenByType(token.COMMA)
+		tok = l.newToken(token.COMMA)
 	case '{':
-		tok = l.newTokenByType(token.LBRACE)
+		tok = l.newToken(token.LBRACE)
 	case '}':
-		tok = l.newTokenByType(token.RBRACE)
+		tok = l.newToken(token.RBRACE)
 	case '[':
-		tok = l.newTokenByType(token.LBRACKET)
+		tok = l.newToken(token.LBRACKET)
 	case ']':
-		tok = l.newTokenByType(token.RBRACKET)
+		tok = l.newToken(token.RBRACKET)
 	case '\\':
-		tok = l.newTokenByType(token.BACKSLASH)
-	case '%':
-		tok = l.newTokenByType(token.PERCENT)
+		tok = l.newToken(token.BACKSLASH)
 
 	case '+':
 		tok = l.switch2(token.PLUS, token.ADD_ASSIGN)
@@ -62,35 +60,47 @@ func (l *Lexer) NextToken() token.Token {
 	case ':':
 		tok = l.switch2(token.COLON, token.WALRUS)
 
+	case '%':
+		switch l.peek() {
+		case '{':
+			l.advance()
+			tok = l.newToken(token.HASHMAP)
+		case '=':
+			l.advance()
+			tok = l.newToken(token.MOD_ASSIGN)
+		default:
+			tok = l.newToken(token.PERCENT)
+		}
+
 	case '.':
 		if l.peek() == '.' {
 			l.advance()
-			tok = l.newToken(token.RANGE, token.RANGE.String())
+			tok = l.newToken(token.RANGE)
 		}
 
 	case '@':
 		if l.peek() == '\\' {
 			l.advance()
-			tok = l.newToken(token.MACRO, token.MACRO.String())
+			tok = l.newToken(token.MACRO)
 		}
 
 	case '"':
-		tok = l.newToken(token.STRING, l.readString())
+		tok = l.newTokenWithLiteral(token.STRING, l.readString())
 
 	case 0:
-		tok = l.newToken(token.EOF, "EOF")
+		tok = l.newToken(token.EOF)
 
 	default:
 		switch {
 		case isLetter(l.ch):
 			identifier := l.readIdentifier()
-			return l.newToken(token.LookupIdent(identifier), identifier)
+			return l.newTokenWithLiteral(token.LookupIdent(identifier), identifier)
 
 		case isDigit(l.ch):
-			return l.newToken(token.INT, l.readNumber())
+			return l.newTokenWithLiteral(token.INT, l.readNumber())
 
 		default:
-			tok = l.newTokenByType(token.ILLEGAL)
+			tok = l.newTokenWithLiteral(token.ILLEGAL, string(l.ch))
 		}
 	}
 
@@ -98,20 +108,20 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
-func (l *Lexer) newToken(tokenType token.TokenType, literal string) token.Token {
-	return token.Token{Type: tokenType, Literal: literal, Line: l.line}
+func (l *Lexer) newToken(tokenType token.TokenType) token.Token {
+	return token.Token{Type: tokenType, Literal: tokenType.String(), Line: l.line}
 }
 
-func (l *Lexer) newTokenByType(tokenType token.TokenType) token.Token {
-	return l.newToken(tokenType, string(l.ch))
+func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) token.Token {
+	return token.Token{Type: tokenType, Literal: literal, Line: l.line}
 }
 
 func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
 	if l.peek() == '=' {
 		l.advance()
-		return l.newToken(tok2, tok2.String())
+		return l.newToken(tok2)
 	}
-	return l.newToken(tok1, tok1.String())
+	return l.newToken(tok1)
 }
 
 func (l *Lexer) advance() {

@@ -118,6 +118,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 
 			result = Eval(node.Body, extendedEnv)
+			if isErrorOrReturn(result) {
+				return result
+			}
 		}
 
 	case *ast.YallExpression:
@@ -130,12 +133,18 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			for _, v := range iter.Elements {
 				extendedEnv.Set(node.KeyName, v)
 				result = Eval(node.Body, extendedEnv)
+				if isErrorOrReturn(result) {
+					return result
+				}
 			}
 
 		case *object.String:
 			for _, v := range iter.Value {
 				extendedEnv.Set(node.KeyName, &object.String{Value: string(v)})
 				result = Eval(node.Body, extendedEnv)
+				if isErrorOrReturn(result) {
+					return result
+				}
 			}
 
 		case *object.Range:
@@ -143,11 +152,17 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				for i := iter.Start; i <= iter.End; i++ {
 					extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
 					result = Eval(node.Body, extendedEnv)
+					if isErrorOrReturn(result) {
+						return result
+					}
 				}
 			} else {
 				for i := iter.Start; i >= iter.End; i-- {
 					extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
 					result = Eval(node.Body, extendedEnv)
+					if isErrorOrReturn(result) {
+						return result
+					}
 				}
 			}
 
@@ -208,8 +223,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return &object.Array{Elements: elts}
 
-	case *ast.HashLiteral:
-		hash := &object.Hash{Pairs: map[object.HashKey]object.HashPair{}}
+	case *ast.HashmapLiteral:
+		hashmap := &object.Hashmap{Pairs: map[object.HashKey]object.HashPair{}}
 		for k, v := range node.Pairs {
 			key := Eval(k, env)
 			if isError(key) {
@@ -226,9 +241,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 
 			pair := object.HashPair{Key: key, Value: val}
-			hash.Pairs[hashKey.HashKey()] = pair
+			hashmap.Pairs[hashKey.HashKey()] = pair
 		}
-		return hash
+		return hashmap
 
 	case *ast.IndexExpression:
 		left := Eval(node.Left, env)
@@ -257,14 +272,14 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 			return &object.String{Value: string(str.Value[i])}
 
-		case left.Type() == object.HASH_OBJ:
-			hashMap := left.(*object.Hash)
+		case left.Type() == object.HASHMAP_OBJ:
+			hashmap := left.(*object.Hashmap)
 			key, ok := idx.(object.Hashable)
 			if !ok {
 				return newError("key not hashable: %s", idx.Type())
 			}
 
-			pair, ok := hashMap.Pairs[key.HashKey()]
+			pair, ok := hashmap.Pairs[key.HashKey()]
 			if !ok {
 				return object.NULL
 			}
@@ -421,6 +436,8 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return &object.Integer{Value: left.Value * right.Value}
 		case "/":
 			return &object.Integer{Value: left.Value / right.Value}
+		case "%":
+			return &object.Integer{Value: left.Value % right.Value}
 		case "<":
 			return toYeetBool(left.Value < right.Value)
 		case ">":
@@ -491,6 +508,10 @@ func toYeetBool(b bool) object.Object {
 
 func isError(obj object.Object) bool {
 	return obj != nil && obj.Type() == object.ERROR_OBJ
+}
+
+func isErrorOrReturn(obj object.Object) bool {
+	return obj != nil && (obj.Type() == object.ERROR_OBJ || obj.Type() == object.RETURN_VALUE_OBJ)
 }
 
 func newError(format string, args ...any) *object.Error {

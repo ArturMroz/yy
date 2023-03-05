@@ -33,6 +33,10 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"3 * 3 * 3 + 10", 37},
 		{"3 * (3 * 3) + 10", 37},
 		{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
+		{"5 % 5", 0},
+		{"5 % 3", 2},
+		{"5 % 5 + 7", 7},
+		{"7 + 5 % 5", 7},
 	})
 }
 
@@ -188,7 +192,7 @@ two := "two";
 	}
 
 	evaluated := testEval(t, input)
-	result, ok := evaluated.(*object.Hash)
+	result, ok := evaluated.(*object.Hashmap)
 	if !ok {
 		t.Fatalf("Eval didn't return Hash. got=%T (%+v)", evaluated, evaluated)
 	}
@@ -285,6 +289,7 @@ func TestYetExpressions(t *testing.T) {
 		{"sum := 0; i := 1; yet i < 5 { sum = sum + i; i = i + 1 }; sum", 10},
 		{"sum := 0; i := 1; yet i < 5 { sum += i; i += 1 }; sum", 10},
 		{"i := 1; yet false { i = 69 }; i", 1},
+		{"i := 0; yet i < 5 { i += 1; yif i == 2 { yeet 69 }; -1 }", 69},
 	})
 }
 
@@ -303,6 +308,11 @@ func TestYallExpressions(t *testing.T) {
 		{`sum := 0; yall 1..4 { sum += yt }; sum`, 10},
 		{`yall i: 0..5 { i }`, 5},
 		{`sum := 0; yall j: 1..4 { sum += j }; sum`, 10},
+
+		{`yall 1..4 { yif yt == 1 { yeet 69 }; -1 }`, 69},
+		{`yall 4..1 { yif yt == 3 { yeet 69 }; -1 }`, 69},
+		{`yall [1, 2, 3] { yif yt == 1 { yeet 69 }; -1 }`, 69},
+		{`yall "testme" { yif yt == "t" { yeet 69 }; -1 }`, 69},
 
 		{`yall 0..5 { x }`, errmsg{"identifier not found: x"}},
 		{`yall i: 0..5 { yt }`, errmsg{"identifier not found: yt"}},
@@ -361,6 +371,7 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := 8; a -= 2; a", 6},
 		{"a := 8; a *= 2; a", 16},
 		{"a := 8; a /= 2; a", 4},
+		{"a := 8; a %= 5; a", 3},
 
 		{"a = 8", errmsg{"identifier not found: a"}},
 		{"a += 8", errmsg{"identifier not found: a"}},

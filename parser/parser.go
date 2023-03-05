@@ -10,6 +10,11 @@ import (
 	"yy/token"
 )
 
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
 type Parser struct {
 	l      *lexer.Lexer
 	errors []string
@@ -21,10 +26,47 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
-type (
-	prefixParseFn func() ast.Expression
-	infixParseFn  func(ast.Expression) ast.Expression
-)
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) advance() {
+	p.curToken = p.peekToken
+	p.peekToken = p.l.NextToken()
+}
+
+func (p *Parser) curIs(t token.TokenType) bool {
+	return p.curToken.Type == t
+}
+
+func (p *Parser) peekIs(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+
+func (p *Parser) eat(t token.TokenType, errMsg string) bool {
+	if p.peekIs(t) {
+		p.advance()
+		return true
+	}
+	p.peekError(t, errMsg)
+	return false
+}
+
+func (p *Parser) peekError(t token.TokenType, errMsg string) {
+	msg := fmt.Sprintf("[line %d] %s (expected '%s', found '%s')", p.curToken.Line, errMsg, t, p.peekToken.Literal)
+	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) noPrefixParseFnError() {
+	msg := fmt.Sprintf("[line %d] unexpected token '%s' near '%s'", p.curToken.Line, p.curToken.Literal, p.peekToken.Literal)
+	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) newError(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	msg = fmt.Sprintf("[line %d] %s", p.curToken.Line, msg)
+	p.errors = append(p.errors, msg)
+}
 
 type Precedence int
 
@@ -49,6 +91,7 @@ var precedences = map[token.TokenType]Precedence{
 	token.SUB_ASSIGN: ASSIGNMENT,
 	token.MUL_ASSIGN: ASSIGNMENT,
 	token.DIV_ASSIGN: ASSIGNMENT,
+	token.MOD_ASSIGN: ASSIGNMENT,
 	token.EQ:         EQUALS,
 	token.NOT_EQ:     EQUALS,
 	token.LT:         LESSGREATER,
@@ -58,6 +101,7 @@ var precedences = map[token.TokenType]Precedence{
 	token.MINUS:      SUM,
 	token.SLASH:      PRODUCT,
 	token.ASTERISK:   PRODUCT,
+	token.PERCENT:    PRODUCT,
 	token.LPAREN:     CALL,
 	token.LBRACKET:   INDEX,
 }
@@ -73,18 +117,17 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.IDENT:    p.parseIdentifier,
-		token.INT:      p.parseIntegerLiteral,
-		token.STRING:   p.parseStringLiteral,
-		token.MINUS:    p.parsePrefixExpression,
-		token.BANG:     p.parsePrefixExpression,
-		token.TRUE:     p.parseBoolean,
-		token.FALSE:    p.parseBoolean,
-		token.NULL:     p.parseNull,
-		token.LPAREN:   p.parseGroupedExpression,
-		token.LBRACKET: p.parseArrayLiteral,
-		// token.LBRACE:    p.parseHashLiteral,
-		token.PERCENT:   p.parsePercent,
+		token.IDENT:     p.parseIdentifier,
+		token.INT:       p.parseIntegerLiteral,
+		token.STRING:    p.parseStringLiteral,
+		token.MINUS:     p.parsePrefixExpression,
+		token.BANG:      p.parsePrefixExpression,
+		token.TRUE:      p.parseBoolean,
+		token.FALSE:     p.parseBoolean,
+		token.NULL:      p.parseNull,
+		token.LPAREN:    p.parseGroupedExpression,
+		token.LBRACKET:  p.parseArrayLiteral,
+		token.HASHMAP:   p.parseHashmapLiteral,
 		token.YIF:       p.parseYifExpression,
 		token.YOLO:      p.parseYoloExpression,
 		token.YALL:      p.parseYallExpression,
@@ -96,8 +139,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.infixParseFns = map[token.TokenType]infixParseFn{
 		token.PLUS:       p.parseInfixExpression,
 		token.MINUS:      p.parseInfixExpression,
-		token.SLASH:      p.parseInfixExpression,
 		token.ASTERISK:   p.parseInfixExpression,
+		token.SLASH:      p.parseInfixExpression,
+		token.PERCENT:    p.parseInfixExpression,
 		token.EQ:         p.parseInfixExpression,
 		token.NOT_EQ:     p.parseInfixExpression,
 		token.LT:         p.parseInfixExpression,
@@ -109,6 +153,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.SUB_ASSIGN: p.parseAssignExpression,
 		token.MUL_ASSIGN: p.parseAssignExpression,
 		token.DIV_ASSIGN: p.parseAssignExpression,
+		token.MOD_ASSIGN: p.parseAssignExpression,
 		token.LPAREN:     p.parseCallExpression,
 		token.LBRACKET:   p.parseIndexExpression,
 	}
@@ -389,15 +434,8 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return arr
 }
 
-func (p *Parser) parsePercent() ast.Expression {
-	if !p.eat(token.LBRACE, "token '%' can only be followed by token '{'") {
-		return nil
-	}
-	return p.parseHashLiteral()
-}
-
-func (p *Parser) parseHashLiteral() ast.Expression {
-	hash := &ast.HashLiteral{
+func (p *Parser) parseHashmapLiteral() ast.Expression {
+	hashmap := &ast.HashmapLiteral{
 		Token: p.curToken,
 		Pairs: map[ast.Expression]ast.Expression{},
 	}
@@ -407,25 +445,25 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 
 		key := p.parseExpression(LOWEST)
 
-		if !p.eat(token.COLON, "missing ':' in hash literal after a key") {
+		if !p.eat(token.COLON, "missing ':' in hashmap literal after a key") {
 			return nil
 		}
 
 		p.advance()
 		val := p.parseExpression(LOWEST)
 
-		hash.Pairs[key] = val
+		hashmap.Pairs[key] = val
 
 		if p.peekIs(token.COMMA) { // TODO tighten up after writing more unit tests
 			p.advance()
 		}
 	}
 
-	if !p.eat(token.RBRACE, "missing closing '}' in hash literal") {
+	if !p.eat(token.RBRACE, "missing closing '}' in hashmap literal") {
 		return nil
 	}
 
-	return hash
+	return hashmap
 }
 
 func (p *Parser) parseLambdaLiteral() ast.Expression {
@@ -524,9 +562,9 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 	p.advance()
 	assExpr.Value = p.parseExpression(LOWEST)
 
-	// TODO rethink this implementation, maybe move to eval stage
+	// TODO rethink this implementation, maybe move to eval stage instead of desugaring
 	switch assExpr.Token.Type {
-	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN, token.DIV_ASSIGN:
+	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN, token.DIV_ASSIGN, token.MOD_ASSIGN:
 		assExpr.Value = &ast.InfixExpression{
 			Left:     assExpr.Name,
 			Right:    assExpr.Value,
@@ -594,46 +632,3 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 }
 
 // utils
-
-func (p *Parser) advance() {
-	p.curToken = p.peekToken
-	p.peekToken = p.l.NextToken()
-}
-
-func (p *Parser) curIs(t token.TokenType) bool {
-	return p.curToken.Type == t
-}
-
-func (p *Parser) peekIs(t token.TokenType) bool {
-	return p.peekToken.Type == t
-}
-
-func (p *Parser) eat(t token.TokenType, errMsg string) bool {
-	// TODO return error instead of bool?
-	if p.peekIs(t) {
-		p.advance()
-		return true
-	}
-	p.peekError(t, errMsg) // TODO move this up?
-	return false
-}
-
-func (p *Parser) Errors() []string {
-	return p.errors
-}
-
-func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("[line %d] %s (expected '%s', found '%s')", p.curToken.Line, errMsg, t, p.peekToken.Literal)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) noPrefixParseFnError() {
-	msg := fmt.Sprintf("[line %d] unexpected token '%s' near '%s'", p.curToken.Line, p.curToken.Literal, p.peekToken.Literal)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) newError(format string, args ...any) {
-	msg := fmt.Sprintf(format, args...)
-	msg = fmt.Sprintf("[line %d] %s", p.curToken.Line, msg)
-	p.errors = append(p.errors, msg)
-}

@@ -240,7 +240,7 @@ func TestParsingHashLiterals(t *testing.T) {
 
 	for _, tt := range tests {
 		stmt := parseSingleExprStmt(t, tt.input)
-		hash, ok := stmt.Expression.(*ast.HashLiteral)
+		hash, ok := stmt.Expression.(*ast.HashmapLiteral)
 		if !ok {
 			t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
 		}
@@ -255,7 +255,7 @@ func TestParsingHashLiteralsStringKeys(t *testing.T) {
 	expected := map[string]int64{"one": 1, "two": 2, "three": 3}
 
 	stmt := parseSingleExprStmt(t, input)
-	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	hash, ok := stmt.Expression.(*ast.HashmapLiteral)
 	if !ok {
 		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
 	}
@@ -278,7 +278,7 @@ func TestParsingHashLiteralsStringKeys(t *testing.T) {
 func TestParsingHashLiteralsWithExpressions(t *testing.T) {
 	input := `%{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}`
 	stmt := parseSingleExprStmt(t, input)
-	hash, ok := stmt.Expression.(*ast.HashLiteral)
+	hash, ok := stmt.Expression.(*ast.HashmapLiteral)
 	if !ok {
 		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
 	}

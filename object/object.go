@@ -21,7 +21,7 @@ const (
 	NULL_OBJ
 
 	ARRAY_OBJ
-	HASH_OBJ
+	HASHMAP_OBJ
 	RANGE_OBJ
 
 	FUNCTION_OBJ
@@ -39,9 +39,9 @@ var objectTypes = [...]string{
 	STRING_OBJ:  "STRING",
 	NULL_OBJ:    "NULL",
 
-	ARRAY_OBJ: "ARRAY",
-	HASH_OBJ:  "HASH",
-	RANGE_OBJ: "RANGE",
+	ARRAY_OBJ:   "ARRAY",
+	HASHMAP_OBJ: "HASHMAP",
+	RANGE_OBJ:   "RANGE",
 
 	FUNCTION_OBJ: "FUNCTION",
 	BUILTIN_OBJ:  "BUILTIN",
@@ -147,12 +147,12 @@ type HashPair struct {
 	Value Object
 }
 
-type Hash struct {
+type Hashmap struct {
 	Pairs map[HashKey]HashPair
 }
 
-func (h *Hash) Type() ObjectType { return HASH_OBJ }
-func (h *Hash) String() string {
+func (h *Hashmap) Type() ObjectType { return HASHMAP_OBJ }
+func (h *Hashmap) String() string {
 	pairs := []string{}
 	for _, pair := range h.Pairs {
 		pairs = append(pairs, fmt.Sprintf("%s: %s", pair.Key.String(), pair.Value.String()))

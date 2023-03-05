@@ -34,8 +34,8 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 			}
 			return object.TRUE
 
-		case *object.Hash:
-			newHash := &object.Hash{
+		case *object.Hashmap:
+			newHash := &object.Hashmap{
 				Pairs: map[object.HashKey]object.HashPair{},
 			}
 
@@ -259,7 +259,7 @@ func bakeArgs(fn *object.Function, right object.Object) object.Object {
 	newParams := []*ast.Identifier{}
 
 	switch right := right.(type) {
-	case *object.Hash:
+	case *object.Hashmap:
 		for _, p := range fn.Parameters {
 			key := (&object.String{Value: p.Value}).HashKey()
 			if val, ok := right.Pairs[key]; ok {
