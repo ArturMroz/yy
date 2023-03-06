@@ -93,11 +93,10 @@ func (l *Lexer) NextToken() token.Token {
 	default:
 		switch {
 		case isLetter(l.ch):
-			identifier := l.readIdentifier()
-			return l.newTokenWithLiteral(token.LookupIdent(identifier), identifier)
+			return l.identifier()
 
 		case isDigit(l.ch):
-			return l.newTokenWithLiteral(token.INT, l.readNumber())
+			return l.number()
 
 		default:
 			tok = l.newTokenWithLiteral(token.ILLEGAL, string(l.ch))
@@ -142,21 +141,32 @@ func (l *Lexer) peek() byte {
 	return l.input[l.readPosition]
 }
 
-func (l *Lexer) readIdentifier() string {
+func (l *Lexer) identifier() token.Token {
 	start := l.position
 	for isLetter(l.ch) || isDigit(l.ch) {
 		l.advance()
 	}
-	return l.input[start:l.position]
+
+	ident := l.input[start:l.position]
+	return l.newTokenWithLiteral(token.LookupIdent(ident), ident)
 }
 
-func (l *Lexer) readNumber() string {
-	// TODO support decimals
+func (l *Lexer) number() token.Token {
 	start := l.position
 	for isDigit(l.ch) {
 		l.advance()
 	}
-	return l.input[start:l.position]
+
+	if l.ch == '.' && isDigit(l.peek()) {
+		l.advance() // dot
+		for isDigit(l.ch) {
+			l.advance()
+		}
+
+		return l.newTokenWithLiteral(token.NUMBER, l.input[start:l.position])
+	} else {
+		return l.newTokenWithLiteral(token.INT, l.input[start:l.position])
+	}
 }
 
 func (l *Lexer) readString() string {

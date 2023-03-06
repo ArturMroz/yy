@@ -175,6 +175,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 
+	case *ast.NumberLiteral:
+		return &object.Number{Value: node.Value}
+
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
 
@@ -386,22 +389,79 @@ func evalPrefixExpression(op string, right object.Object, yoloOK bool) object.Ob
 		return toYeetBool(!isTruthy(right))
 
 	case "-":
-		if right.Type() != object.INTEGER_OBJ {
-			if yoloOK {
-				return yoloPrefixExpression(op, right)
-			}
-			return newError("unknown operator: %s%s", op, right.Type())
-		}
-		rightVal := right.(*object.Integer).Value
-		return &object.Integer{Value: -rightVal}
+		switch {
+		case right.Type() == object.INTEGER_OBJ:
+			rightVal := right.(*object.Integer).Value
+			return &object.Integer{Value: -rightVal}
 
-	default:
-		return newError("unknown operator: %s%s", op, right.Type())
+		case right.Type() == object.NUMBER_OBJ:
+			rightVal := right.(*object.Number).Value
+			return &object.Number{Value: -rightVal}
+
+		case yoloOK:
+			return yoloPrefixExpression(op, right)
+		}
 	}
+
+	return newError("unknown operator: %s%s", op, right.Type())
 }
 
 func evalInfixExpression(op string, left, right object.Object, yoloOK bool) object.Object {
 	switch {
+	// as a special case, NUMBER & INTEGER types can be mixed together outside of yolo mode
+	case left.Type() == object.NUMBER_OBJ && right.Type() == object.INTEGER_OBJ:
+		left := left.(*object.Number)
+		right := right.(*object.Integer)
+		rVal := float64(right.Value)
+
+		switch op {
+		case "+":
+			return &object.Number{Value: left.Value + rVal}
+		case "-":
+			return &object.Number{Value: left.Value - rVal}
+		case "*":
+			return &object.Number{Value: left.Value * rVal}
+		case "/":
+			return &object.Number{Value: left.Value / rVal}
+		case "%":
+			return &object.Number{Value: float64(int64(left.Value) % int64(right.Value))}
+		case "<":
+			return toYeetBool(left.Value < rVal)
+		case ">":
+			return toYeetBool(left.Value > rVal)
+		case "==":
+			return toYeetBool(left.Value == rVal)
+		case "!=":
+			return toYeetBool(left.Value != rVal)
+		}
+
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.NUMBER_OBJ:
+		left := left.(*object.Integer)
+		right := right.(*object.Number)
+		lVal := float64(left.Value)
+
+		switch op {
+		case "+":
+			return &object.Number{Value: lVal + right.Value}
+		case "-":
+			return &object.Number{Value: lVal - right.Value}
+		case "*":
+			return &object.Number{Value: lVal * right.Value}
+		case "/":
+			return &object.Number{Value: lVal / right.Value}
+		case "%":
+			return &object.Number{Value: float64(int64(left.Value) % int64(right.Value))}
+		case "<":
+			return toYeetBool(lVal < right.Value)
+		case ">":
+			return toYeetBool(lVal > right.Value)
+		case "==":
+			return toYeetBool(lVal == right.Value)
+		case "!=":
+			return toYeetBool(lVal != right.Value)
+		}
+
+		// mixing of all the other types is allowed only in yolo mode
 	case left.Type() != right.Type():
 		switch op {
 		case "==":
@@ -438,6 +498,31 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return &object.Integer{Value: left.Value / right.Value}
 		case "%":
 			return &object.Integer{Value: left.Value % right.Value}
+		case "<":
+			return toYeetBool(left.Value < right.Value)
+		case ">":
+			return toYeetBool(left.Value > right.Value)
+		case "==":
+			return toYeetBool(left.Value == right.Value)
+		case "!=":
+			return toYeetBool(left.Value != right.Value)
+		}
+
+	case left.Type() == object.NUMBER_OBJ && right.Type() == object.NUMBER_OBJ:
+		right := right.(*object.Number)
+		left := left.(*object.Number)
+
+		switch op {
+		case "+":
+			return &object.Number{Value: left.Value + right.Value}
+		case "-":
+			return &object.Number{Value: left.Value - right.Value}
+		case "*":
+			return &object.Number{Value: left.Value * right.Value}
+		case "/":
+			return &object.Number{Value: left.Value / right.Value}
+		case "%":
+			return &object.Number{Value: float64(int64(left.Value) % int64(right.Value))}
 		case "<":
 			return toYeetBool(left.Value < right.Value)
 		case ">":

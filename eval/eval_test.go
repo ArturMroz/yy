@@ -40,6 +40,19 @@ func TestEvalIntegerExpression(t *testing.T) {
 	})
 }
 
+func TestEvalFloatExpression(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"5.0", 5.0},
+		{"10.0", 10.0},
+		{"-15.0", -15.0},
+		{"5 + 5.0 + 5 + 5 - 10", 10.0},
+		{"2 * 2 * 2.0 * 2 * 2", 32.0},
+		{"(5 + 10.0 * 2 + 15 / 3) * 2 + -10", 50.0},
+		{"5.0 % 5", 0.0},
+		{"5.0 % 3", 2.0},
+	})
+}
+
 func TestStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`"piece of yarn"`, "piece of yarn"},
@@ -634,6 +647,16 @@ func runEvalTests(t *testing.T, tests []evalTestCase) {
 				t.Errorf("%s (%s)", err, tt.input)
 			}
 
+		case float64:
+			if err := testNumberObject(evaluated, expected); err != nil {
+				t.Errorf("%s (%s)", err, tt.input)
+			}
+
+		case []float64:
+			if err := testNumberArray(evaluated, expected); err != nil {
+				t.Errorf("%s (%s)", err, tt.input)
+			}
+
 		case bool:
 			if err := testBooleanObject(evaluated, expected); err != nil {
 				t.Errorf("%s (%s)", err, tt.input)
@@ -706,6 +729,30 @@ func testIntegerArray(obj object.Object, expected []int64) error {
 	}
 	for i := range expected {
 		if err := testIntegerObject(result.Elements[i], expected[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func testNumberObject(obj object.Object, expected float64) error {
+	result, ok := obj.(*object.Number)
+	if !ok {
+		return fmt.Errorf("object is not Number. got=%T (%+v)", obj, obj)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("Number object has wrong value. got=%g, want=%g", result.Value, expected)
+	}
+	return nil
+}
+
+func testNumberArray(obj object.Object, expected []float64) error {
+	result, ok := obj.(*object.Array)
+	if !ok {
+		return fmt.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+	}
+	for i := range expected {
+		if err := testNumberObject(result.Elements[i], expected[i]); err != nil {
 			return err
 		}
 	}

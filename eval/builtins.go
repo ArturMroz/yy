@@ -225,6 +225,16 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
+	"yelp": {
+		Fn: func(args ...object.Object) object.Object {
+			msg := spaceSeparatedArgs(args...)
+			fmt.Print(msg)
+			return object.NULL
+		},
+	},
+
+	// CONVERT
+
 	// converts an object to string
 	"yarn": {
 		Fn: func(args ...object.Object) object.Object {
@@ -232,6 +242,30 @@ var builtins = map[string]*object.Builtin{
 				return newError("wrong number of args for yarn (got %d, want 1)", len(args))
 			}
 			return &object.String{Value: args[0].String()}
+		},
+	},
+
+	"to_f": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of args for to_f (got %d, want 1)", len(args))
+			}
+			if args[0].Type() != object.INTEGER_OBJ {
+				return newError("argument to to_f must be INTEGER, got %s", args[0].Type())
+			}
+			return &object.Number{Value: float64(args[0].(*object.Integer).Value)}
+		},
+	},
+
+	"to_i": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of args for to_i (got %d, want 1)", len(args))
+			}
+			if args[0].Type() != object.NUMBER_OBJ {
+				return newError("argument to to_i must be NUMBER, got %s", args[0].Type())
+			}
+			return &object.Integer{Value: int64(args[0].(*object.Integer).Value)}
 		},
 	},
 
