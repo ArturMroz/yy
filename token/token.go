@@ -15,6 +15,7 @@ const (
 	// Identifiers + literals
 	IDENT
 	INT
+	NUMBER
 	STRING
 
 	// Operators
@@ -72,6 +73,7 @@ var tokens = [...]string{
 	// Identifiers + literals
 	IDENT:  "IDENT",
 	INT:    "INT",
+	NUMBER: "NUMBER",
 	STRING: "STRING",
 
 	// Operators
@@ -129,7 +131,6 @@ var keywords = map[string]TokenType{
 	"true":  TRUE,
 	"false": FALSE,
 	"null":  NULL,
-	"yo":    YO,
 	"yif":   YIF,
 	"yels":  YELS,
 	"yeet":  YEET,

@@ -16,6 +16,7 @@ type ObjectType int
 
 const (
 	INTEGER_OBJ ObjectType = iota
+	NUMBER_OBJ
 	BOOLEAN_OBJ
 	STRING_OBJ
 	NULL_OBJ
@@ -35,6 +36,7 @@ const (
 
 var objectTypes = [...]string{
 	INTEGER_OBJ: "INTEGER",
+	NUMBER_OBJ:  "NUMBER",
 	BOOLEAN_OBJ: "BOOLEAN",
 	STRING_OBJ:  "STRING",
 	NULL_OBJ:    "NULL",
@@ -69,6 +71,13 @@ type Integer struct {
 
 func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
 func (i *Integer) String() string   { return fmt.Sprintf("%d", i.Value) }
+
+type Number struct {
+	Value float64
+}
+
+func (n *Number) Type() ObjectType { return NUMBER_OBJ }
+func (n *Number) String() string   { return fmt.Sprintf("%g", n.Value) }
 
 type String struct {
 	Value string

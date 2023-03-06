@@ -104,6 +104,15 @@ func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
+type NumberLiteral struct {
+	Token token.Token
+	Value float64
+}
+
+func (nl *NumberLiteral) expressionNode()      {}
+func (nl *NumberLiteral) TokenLiteral() string { return nl.Token.Literal }
+func (nl *NumberLiteral) String() string       { return nl.Token.Literal }
+
 type Boolean struct {
 	Token token.Token
 	Value bool

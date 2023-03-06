@@ -119,6 +119,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
 		token.IDENT:     p.parseIdentifier,
 		token.INT:       p.parseIntegerLiteral,
+		token.NUMBER:    p.parseNumberLiteral,
 		token.STRING:    p.parseStringLiteral,
 		token.MINUS:     p.parsePrefixExpression,
 		token.BANG:      p.parsePrefixExpression,
@@ -273,6 +274,16 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	}
 
 	return &ast.IntegerLiteral{Token: p.curToken, Value: val}
+}
+
+func (p *Parser) parseNumberLiteral() ast.Expression {
+	val, err := strconv.ParseFloat(p.curToken.Literal, 64)
+	if err != nil {
+		p.newError("could not parse %s as float", p.peekToken.Literal)
+		return nil
+	}
+
+	return &ast.NumberLiteral{Token: p.curToken, Value: val}
 }
 
 func (p *Parser) parseStringLiteral() ast.Expression {

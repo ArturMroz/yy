@@ -42,6 +42,18 @@ func TestNextToken(t *testing.T) {
 			},
 		},
 		{
+			`35; 38.23; -4`,
+			[]token.Token{
+				{Type: token.INT, Literal: "35"},
+				{Type: token.SEMICOLON, Literal: ";"},
+				{Type: token.NUMBER, Literal: "38.23"},
+				{Type: token.SEMICOLON, Literal: ";"},
+				{Type: token.MINUS, Literal: "-"},
+				{Type: token.INT, Literal: "4"},
+				{Type: token.EOF, Literal: "EOF"},
+			},
+		},
+		{
 			`{"key": "value"}`, // hash map
 			[]token.Token{
 				{Type: token.LBRACE, Literal: "{"},
