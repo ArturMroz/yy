@@ -107,7 +107,7 @@ header select {
 }
 
 #source {
-    flex: 3.5;
+    flex: 3;
     border-radius: 8px 8px 0px 0px;
     opacity: .92;
 }

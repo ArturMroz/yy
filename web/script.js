@@ -103,6 +103,53 @@ f := fib_gen()
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
 
+    'mandelbrot':
+        `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set. 
+// Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
+// back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
+
+width  := 90
+height := 24 
+
+real_min := -2.0
+real_max := 0.5
+imag_min := -1.1
+imag_max := 1.1
+
+max_iter := 20
+palette  := ".-~:;=!*#$@"
+ratio    := to_f(max_iter) / (len(palette) - 1)
+
+escape_time := \\real, imag {
+    x := 0.0
+    y := 0.0
+
+    yall 0..max_iter {
+        xtemp := x*x - y*y + real
+        y := 2*x*y + imag
+        x := xtemp
+        yif x*x + y*y > 4.0 {
+            yeet yt
+        }
+    }
+
+    max_iter
+}
+
+yall y: 0..height {
+    yall x: 0..width {
+        real := (to_f(x) / width) * (real_max - real_min) + real_min
+        imag := (to_f(y) / height) * (imag_max - imag_min) + imag_min
+
+        iterations := escape_time(real, imag)
+        color_idx  := to_i(iterations / ratio)
+        yelp(palette[color_idx])
+    }
+
+    yap() 
+}
+`,
+
     'sort':
         `// Sorting algorithms of different sorts.
 
@@ -149,6 +196,7 @@ yap("Bubble sorted:", bubble_sort(nums))
 yap("Quick sorted: ", quick_sort(nums))
 yap("Btw, original array is still there, untouched:", nums)
 `,
+
 
     'map et al':
         `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together 
@@ -292,31 +340,7 @@ yall ["racecar", "level", "hello", "world", "1221", "1337"] {
 }
 `,
 
-    'primes':
-        `// If you ever wondered if your favorite number is a prime, wonder no more! YY is here for you to do
-// the heavy lifting and separate the primes from the imposter numbers, in a very inefficient manner.
-
-is_prime := \\n {
-    yif n < 2  { yeet false }
-    yif n == 2 { yeet true }
-
-    yif n % 2 == 0 { yeet false }
-
-    yall 3 .. n/2 + 1 {
-        yif n % yt == 0 { yeet false }
-    }
-
-    true
-}
-
-yall 1..20 {
-    yif is_prime(yt) {
-        yap("number", yt, "is prime")
-    }
-}
-`,
-
-    'bin conv':
+    'bin convert':
         `// Don't you just hate it when you're sorting a box of uncooked spaghetti by length, and sudddenly a
 // stranger comes up to you with a piece of paper covered in ones and zeros? Like, seriously, dude,
 // can't you see I'm busy here? But alas, you know you can't resist the temptation of converting

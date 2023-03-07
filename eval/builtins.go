@@ -265,7 +265,7 @@ var builtins = map[string]*object.Builtin{
 			if args[0].Type() != object.NUMBER_OBJ {
 				return newError("argument to to_i must be NUMBER, got %s", args[0].Type())
 			}
-			return &object.Integer{Value: int64(args[0].(*object.Integer).Value)}
+			return &object.Integer{Value: int64(args[0].(*object.Number).Value)}
 		},
 	},
 
