@@ -251,10 +251,39 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
-	"to_f": {
+	"int": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for to_f (got %d, want 1)", len(args))
+				return newError("wrong number of args for int (got %d, want 1)", len(args))
+			}
+
+			switch arg := args[0].(type) {
+			case *object.Integer:
+				return arg
+			case *object.Number:
+				return &object.Integer{Value: int64(arg.Value)}
+			case *object.Boolean:
+				v := 0
+				if arg.Value {
+					v = 1
+				}
+				return &object.Integer{Value: int64(v)}
+			case *object.String:
+				val, err := strconv.ParseInt(arg.Value, 0, 64)
+				if err != nil {
+					return newError("could not parse %s as integer", arg.Value)
+				}
+				return &object.Integer{Value: val}
+			default:
+				return newError("unsupported argument type for int, got %s", arg.Type())
+			}
+		},
+	},
+
+	"float": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of args for float (got %d, want 1)", len(args))
 			}
 			switch arg := args[0].(type) {
 			case *object.Number:
@@ -267,30 +296,14 @@ var builtins = map[string]*object.Builtin{
 					return newError("could not parse %s as float", arg.Value)
 				}
 				return &object.Number{Value: val}
-			default:
-				return newError("unsupported argument type for to_f, got %s", arg.Type())
-			}
-		},
-	},
-
-	"to_i": {
-		Fn: func(args ...object.Object) object.Object {
-			if len(args) != 1 {
-				return newError("wrong number of args for to_i (got %d, want 1)", len(args))
-			}
-			switch arg := args[0].(type) {
-			case *object.Integer:
-				return arg
-			case *object.Number:
-				return &object.Integer{Value: int64(arg.Value)}
-			case *object.String:
-				val, err := strconv.ParseInt(arg.Value, 0, 64)
-				if err != nil {
-					return newError("could not parse %s as integer", arg.Value)
+			case *object.Boolean:
+				v := 0
+				if arg.Value {
+					v = 1
 				}
-				return &object.Integer{Value: val}
+				return &object.Number{Value: float64(v)}
 			default:
-				return newError("unsupported argument type for to_i, got %s", arg.Type())
+				return newError("unsupported argument type for float, got %s", arg.Type())
 			}
 		},
 	},
