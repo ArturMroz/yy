@@ -13,12 +13,16 @@ const (
 	EOF
 
 	// Identifiers + literals
+
 	IDENT
 	INT
 	NUMBER
 	STRING
 
 	// Operators
+
+	OR
+	AND
 	ASSIGN
 	PLUS
 	MINUS
@@ -42,6 +46,7 @@ const (
 	HASHMAP
 
 	// Delimiters
+
 	COMMA
 	SEMICOLON
 	COLON
@@ -53,10 +58,10 @@ const (
 	RBRACKET
 
 	// Keywords
+
 	TRUE
 	FALSE
 	NULL
-	YO
 	YIF
 	YELS
 	YEET
@@ -71,12 +76,16 @@ var tokens = [...]string{
 	EOF:     "EOF",
 
 	// Identifiers + literals
+
 	IDENT:  "IDENT",
 	INT:    "INT",
 	NUMBER: "NUMBER",
 	STRING: "STRING",
 
 	// Operators
+
+	OR:         "||",
+	AND:        "&&",
 	ASSIGN:     "=",
 	PLUS:       "+",
 	MINUS:      "-",
@@ -100,6 +109,7 @@ var tokens = [...]string{
 	HASHMAP:    "%{",
 
 	// Delimiters
+
 	COMMA:     ",",
 	SEMICOLON: ";",
 	COLON:     ":",
@@ -111,10 +121,10 @@ var tokens = [...]string{
 	RBRACKET:  "]",
 
 	// Keywords
+
 	TRUE:  "TRUE",
 	FALSE: "FALSE",
 	NULL:  "NULL",
-	YO:    "YO",
 	YIF:   "YIF",
 	YELS:  "YELS",
 	YEET:  "YEET",

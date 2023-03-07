@@ -148,6 +148,44 @@ func TestEvalBooleanExpression(t *testing.T) {
 	})
 }
 
+func TestEvalAndExpression(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"true && false", false},
+		{"true && null", nil},
+		{"true && 8", 8},
+		{"true && 8 && 4", 4},
+		{"true && 8*2 && 4+5", 9},
+		{"a := false && 8; a", false},
+		{"a := true && 8; a", 8},
+		{"a := 1; false && (a = 8) && 5", false},
+		{"a := 1; false && (a = 8) && 5; a", 1},
+	})
+}
+
+func TestEvalOrExpression(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"true || false", true},
+		{"true || null", true},
+		{"false || 8", 8},
+		{"null || 8", 8},
+		{"false || 8+2 || 4*3", 10},
+		{"a := 1; false || (a = 8) || 5", 8},
+		{"a := 1; false || (a = 8) || 5; a", 8},
+		{"a := false || 8; a", 8},
+		{"a := true || 8; a", true},
+	})
+}
+
+func TestEvalOrAndExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"3 || 8 && 5", 3},
+		{"false || 8 && 5", 5},
+		{"false || 8 && 5 || 7", 5},
+		{"(false || 8) && (9 || 7)", 9},
+		{"(false || 8) && (false || 7)", 7},
+	})
+}
+
 func TestBangOperator(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"!true", false},

@@ -9,28 +9,22 @@ imag_max := 1.1
 palette  := ".-~:;=!*#$@"
 max_iter := len(palette) - 1
 
-mandelbrot := \real imag {
-    x := y := 0.0
+yall py: 0..height {
+    yall px: 0..width {
+        real := (float(px) / width)  * (real_max - real_min) + real_min
+        imag := (float(py) / height) * (imag_max - imag_min) + imag_min
 
-    yall 0..max_iter {
-        xtemp := x*x - y*y + real
-        y := 2*x*y + imag
-        x := xtemp
-        yif x*x + y*y > 4 {
-            yeet yt
+        x := y := 0.0
+        
+        i := 0
+        yet x*x + y*y < 4.0 && i < max_iter {
+            tmp := x*x - y*y + real
+            y   = 2*x*y + imag
+            x   = tmp
+            i += 1
         }
-    }
 
-    max_iter
-}
-
-yall y: 0..height {
-    yall x: 0..width {
-        real := (float(x) / width)  * (real_max - real_min) + real_min
-        imag := (float(y) / height) * (imag_max - imag_min) + imag_min
-
-        iterations := mandelbrot(real, imag)
-        yelp(palette[iterations])
+        yelp(palette[i])
     }
 
     yap() 

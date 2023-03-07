@@ -245,6 +245,30 @@ func (ie *InfixExpression) String() string {
 	return fmt.Sprintf("(%s %s %s)", ie.Left.String(), ie.Operator, ie.Right.String())
 }
 
+type AndExpression struct {
+	Token token.Token
+	Left  Expression
+	Right Expression
+}
+
+func (ae *AndExpression) expressionNode()      {}
+func (ae *AndExpression) TokenLiteral() string { return ae.Token.Literal }
+func (ae *AndExpression) String() string {
+	return fmt.Sprintf("(%s && %s)", ae.Left.String(), ae.Right.String())
+}
+
+type OrExpression struct {
+	Token token.Token
+	Left  Expression
+	Right Expression
+}
+
+func (ae *OrExpression) expressionNode()      {}
+func (oe *OrExpression) TokenLiteral() string { return oe.Token.Literal }
+func (oe *OrExpression) String() string {
+	return fmt.Sprintf("(%s || %s)", oe.Left.String(), oe.Right.String())
+}
+
 type YifExpression struct {
 	Token       token.Token
 	Condition   Expression

@@ -84,6 +84,40 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 		return evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
 
+	case *ast.AndExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		if !isTruthy(left) {
+			return left
+		}
+
+		right := Eval(node.Right, env)
+		if isError(right) {
+			return right
+		}
+
+		return right
+
+	case *ast.OrExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		if isTruthy(left) {
+			return left
+		}
+
+		right := Eval(node.Right, env)
+		if isError(right) {
+			return right
+		}
+
+		return right
+
 	case *ast.YifExpression:
 		condition := Eval(node.Condition, env)
 		if isError(condition) {
@@ -171,6 +205,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 
 		return result
+
+	case *ast.Null:
+		return object.NULL
 
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -291,9 +328,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		default:
 			return newError("index operator not supported: %s", idx.Type())
 		}
-
-	case *ast.Null:
-		return object.NULL
 
 	case nil:
 		return newError("unexpected error: something most likely went wrong at the parsing stage")

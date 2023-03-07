@@ -78,6 +78,18 @@ func (l *Lexer) NextToken() token.Token {
 			tok = l.newToken(token.RANGE)
 		}
 
+	case '&':
+		if l.peek() == '&' {
+			l.advance()
+			tok = l.newToken(token.AND)
+		}
+
+	case '|':
+		if l.peek() == '|' {
+			l.advance()
+			tok = l.newToken(token.OR)
+		}
+
 	case '@':
 		if l.peek() == '\\' {
 			l.advance()

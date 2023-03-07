@@ -73,6 +73,8 @@ type Precedence int
 const (
 	_ Precedence = iota
 	LOWEST
+	OR          // ||
+	AND         // &&
 	ASSIGNMENT  // = :=
 	EQUALS      // == !=
 	LESSGREATER // > <
@@ -85,6 +87,8 @@ const (
 )
 
 var precedences = map[token.TokenType]Precedence{
+	token.OR:         OR,
+	token.AND:        AND,
 	token.ASSIGN:     ASSIGNMENT,
 	token.WALRUS:     ASSIGNMENT,
 	token.ADD_ASSIGN: ASSIGNMENT,
@@ -138,6 +142,8 @@ func New(l *lexer.Lexer) *Parser {
 	}
 
 	p.infixParseFns = map[token.TokenType]infixParseFn{
+		token.OR:         p.parseOrExpression,
+		token.AND:        p.parseAndExpression,
 		token.PLUS:       p.parseInfixExpression,
 		token.MINUS:      p.parseInfixExpression,
 		token.ASTERISK:   p.parseInfixExpression,
@@ -552,6 +558,30 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	precedence := getPrecedence(p.curToken)
 	p.advance()
 	expr.Right = p.parseExpression(precedence)
+
+	return expr
+}
+
+func (p *Parser) parseAndExpression(left ast.Expression) ast.Expression {
+	expr := &ast.AndExpression{
+		Token: p.curToken,
+		Left:  left,
+	}
+
+	p.advance()
+	expr.Right = p.parseExpression(AND)
+
+	return expr
+}
+
+func (p *Parser) parseOrExpression(left ast.Expression) ast.Expression {
+	expr := &ast.OrExpression{
+		Token: p.curToken,
+		Left:  left,
+	}
+
+	p.advance()
+	expr.Right = p.parseExpression(OR)
 
 	return expr
 }
