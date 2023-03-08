@@ -40,15 +40,10 @@ func runFile(f string) {
 	p := parser.New(l)
 	program := p.ParseProgram()
 
-	if len(p.Errors()) == 1 {
-		fmt.Println("parser error: " + p.Errors()[0])
-		os.Exit(1)
-	} else if len(p.Errors()) > 1 {
-		errMsg := "parser errors:\n"
-		for _, err := range p.Errors() {
-			errMsg += err + "\n"
+	if len(p.Errors()) > 0 {
+		for _, errMsg := range p.Errors() {
+			fmt.Println(errMsg)
 		}
-		fmt.Println(errMsg)
 		os.Exit(1)
 	}
 

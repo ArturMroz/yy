@@ -4,6 +4,7 @@ type Token struct {
 	Type    TokenType
 	Literal string
 	Line    int
+	Offset  int
 }
 
 type TokenType int

@@ -52,19 +52,54 @@ func (p *Parser) eat(t token.TokenType, errMsg string) bool {
 	return false
 }
 
-func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("[line %d] %s (expected '%s', found '%s')", p.curToken.Line, errMsg, t, p.peekToken.Literal)
-	p.errors = append(p.errors, msg)
+func (p *Parser) prettyError(tok token.Token, errMsg string) string {
+	src := p.l.Input
+	line := 1
+	col := 0
+	lastNewLineStart := 0
+
+	offset := tok.Offset - len(tok.Literal) + 1
+
+	i := 0
+	for ; i < offset; i++ {
+		if src[i] == '\n' {
+			line++
+			col = 0
+			lastNewLineStart = i
+		} else {
+			col++
+		}
+	}
+
+	if lastNewLineStart > 0 {
+		lastNewLineStart++
+	}
+
+	lastNewLineEnd := i
+	for src[lastNewLineEnd] != '\n' && src[lastNewLineEnd] != 0 {
+		lastNewLineEnd++
+	}
+
+	// fmt.Println("line", line, "col", col, "offset", offset, "start", lastNewLineStart, "end", lastNewLineEnd)
+	// fmt.Println("curToken", tok)
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("error: %s\n\n", errMsg))
+	b.WriteString(fmt.Sprintf("%3d | %s\n", line, src[lastNewLineStart:lastNewLineEnd]))
+	b.WriteString(fmt.Sprintf("      %s^\n", strings.Repeat(" ", col)))
+
+	return b.String()
 }
 
-func (p *Parser) noPrefixParseFnError() {
-	msg := fmt.Sprintf("[line %d] unexpected token '%s' near '%s'", p.curToken.Line, p.curToken.Literal, p.peekToken.Literal)
+func (p *Parser) peekError(t token.TokenType, errMsg string) {
+	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
+	msg = p.prettyError(p.peekToken, msg)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) newError(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
-	msg = fmt.Sprintf("[line %d] %s", p.curToken.Line, msg)
+	msg = p.prettyError(p.curToken, msg)
 	p.errors = append(p.errors, msg)
 }
 
@@ -238,7 +273,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
-		p.noPrefixParseFnError()
+		p.newError("unexpected token '%s'", p.curToken.Literal)
 		return nil
 	}
 
@@ -590,7 +625,7 @@ func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
 		// TODO support assignment to index expr ie array[2] = 5;
-		p.newError("can only assign to an Identifier (got '%s')", maybeIdent)
+		p.newError("can only assign to an Identifier (got '%s')", maybeIdent.TokenLiteral())
 		return nil
 	}
 
@@ -671,5 +706,3 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 
 	return callExpr
 }
-
-// utils

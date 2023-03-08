@@ -3,7 +3,7 @@ package lexer
 import "yy/token"
 
 type Lexer struct {
-	input        string
+	Input        string
 	position     int  // current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
 	line         int  // current line
@@ -11,7 +11,7 @@ type Lexer struct {
 }
 
 func New(input string) *Lexer {
-	l := &Lexer{input: input, line: 1}
+	l := &Lexer{Input: input, line: 1}
 	l.advance()
 	return l
 }
@@ -120,11 +120,11 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) newToken(tokenType token.TokenType) token.Token {
-	return token.Token{Type: tokenType, Literal: tokenType.String(), Line: l.line}
+	return l.newTokenWithLiteral(tokenType, tokenType.String())
 }
 
 func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) token.Token {
-	return token.Token{Type: tokenType, Literal: literal, Line: l.line}
+	return token.Token{Type: tokenType, Literal: literal, Line: l.line, Offset: l.position}
 }
 
 func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
@@ -136,10 +136,10 @@ func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
 }
 
 func (l *Lexer) advance() {
-	if l.readPosition >= len(l.input) {
+	if l.readPosition >= len(l.Input) {
 		l.ch = 0
 	} else {
-		l.ch = l.input[l.readPosition]
+		l.ch = l.Input[l.readPosition]
 	}
 
 	l.position = l.readPosition
@@ -147,10 +147,10 @@ func (l *Lexer) advance() {
 }
 
 func (l *Lexer) peek() byte {
-	if l.readPosition >= len(l.input) {
+	if l.readPosition >= len(l.Input) {
 		return 0
 	}
-	return l.input[l.readPosition]
+	return l.Input[l.readPosition]
 }
 
 func (l *Lexer) identifier() token.Token {
@@ -159,7 +159,7 @@ func (l *Lexer) identifier() token.Token {
 		l.advance()
 	}
 
-	ident := l.input[start:l.position]
+	ident := l.Input[start:l.position]
 	return l.newTokenWithLiteral(token.LookupIdent(ident), ident)
 }
 
@@ -175,9 +175,9 @@ func (l *Lexer) number() token.Token {
 			l.advance()
 		}
 
-		return l.newTokenWithLiteral(token.NUMBER, l.input[start:l.position])
+		return l.newTokenWithLiteral(token.NUMBER, l.Input[start:l.position])
 	} else {
-		return l.newTokenWithLiteral(token.INT, l.input[start:l.position])
+		return l.newTokenWithLiteral(token.INT, l.Input[start:l.position])
 	}
 }
 
@@ -192,7 +192,7 @@ func (l *Lexer) readString() string {
 		l.advance()
 	}
 	// TODO handle unterminated strings
-	return l.input[start:l.position]
+	return l.Input[start:l.position]
 }
 
 func (l *Lexer) skipWhitespace() {
