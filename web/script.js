@@ -118,7 +118,7 @@ imag_max := 1.1
 
 max_iter := 20
 palette  := ".-~:;=!*#$@"
-ratio    := to_f(max_iter) / (len(palette) - 1)
+ratio    := float(max_iter) / (len(palette) - 1)
 
 escape_time := \\real, imag {
     x := 0.0
@@ -138,15 +138,81 @@ escape_time := \\real, imag {
 
 yall y: 0..height {
     yall x: 0..width {
-        real := (to_f(x) / width) * (real_max - real_min) + real_min
-        imag := (to_f(y) / height) * (imag_max - imag_min) + imag_min
+        real := (float(x) / width) * (real_max - real_min) + real_min
+        imag := (float(y) / height) * (imag_max - imag_min) + imag_min
 
         iterations := escape_time(real, imag)
-        color_idx  := to_i(iterations / ratio)
+        color_idx  := int(iterations / ratio)
         yelp(palette[color_idx])
     }
 
     yap() 
+}
+`,
+
+    'brainfuck':
+        `// An interpreter for the Brainfuck programming language, written in the YY programming language.
+// Does your head hurt yet, or should we go deeper? 
+// *BWOOOONNNNGNGGGG* <- Inception's horn sound effect
+// -_-                <- DiCaprio's face
+
+// This is an actual "Hello, World!" in Brainfuck
+hello_world := "
+++++++++[>++++[>++>+++>+++>+<<
+<<-]>+>+>->>+[<]<-]>>.>---.+++
+++++..+++.>>.<-.<.+++.------.-
+-------.>>+.>++.
+"
+
+// Our very own Brainfuck VM
+ip     := 0 // instruction pointer
+dp     := 0 // data pointer
+memory := []
+
+// initialise memory
+yall 0..100 { memory = push(memory, 0) }
+
+code := hello_world
+
+yet ip < len(code) {
+    ins := code[ip]
+    yif ins == "+" {
+        memory[dp] += 1
+    } yels yif ins == "-" {
+        memory[dp] -= 1
+    } yels yif ins == ">" {
+        dp += 1
+    } yels yif ins == "<" {
+        dp -= 1
+    } yels yif ins == "." {
+        yelp(chr(memory[dp]))
+    } yels yif ins == "[" {
+        yif memory[dp] == 0 {
+            depth := 1
+            yet depth != 0 {
+                ip += 1
+                yif code[ip] == "[" {
+                    depth += 1
+                } yels yif code[ip] == "]" {
+                    depth -= 1
+                }
+            }
+        }
+    } yels yif ins == "]" { 
+        yif memory[dp] != 0 {
+            depth := 1
+            yet depth != 0 {
+                ip -= 1
+                yif code[ip] == "[" {
+                    depth -= 1
+                } yels yif code[ip] == "]" {
+                    depth += 1
+                }
+            }
+        }
+    }
+
+    ip += 1
 }
 `,
 

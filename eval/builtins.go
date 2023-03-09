@@ -251,6 +251,21 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
+	"chr": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of args for chr (got %d, want 1)", len(args))
+			}
+
+			switch arg := args[0].(type) {
+			case *object.Integer:
+				return &object.String{Value: string(rune(arg.Value))}
+			default:
+				return newError("unsupported argument type for chr, got %s", arg.Type())
+			}
+		},
+	},
+
 	"int": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
