@@ -26,12 +26,13 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.CallExpression:
 		return evalCallExpr(node, env)
 
-	case *ast.FunctionLiteral:
-		return &object.Function{
-			Parameters: node.Parameters,
-			Body:       node.Body,
-			Env:        env,
+	case *ast.DeclareExpression:
+		val := Eval(node.Value, env)
+		if isError(val) {
+			return val
 		}
+		env.Set(node.Name.Value, val)
+		return val
 
 	case *ast.AssignExpression:
 		val := Eval(node.Value, env)
@@ -39,18 +40,106 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return val
 		}
 
-		if node.IsInit {
-			env.Set(node.Name.Value, val)
-			return val
+		switch node := node.Left.(type) {
+		case *ast.Identifier:
+			if ok := env.Update(node.Value, val); ok {
+				return val
+			}
+			if env.IsYoloMode() {
+				env.Set(node.Value, val)
+				return val
+			}
+			return newError("identifier not found: " + node.Value)
+
+		case *ast.IndexExpression:
+			left := Eval(node.Left, env)
+			if isError(left) {
+				return left
+			}
+			idx := Eval(node.Index, env)
+			if isError(idx) {
+				return idx
+			}
+
+			switch {
+			case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
+				i := idx.(*object.Integer).Value
+				arr := left.(*object.Array)
+				if i < 0 || i >= int64(len(arr.Elements)) {
+					return newError("assign out of bounds for array %s", node.Left.(*ast.Identifier).Value)
+				}
+				arr.Elements[i] = val
+				return val
+
+			case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
+				i := idx.(*object.Integer).Value
+				str := left.(*object.String)
+				if i < 0 || i >= int64(len(str.Value)) {
+					return newError("assign out of bounds for string %s", node.Left.(*ast.Identifier).Value)
+				}
+				str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
+				return val
+
+			case left.Type() == object.HASHMAP_OBJ:
+				hashmap := left.(*object.Hashmap)
+				key, ok := idx.(object.Hashable)
+				if !ok {
+					return newError("key not hashable: %s", idx.Type())
+				}
+
+				hashmap.Pairs[key.HashKey()] = object.HashPair{Key: idx, Value: val}
+				return val
+
+			default:
+				return newError("index operator not supported: %s", idx.Type())
+			}
 		}
-		if ok := env.Update(node.Name.Value, val); ok {
-			return val
+
+		return newError("identifier not found: " + node.Left.String())
+
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
 		}
-		if env.IsYoloMode() {
-			env.Set(node.Name.Value, val)
-			return val
+		idx := Eval(node.Index, env)
+		if isError(idx) {
+			return idx
 		}
-		return newError("identifier not found: " + node.Name.Value)
+
+		switch {
+		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			arr := left.(*object.Array)
+			if i < 0 || i >= int64(len(arr.Elements)) {
+				return object.NULL
+			}
+			return arr.Elements[i]
+
+		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			str := left.(*object.String)
+			if i < 0 || i >= int64(len(str.Value)) {
+				return object.NULL
+			}
+			return &object.String{Value: string(str.Value[i])}
+
+		case left.Type() == object.HASHMAP_OBJ:
+			hashmap := left.(*object.Hashmap)
+			key, ok := idx.(object.Hashable)
+			if !ok {
+				return newError("key not hashable: %s", idx.Type())
+			}
+
+			pair, ok := hashmap.Pairs[key.HashKey()]
+			if !ok {
+				return object.NULL
+			}
+			return pair.Value
+
+		default:
+			return newError("index operator not supported: %s", idx.Type())
+		}
 
 	case *ast.Identifier:
 		if val, ok := env.Get(node.Value); ok {
@@ -84,6 +173,47 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 		return evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
 
+	case *ast.YoloExpression:
+		extendedEnv := object.NewEnclosedEnvironment(env)
+		env.SetYoloMode()
+		return Eval(node.Body, extendedEnv)
+
+	// CONTROL FLOW
+
+	case *ast.AndExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		if !isTruthy(left) {
+			return left
+		}
+
+		right := Eval(node.Right, env)
+		if isError(right) {
+			return right
+		}
+
+		return right
+
+	case *ast.OrExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		if isTruthy(left) {
+			return left
+		}
+
+		right := Eval(node.Right, env)
+		if isError(right) {
+			return right
+		}
+
+		return right
+
 	case *ast.YifExpression:
 		condition := Eval(node.Condition, env)
 		if isError(condition) {
@@ -97,11 +227,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		} else {
 			return object.NULL
 		}
-
-	case *ast.YoloExpression:
-		extendedEnv := object.NewEnclosedEnvironment(env)
-		env.SetYoloMode()
-		return Eval(node.Body, extendedEnv)
 
 	case *ast.YetExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
@@ -172,6 +297,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 		return result
 
+	// LITERALS
+
+	case *ast.NullLiteral:
+		return object.NULL
+
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 
@@ -194,8 +324,15 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 		return &object.String{Value: value}
 
-	case *ast.Boolean:
+	case *ast.BooleanLiteral:
 		return toYeetBool(node.Value)
+
+	case *ast.FunctionLiteral:
+		return &object.Function{
+			Parameters: node.Parameters,
+			Body:       node.Body,
+			Env:        env,
+		}
 
 	case *ast.RangeLiteral:
 		start := Eval(node.Start, env)
@@ -247,53 +384,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			hashmap.Pairs[hashKey.HashKey()] = pair
 		}
 		return hashmap
-
-	case *ast.IndexExpression:
-		left := Eval(node.Left, env)
-		if isError(left) {
-			return left
-		}
-		idx := Eval(node.Index, env)
-		if isError(idx) {
-			return idx
-		}
-
-		switch {
-		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
-			i := idx.(*object.Integer).Value
-			arr := left.(*object.Array)
-			if i < 0 || i >= int64(len(arr.Elements)) {
-				return object.NULL
-			}
-			return arr.Elements[i]
-
-		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
-			i := idx.(*object.Integer).Value
-			str := left.(*object.String)
-			if i < 0 || i >= int64(len(str.Value)) {
-				return object.NULL
-			}
-			return &object.String{Value: string(str.Value[i])}
-
-		case left.Type() == object.HASHMAP_OBJ:
-			hashmap := left.(*object.Hashmap)
-			key, ok := idx.(object.Hashable)
-			if !ok {
-				return newError("key not hashable: %s", idx.Type())
-			}
-
-			pair, ok := hashmap.Pairs[key.HashKey()]
-			if !ok {
-				return object.NULL
-			}
-			return pair.Value
-
-		default:
-			return newError("index operator not supported: %s", idx.Type())
-		}
-
-	case *ast.Null:
-		return object.NULL
 
 	case nil:
 		return newError("unexpected error: something most likely went wrong at the parsing stage")

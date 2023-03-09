@@ -148,6 +148,44 @@ func TestEvalBooleanExpression(t *testing.T) {
 	})
 }
 
+func TestEvalAndExpression(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"true && false", false},
+		{"true && null", nil},
+		{"true && 8", 8},
+		{"true && 8 && 4", 4},
+		{"true && 8*2 && 4+5", 9},
+		{"a := false && 8; a", false},
+		{"a := true && 8; a", 8},
+		{"a := 1; false && (a = 8) && 5", false},
+		{"a := 1; false && (a = 8) && 5; a", 1},
+	})
+}
+
+func TestEvalOrExpression(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"true || false", true},
+		{"true || null", true},
+		{"false || 8", 8},
+		{"null || 8", 8},
+		{"false || 8+2 || 4*3", 10},
+		{"a := 1; false || (a = 8) || 5", 8},
+		{"a := 1; false || (a = 8) || 5; a", 8},
+		{"a := false || 8; a", 8},
+		{"a := true || 8; a", true},
+	})
+}
+
+func TestEvalOrAndExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"3 || 8 && 5", 3},
+		{"false || 8 && 5", 5},
+		{"false || 8 && 5 || 7", 5},
+		{"(false || 8) && (9 || 7)", 9},
+		{"(false || 8) && (false || 7)", 7},
+	})
+}
+
 func TestBangOperator(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"!true", false},
@@ -365,7 +403,7 @@ func TestRangeLiterals(t *testing.T) {
 	})
 }
 
-func TestAssignExpressions(t *testing.T) {
+func TestDeclareExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"a := 8", 8},
 		{"a := 8; a", 8},
@@ -379,7 +417,11 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := 8; a = 15", 15},
 		{"a := 8; b := 2; a = b", 2},
 		{"a := b := c := 8; a + b + c", 24},
+	})
+}
 
+func TestAssignExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
 		{"a := 8; a += 2; a", 10},
 		{"a := 8; a -= 2; a", 6},
 		{"a := 8; a *= 2; a", 16},
@@ -388,6 +430,11 @@ func TestAssignExpressions(t *testing.T) {
 
 		{"a = 8", errmsg{"identifier not found: a"}},
 		{"a += 8", errmsg{"identifier not found: a"}},
+
+		// TODO add more tests
+		{"arr := [1, 2 3]; arr[1] = 69; arr", []int64{1, 69, 3}},
+		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
+		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
 	})
 }
 

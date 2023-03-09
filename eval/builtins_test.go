@@ -30,16 +30,36 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`str := "howdy"; x := yoink(str, 1); str`, "hwdy"},
 		{`yoink(69)`, errmsg{"cannot yoink from INTEGER"}},
 
+		{`swap([1, 2, 3, 4], 0, 2)`, []int64{3, 2, 1, 4}},
+		{`a := swap([1, 2, 3, 4], 1, 3); a`, []int64{1, 4, 3, 2}},
+		{`a := [1, 2, 3, 4]; swap(a, 1, 3)`, []int64{1, 4, 3, 2}},
+		{`a := [1, 2, 3, 4]; swap(a, 1, 69)`, []int64{1, 2, 3, 4}},
+		{`a := [1, 2, 3, 4]; swap(a, 1, -3)`, []int64{1, 2, 3, 4}},
+	})
+}
+
+func TestBuiltinCastingFunctions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
 		{`yarn(5)`, "5"},
 		{`yarn(true)`, "true"},
 		{`yarn([1, 2, 3])`, "[1, 2, 3]"},
 		{`yarn(0..2)`, "0..2"},
 		{`yarn("test")`, "test"},
 
-		{`swap([1, 2, 3, 4], 0, 2)`, []int64{3, 2, 1, 4}},
-		{`a := swap([1, 2, 3, 4], 1, 3); a`, []int64{1, 4, 3, 2}},
-		{`a := [1, 2, 3, 4]; swap(a, 1, 3)`, []int64{1, 4, 3, 2}},
-		{`a := [1, 2, 3, 4]; swap(a, 1, 69)`, []int64{1, 2, 3, 4}},
-		{`a := [1, 2, 3, 4]; swap(a, 1, -3)`, []int64{1, 2, 3, 4}},
+		{`int(5)`, 5},
+		{`int(5.0)`, 5},
+		{`int(true)`, 1},
+		{`int(false)`, 0},
+		{`int("5")`, 5},
+		{`int(0..2)`, errmsg{"unsupported argument type for int, got RANGE"}},
+		{`int([1, 2, 3])`, errmsg{"unsupported argument type for int, got ARRAY"}},
+
+		{`float(5)`, 5.0},
+		{`float(5.0)`, 5.0},
+		{`float(true)`, 1.0},
+		{`float(false)`, 0.0},
+		{`float("5")`, 5.0},
+		{`float(0..2)`, errmsg{"unsupported argument type for float, got RANGE"}},
+		{`float([1, 2, 3])`, errmsg{"unsupported argument type for float, got ARRAY"}},
 	})
 }

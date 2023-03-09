@@ -3,6 +3,7 @@ package eval
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 
 	"yy/object"
@@ -168,10 +169,16 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
+	// RANDOM
+
 	"yahtzee": {
 		Fn: func(args ...object.Object) object.Object {
-			if len(args) != 1 {
-				return newError("wrong number of args for yahtzee (got %d, want 1)", len(args))
+			if len(args) != 0 && len(args) != 1 {
+				return newError("wrong number of args for yahtzee (got %d, want 0 or 1)", len(args))
+			}
+
+			if len(args) == 0 {
+				return &object.Number{Value: rand.Float64()}
 			}
 
 			switch arg := args[0].(type) {
@@ -235,7 +242,6 @@ var builtins = map[string]*object.Builtin{
 
 	// CONVERT
 
-	// converts an object to string
 	"yarn": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
@@ -245,27 +251,60 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
-	"to_f": {
+	"int": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for to_f (got %d, want 1)", len(args))
+				return newError("wrong number of args for int (got %d, want 1)", len(args))
 			}
-			if args[0].Type() != object.INTEGER_OBJ {
-				return newError("argument to to_f must be INTEGER, got %s", args[0].Type())
+
+			switch arg := args[0].(type) {
+			case *object.Integer:
+				return arg
+			case *object.Number:
+				return &object.Integer{Value: int64(arg.Value)}
+			case *object.Boolean:
+				v := 0
+				if arg.Value {
+					v = 1
+				}
+				return &object.Integer{Value: int64(v)}
+			case *object.String:
+				val, err := strconv.ParseInt(arg.Value, 0, 64)
+				if err != nil {
+					return newError("could not parse %s as integer", arg.Value)
+				}
+				return &object.Integer{Value: val}
+			default:
+				return newError("unsupported argument type for int, got %s", arg.Type())
 			}
-			return &object.Number{Value: float64(args[0].(*object.Integer).Value)}
 		},
 	},
 
-	"to_i": {
+	"float": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for to_i (got %d, want 1)", len(args))
+				return newError("wrong number of args for float (got %d, want 1)", len(args))
 			}
-			if args[0].Type() != object.NUMBER_OBJ {
-				return newError("argument to to_i must be NUMBER, got %s", args[0].Type())
+			switch arg := args[0].(type) {
+			case *object.Number:
+				return arg
+			case *object.Integer:
+				return &object.Number{Value: float64(arg.Value)}
+			case *object.String:
+				val, err := strconv.ParseFloat(arg.Value, 64)
+				if err != nil {
+					return newError("could not parse %s as float", arg.Value)
+				}
+				return &object.Number{Value: val}
+			case *object.Boolean:
+				v := 0
+				if arg.Value {
+					v = 1
+				}
+				return &object.Number{Value: float64(v)}
+			default:
+				return newError("unsupported argument type for float, got %s", arg.Type())
 			}
-			return &object.Integer{Value: int64(args[0].(*object.Number).Value)}
 		},
 	},
 

@@ -44,7 +44,7 @@ func Modify(node Node, modifier ModifierFunc) Node {
 		node.Iterable, _ = Modify(node.Iterable, modifier).(Expression)
 		node.Body, _ = Modify(node.Body, modifier).(*BlockStatement)
 
-	case *AssignExpression:
+	case *DeclareExpression:
 		node.Value, _ = Modify(node.Value, modifier).(Expression)
 
 	case *YeetStatement:

@@ -4,6 +4,7 @@ type Token struct {
 	Type    TokenType
 	Literal string
 	Line    int
+	Offset  int
 }
 
 type TokenType int
@@ -13,13 +14,14 @@ const (
 	EOF
 
 	// Identifiers + literals
+
 	IDENT
 	INT
 	NUMBER
 	STRING
 
 	// Operators
-	ASSIGN
+
 	PLUS
 	MINUS
 	BANG
@@ -28,20 +30,28 @@ const (
 	PERCENT
 	LT
 	GT
-	EQ
-	NOT_EQ
-	WALRUS
-	RANGE
+	DOT
+	AT
+	AMPERSAND
+	PIPE
 	BACKSLASH
-	MACRO
+	ASSIGN
 	ADD_ASSIGN
 	SUB_ASSIGN
 	MUL_ASSIGN
 	DIV_ASSIGN
 	MOD_ASSIGN
+	OR
+	AND
+	EQ
+	NOT_EQ
+	WALRUS
+	RANGE
+	MACRO
 	HASHMAP
 
 	// Delimiters
+
 	COMMA
 	SEMICOLON
 	COLON
@@ -53,10 +63,10 @@ const (
 	RBRACKET
 
 	// Keywords
+
 	TRUE
 	FALSE
 	NULL
-	YO
 	YIF
 	YELS
 	YEET
@@ -71,35 +81,45 @@ var tokens = [...]string{
 	EOF:     "EOF",
 
 	// Identifiers + literals
+
 	IDENT:  "IDENT",
 	INT:    "INT",
 	NUMBER: "NUMBER",
 	STRING: "STRING",
 
 	// Operators
+
+	PLUS:      "+",
+	MINUS:     "-",
+	BANG:      "!",
+	ASTERISK:  "*",
+	SLASH:     "/",
+	PERCENT:   "%",
+	LT:        "<",
+	GT:        ">",
+	DOT:       ".",
+	AT:        "@",
+	AMPERSAND: "&",
+	PIPE:      "|",
+	BACKSLASH: `\`,
+
 	ASSIGN:     "=",
-	PLUS:       "+",
-	MINUS:      "-",
-	BANG:       "!",
-	ASTERISK:   "*",
-	SLASH:      "/",
-	PERCENT:    "%",
-	LT:         "<",
-	GT:         ">",
-	EQ:         "==",
-	NOT_EQ:     "!=",
-	WALRUS:     ":=",
-	RANGE:      "..",
-	BACKSLASH:  `\`,
-	MACRO:      `@\`,
 	ADD_ASSIGN: "+=",
 	SUB_ASSIGN: "-=",
 	MUL_ASSIGN: "*=",
 	DIV_ASSIGN: "/=",
 	MOD_ASSIGN: "%=",
+	OR:         "||",
+	AND:        "&&",
+	EQ:         "==",
+	NOT_EQ:     "!=",
+	WALRUS:     ":=",
+	RANGE:      "..",
+	MACRO:      `@\`,
 	HASHMAP:    "%{",
 
 	// Delimiters
+
 	COMMA:     ",",
 	SEMICOLON: ";",
 	COLON:     ":",
@@ -111,10 +131,10 @@ var tokens = [...]string{
 	RBRACKET:  "]",
 
 	// Keywords
+
 	TRUE:  "TRUE",
 	FALSE: "FALSE",
 	NULL:  "NULL",
-	YO:    "YO",
 	YIF:   "YIF",
 	YELS:  "YELS",
 	YEET:  "YEET",
