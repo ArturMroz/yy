@@ -52,65 +52,14 @@ func (p *Parser) eat(t token.TokenType, errMsg string) bool {
 	return false
 }
 
-func (p *Parser) prettyError(tok token.Token, errMsg string) string {
-	src := p.l.Input
-	line := 1
-	col := 0
-	lastNewLineStart := 0
-
-	offset := tok.Offset - len(tok.Literal) + 1
-
-	i := 0
-	for ; i < offset; i++ {
-		if src[i] == '\n' {
-			line++
-			col = 0
-			lastNewLineStart = i
-		} else {
-			col++
-		}
-	}
-
-	if lastNewLineStart > 0 {
-		lastNewLineStart++
-	}
-
-	lastNewLineEnd := i
-	for src[lastNewLineEnd] != '\n' && src[lastNewLineEnd] != 0 {
-		lastNewLineEnd++
-	}
-
-	// fmt.Println("line", line, "col", col, "offset", offset, "start", lastNewLineStart, "end", lastNewLineEnd)
-	// fmt.Println("curToken", tok)
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("error: %s\n\n", errMsg))
-	b.WriteString(fmt.Sprintf("%3d | %s\n", line, src[lastNewLineStart:lastNewLineEnd]))
-	b.WriteString(fmt.Sprintf("      %s^\n", strings.Repeat(" ", col)))
-
-	return b.String()
-}
-
-func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
-	msg = p.prettyError(p.peekToken, msg)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) newError(format string, args ...any) {
-	msg := fmt.Sprintf(format, args...)
-	msg = p.prettyError(p.curToken, msg)
-	p.errors = append(p.errors, msg)
-}
-
 type Precedence int
 
 const (
 	_ Precedence = iota
 	LOWEST
+	ASSIGNMENT  // = :=
 	OR          // ||
 	AND         // &&
-	ASSIGNMENT  // = :=
 	EQUALS      // == !=
 	LESSGREATER // > <
 	RANGE       // x..y
@@ -122,8 +71,6 @@ const (
 )
 
 var precedences = map[token.TokenType]Precedence{
-	token.OR:         OR,
-	token.AND:        AND,
 	token.ASSIGN:     ASSIGNMENT,
 	token.WALRUS:     ASSIGNMENT,
 	token.ADD_ASSIGN: ASSIGNMENT,
@@ -131,6 +78,8 @@ var precedences = map[token.TokenType]Precedence{
 	token.MUL_ASSIGN: ASSIGNMENT,
 	token.DIV_ASSIGN: ASSIGNMENT,
 	token.MOD_ASSIGN: ASSIGNMENT,
+	token.OR:         OR,
+	token.AND:        AND,
 	token.EQ:         EQUALS,
 	token.NOT_EQ:     EQUALS,
 	token.LT:         LESSGREATER,
@@ -189,7 +138,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LT:         p.parseInfixExpression,
 		token.GT:         p.parseInfixExpression,
 		token.RANGE:      p.parseRangeLiteral,
-		token.WALRUS:     p.parseAssignExpression,
+		token.WALRUS:     p.parseDeclareExpression,
 		token.ASSIGN:     p.parseAssignExpression,
 		token.ADD_ASSIGN: p.parseAssignExpression,
 		token.SUB_ASSIGN: p.parseAssignExpression,
@@ -364,11 +313,11 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 }
 
 func (p *Parser) parseBoolean() ast.Expression {
-	return &ast.Boolean{Token: p.curToken, Value: p.curIs(token.TRUE)}
+	return &ast.BooleanLiteral{Token: p.curToken, Value: p.curIs(token.TRUE)}
 }
 
 func (p *Parser) parseNull() ast.Expression {
-	return &ast.Null{Token: p.curToken}
+	return &ast.NullLiteral{Token: p.curToken}
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
@@ -621,28 +570,43 @@ func (p *Parser) parseOrExpression(left ast.Expression) ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseAssignExpression(maybeIdent ast.Expression) ast.Expression {
+func (p *Parser) parseDeclareExpression(maybeIdent ast.Expression) ast.Expression {
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
-		// TODO support assignment to index expr ie array[2] = 5;
-		p.newError("can only assign to an Identifier (got '%s')", maybeIdent.TokenLiteral())
+		p.newError("expected a name when declaring a variable (got '%s')", maybeIdent.TokenLiteral())
 		return nil
 	}
 
-	assExpr := &ast.AssignExpression{
-		Name:   ident,
-		Token:  p.curToken,
-		IsInit: p.curIs(token.WALRUS),
+	declExpr := &ast.DeclareExpression{
+		Name:  ident,
+		Token: p.curToken,
+	}
+
+	p.advance()
+	declExpr.Value = p.parseExpression(LOWEST)
+
+	return declExpr
+}
+
+func (p *Parser) parseAssignExpression(left ast.Expression) ast.Expression {
+	assExpr := &ast.AssignExpression{Token: p.curToken}
+
+	switch left.(type) {
+	case *ast.Identifier, *ast.IndexExpression:
+		assExpr.Left = left
+	default:
+		p.newError("expected a variable name or index expression when assigning a value (got '%s')", left.TokenLiteral())
+		return nil
 	}
 
 	p.advance()
 	assExpr.Value = p.parseExpression(LOWEST)
 
-	// TODO rethink this implementation, maybe move to eval stage instead of desugaring
+	// desugar a += 5 into a = a + 5
 	switch assExpr.Token.Type {
 	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN, token.DIV_ASSIGN, token.MOD_ASSIGN:
 		assExpr.Value = &ast.InfixExpression{
-			Left:     assExpr.Name,
+			Left:     assExpr.Left,
 			Right:    assExpr.Value,
 			Operator: string(assExpr.Token.Literal[0]),
 		}
@@ -705,4 +669,58 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 	// }
 
 	return callExpr
+}
+
+//
+// ERRORS
+//
+
+func (p *Parser) prettyError(tok token.Token, errMsg string) string {
+	src := p.l.Input
+	line := 1
+	col := 0
+	lastNewLineStart := 0
+
+	offset := tok.Offset - len(tok.Literal) + 1
+
+	i := 0
+	for ; i < offset; i++ {
+		if src[i] == '\n' {
+			line++
+			col = 0
+			lastNewLineStart = i
+		} else {
+			col++
+		}
+	}
+
+	if lastNewLineStart > 0 {
+		lastNewLineStart++
+	}
+
+	lastNewLineEnd := i
+	for lastNewLineEnd < len(src) && src[lastNewLineEnd] != '\n' {
+		lastNewLineEnd++
+	}
+
+	// fmt.Println("line", line, "col", col, "offset", offset, "start", lastNewLineStart, "end", lastNewLineEnd, "curToken", tok)
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("error: %s\n\n", errMsg))
+	b.WriteString(fmt.Sprintf("%3d | %s\n", line, src[lastNewLineStart:lastNewLineEnd]))
+	b.WriteString(fmt.Sprintf("      %s^\n", strings.Repeat(" ", col)))
+
+	return b.String()
+}
+
+func (p *Parser) peekError(t token.TokenType, errMsg string) {
+	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
+	msg = p.prettyError(p.peekToken, msg)
+	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) newError(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	msg = p.prettyError(p.curToken, msg)
+	p.errors = append(p.errors, msg)
 }

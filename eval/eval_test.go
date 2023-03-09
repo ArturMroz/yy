@@ -403,7 +403,7 @@ func TestRangeLiterals(t *testing.T) {
 	})
 }
 
-func TestAssignExpressions(t *testing.T) {
+func TestDeclareExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"a := 8", 8},
 		{"a := 8; a", 8},
@@ -417,7 +417,11 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := 8; a = 15", 15},
 		{"a := 8; b := 2; a = b", 2},
 		{"a := b := c := 8; a + b + c", 24},
+	})
+}
 
+func TestAssignExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
 		{"a := 8; a += 2; a", 10},
 		{"a := 8; a -= 2; a", 6},
 		{"a := 8; a *= 2; a", 16},
@@ -426,6 +430,11 @@ func TestAssignExpressions(t *testing.T) {
 
 		{"a = 8", errmsg{"identifier not found: a"}},
 		{"a += 8", errmsg{"identifier not found: a"}},
+
+		// TODO add more tests
+		{"arr := [1, 2 3]; arr[1] = 69; arr", []int64{1, 69, 3}},
+		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
+		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
 	})
 }
 

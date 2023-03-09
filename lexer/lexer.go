@@ -19,7 +19,7 @@ func New(input string) *Lexer {
 func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
-	tok := token.Token{Line: l.line}
+	var tok token.Token
 
 	switch l.ch {
 	case '<':
@@ -46,19 +46,19 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.BACKSLASH)
 
 	case '+':
-		tok = l.switch2(token.PLUS, token.ADD_ASSIGN)
+		tok = l.switchEq(token.PLUS, token.ADD_ASSIGN)
 	case '-':
-		tok = l.switch2(token.MINUS, token.SUB_ASSIGN)
+		tok = l.switchEq(token.MINUS, token.SUB_ASSIGN)
 	case '*':
-		tok = l.switch2(token.ASTERISK, token.MUL_ASSIGN)
+		tok = l.switchEq(token.ASTERISK, token.MUL_ASSIGN)
 	case '/':
-		tok = l.switch2(token.SLASH, token.DIV_ASSIGN)
+		tok = l.switchEq(token.SLASH, token.DIV_ASSIGN)
 	case '=':
-		tok = l.switch2(token.ASSIGN, token.EQ)
+		tok = l.switchEq(token.ASSIGN, token.EQ)
 	case '!':
-		tok = l.switch2(token.BANG, token.NOT_EQ)
+		tok = l.switchEq(token.BANG, token.NOT_EQ)
 	case ':':
-		tok = l.switch2(token.COLON, token.WALRUS)
+		tok = l.switchEq(token.COLON, token.WALRUS)
 
 	case '%':
 		switch l.peek() {
@@ -73,28 +73,16 @@ func (l *Lexer) NextToken() token.Token {
 		}
 
 	case '.':
-		if l.peek() == '.' {
-			l.advance()
-			tok = l.newToken(token.RANGE)
-		}
+		tok = l.switch2(token.DOT, token.RANGE, '.')
 
 	case '&':
-		if l.peek() == '&' {
-			l.advance()
-			tok = l.newToken(token.AND)
-		}
+		tok = l.switch2(token.AMPERSAND, token.AND, '&')
 
 	case '|':
-		if l.peek() == '|' {
-			l.advance()
-			tok = l.newToken(token.OR)
-		}
+		tok = l.switch2(token.PIPE, token.OR, '|')
 
 	case '@':
-		if l.peek() == '\\' {
-			l.advance()
-			tok = l.newToken(token.MACRO)
-		}
+		tok = l.switch2(token.AT, token.MACRO, '\\')
 
 	case '"':
 		tok = l.newTokenWithLiteral(token.STRING, l.readString())
@@ -127,12 +115,16 @@ func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) t
 	return token.Token{Type: tokenType, Literal: literal, Line: l.line, Offset: l.position}
 }
 
-func (l *Lexer) switch2(tok1, tok2 token.TokenType) token.Token {
-	if l.peek() == '=' {
+func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
+	if l.peek() == expected {
 		l.advance()
 		return l.newToken(tok2)
 	}
 	return l.newToken(tok1)
+}
+
+func (l *Lexer) switchEq(tok1, tok2 token.TokenType) token.Token {
+	return l.switch2(tok1, tok2, '=')
 }
 
 func (l *Lexer) advance() {

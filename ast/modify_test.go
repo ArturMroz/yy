@@ -132,8 +132,8 @@ func TestModify(t *testing.T) {
 			&YeetStatement{ReturnValue: two()},
 		},
 		{
-			&AssignExpression{Value: one()},
-			&AssignExpression{Value: two()},
+			&DeclareExpression{Value: one()},
+			&DeclareExpression{Value: two()},
 		},
 		{
 			&ArrayLiteral{Elements: []Expression{one(), one(), two()}},

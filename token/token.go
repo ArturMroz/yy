@@ -22,9 +22,6 @@ const (
 
 	// Operators
 
-	OR
-	AND
-	ASSIGN
 	PLUS
 	MINUS
 	BANG
@@ -33,17 +30,24 @@ const (
 	PERCENT
 	LT
 	GT
-	EQ
-	NOT_EQ
-	WALRUS
-	RANGE
+	DOT
+	AT
+	AMPERSAND
+	PIPE
 	BACKSLASH
-	MACRO
+	ASSIGN
 	ADD_ASSIGN
 	SUB_ASSIGN
 	MUL_ASSIGN
 	DIV_ASSIGN
 	MOD_ASSIGN
+	OR
+	AND
+	EQ
+	NOT_EQ
+	WALRUS
+	RANGE
+	MACRO
 	HASHMAP
 
 	// Delimiters
@@ -85,28 +89,33 @@ var tokens = [...]string{
 
 	// Operators
 
-	OR:         "||",
-	AND:        "&&",
+	PLUS:      "+",
+	MINUS:     "-",
+	BANG:      "!",
+	ASTERISK:  "*",
+	SLASH:     "/",
+	PERCENT:   "%",
+	LT:        "<",
+	GT:        ">",
+	DOT:       ".",
+	AT:        "@",
+	AMPERSAND: "&",
+	PIPE:      "|",
+	BACKSLASH: `\`,
+
 	ASSIGN:     "=",
-	PLUS:       "+",
-	MINUS:      "-",
-	BANG:       "!",
-	ASTERISK:   "*",
-	SLASH:      "/",
-	PERCENT:    "%",
-	LT:         "<",
-	GT:         ">",
-	EQ:         "==",
-	NOT_EQ:     "!=",
-	WALRUS:     ":=",
-	RANGE:      "..",
-	BACKSLASH:  `\`,
-	MACRO:      `@\`,
 	ADD_ASSIGN: "+=",
 	SUB_ASSIGN: "-=",
 	MUL_ASSIGN: "*=",
 	DIV_ASSIGN: "/=",
 	MOD_ASSIGN: "%=",
+	OR:         "||",
+	AND:        "&&",
+	EQ:         "==",
+	NOT_EQ:     "!=",
+	WALRUS:     ":=",
+	RANGE:      "..",
+	MACRO:      `@\`,
 	HASHMAP:    "%{",
 
 	// Delimiters

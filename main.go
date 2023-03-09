@@ -98,9 +98,9 @@ func repl() {
 			io.WriteString(out, "\n")
 		}
 
-		if len(p.Errors()) != 0 {
+		if len(p.Errors()) > 0 {
 			for _, msg := range p.Errors() {
-				io.WriteString(out, "\t"+msg+"\n")
+				io.WriteString(out, msg+"\n")
 			}
 			continue
 		}

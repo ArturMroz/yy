@@ -42,17 +42,28 @@ func (p *Program) String() string {
 	return b.String()
 }
 
-type AssignExpression struct {
-	Token  token.Token // the '=' or ':=' token
-	Name   *Identifier
-	Value  Expression
-	IsInit bool
+type DeclareExpression struct {
+	Token token.Token // the ':=' token
+	Name  *Identifier
+	Value Expression
 }
 
-func (ls *AssignExpression) expressionNode()      {}
-func (ls *AssignExpression) TokenLiteral() string { return ls.Token.Literal }
-func (ls *AssignExpression) String() string {
-	return fmt.Sprintf("(%s %s %s)", ls.Name.String(), ls.TokenLiteral(), ls.Value.String())
+func (de *DeclareExpression) expressionNode()      {}
+func (de *DeclareExpression) TokenLiteral() string { return de.Token.Literal }
+func (de *DeclareExpression) String() string {
+	return fmt.Sprintf("(%s := %s)", de.Name.String(), de.Value.String())
+}
+
+type AssignExpression struct {
+	Token token.Token // '=' token
+	Left  Expression
+	Value Expression
+}
+
+func (ae *AssignExpression) expressionNode()      {}
+func (ae *AssignExpression) TokenLiteral() string { return ae.Token.Literal }
+func (ae *AssignExpression) String() string {
+	return fmt.Sprintf("(%s = %s)", ae.Left.String(), ae.Value.String())
 }
 
 type Identifier struct {
@@ -113,22 +124,22 @@ func (nl *NumberLiteral) expressionNode()      {}
 func (nl *NumberLiteral) TokenLiteral() string { return nl.Token.Literal }
 func (nl *NumberLiteral) String() string       { return nl.Token.Literal }
 
-type Boolean struct {
+type BooleanLiteral struct {
 	Token token.Token
 	Value bool
 }
 
-func (b *Boolean) expressionNode()      {}
-func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
-func (b *Boolean) String() string       { return b.Token.Literal }
+func (b *BooleanLiteral) expressionNode()      {}
+func (b *BooleanLiteral) TokenLiteral() string { return b.Token.Literal }
+func (b *BooleanLiteral) String() string       { return b.Token.Literal }
 
-type Null struct {
+type NullLiteral struct {
 	Token token.Token
 }
 
-func (n *Null) expressionNode()      {}
-func (n *Null) TokenLiteral() string { return n.Token.Literal }
-func (n *Null) String() string       { return n.Token.Literal }
+func (n *NullLiteral) expressionNode()      {}
+func (n *NullLiteral) TokenLiteral() string { return n.Token.Literal }
+func (n *NullLiteral) String() string       { return n.Token.Literal }
 
 type StringLiteral struct {
 	Token token.Token

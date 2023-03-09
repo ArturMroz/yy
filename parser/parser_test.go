@@ -10,7 +10,7 @@ import (
 	"yy/lexer"
 )
 
-func TestAssignExpression(t *testing.T) {
+func TestDeclareExpression(t *testing.T) {
 	tests := []struct {
 		input              string
 		expectedIdentifier string
@@ -19,6 +19,22 @@ func TestAssignExpression(t *testing.T) {
 		{"x := 69;", "x", 69},
 		{"y := true;", "y", true},
 		{"z := y;", "z", "y"},
+	}
+
+	for _, tt := range tests {
+		stmt := parseSingleExprStmt(t, tt.input)
+		if err := testLiteralExpression(stmt.Expression.(*ast.DeclareExpression).Value, tt.expectedValue); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func TestAssignExpression(t *testing.T) {
+	tests := []struct {
+		input              string
+		expectedIdentifier string
+		expectedValue      any
+	}{
 		{"x = 69;", "x", 69},
 		{"y = true;", "y", true},
 		{"z = y;", "z", "y"},
@@ -1047,7 +1063,7 @@ func testIdentifier(expr ast.Expression, value string) error {
 }
 
 func testBooleanLiteral(expr ast.Expression, value bool) error {
-	b, ok := expr.(*ast.Boolean)
+	b, ok := expr.(*ast.BooleanLiteral)
 	if !ok {
 		return fmt.Errorf("expr not *ast.Boolean. got=%T", expr)
 	}

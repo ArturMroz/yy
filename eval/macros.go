@@ -17,11 +17,11 @@ func DefineMacros(program *ast.Program, env *object.Environment) {
 		if !ok {
 			continue
 		}
-		assExpr, ok := exprStmt.Expression.(*ast.AssignExpression)
+		declExpr, ok := exprStmt.Expression.(*ast.DeclareExpression)
 		if !ok {
 			continue
 		}
-		macroLiteral, ok := assExpr.Value.(*ast.MacroLiteral)
+		macroLiteral, ok := declExpr.Value.(*ast.MacroLiteral)
 		if !ok {
 			continue
 		}
@@ -32,7 +32,7 @@ func DefineMacros(program *ast.Program, env *object.Environment) {
 			Body:       macroLiteral.Body,
 		}
 
-		env.Set(assExpr.Name.Value, macro)
+		env.Set(declExpr.Name.Value, macro)
 		found = append(found, i)
 	}
 
@@ -129,7 +129,7 @@ func objectToASTNode(obj object.Object) ast.Node {
 		} else {
 			t = token.Token{Type: token.FALSE, Literal: "false"}
 		}
-		return &ast.Boolean{Token: t, Value: obj.Value}
+		return &ast.BooleanLiteral{Token: t, Value: obj.Value}
 
 	case *object.Quote:
 		return obj.Node

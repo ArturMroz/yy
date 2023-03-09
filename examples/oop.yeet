@@ -1,0 +1,30 @@
+// YY isn't Object-Oriented, but that's alright (and even quite trendy nowadays).
+// But who needs classes when you've got ingenuity and a can-do attitude?
+// If you really want, you can create pseudo-classes using hashmaps, lambdas, duct tape and WD-40.
+// 
+// To demonstrate, we'll create an Animal "class" because nothing screams originality like a good
+// old beaten-to-death coding trope.
+
+Animal := \species, sound {
+    self := %{
+        "species": species,
+        "sound": sound,
+    }
+
+    // or alternatively we could write:
+    // self["species"] = species
+    // self["sound"] = sound
+
+    self["makeSound"] = \{ yap(self["sound"]) } // look, a method!
+    yeet self
+}
+
+doggo := Animal("Dog", "Woof!")
+doggo["makeSound"]()
+
+sasquatch := Animal("Yeti", "RRrrRaruGRrRh!")
+sasquatch["makeSound"]()
+
+// All said and done, you probably should just stick to maps and lambdas, and skip OOP stuff like
+// methods altogether. Our scientists were so preoccupied with whether or not they could, they
+// didn't stop to think if they should.
