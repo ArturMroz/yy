@@ -179,7 +179,7 @@ func (rv *ReturnValue) String() string   { return rv.Value.String() }
 
 type Error struct {
 	Msg string
-	// TODO add stack trace, column, line etc
+	Pos int
 }
 
 func (e *Error) Type() ObjectType { return ERROR_OBJ }

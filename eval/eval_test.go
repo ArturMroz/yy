@@ -422,17 +422,17 @@ func TestDeclareExpressions(t *testing.T) {
 
 func TestAssignExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{"a := 8; a += 2; a", 10},
-		{"a := 8; a -= 2; a", 6},
-		{"a := 8; a *= 2; a", 16},
-		{"a := 8; a /= 2; a", 4},
-		{"a := 8; a %= 5; a", 3},
+		{"x := 8; x += 2; x", 10},
+		{"x := 8; x -= 2; x", 6},
+		{"x := 8; x *= 2; x", 16},
+		{"x := 8; x /= 2; x", 4},
+		{"x := 8; x %= 5; x", 3},
 
-		{"a = 8", errmsg{"identifier not found: a"}},
-		{"a += 8", errmsg{"identifier not found: a"}},
+		{"x = 8", errmsg{"identifier not found: x"}},
+		{"x += 8", errmsg{"identifier not found: x"}},
 
 		// TODO add more tests
-		{"arr := [1, 2 3]; arr[1] = 69; arr", []int64{1, 69, 3}},
+		{"a := [1, 2 3]; a[1] = 69; a", []int64{1, 69, 3}},
 		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
 		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
 	})

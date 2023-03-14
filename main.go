@@ -10,6 +10,7 @@ import (
 	"yy/lexer"
 	"yy/object"
 	"yy/parser"
+	"yy/yikes"
 )
 
 const version = "v0.0.1"
@@ -42,7 +43,7 @@ func runFile(f string) {
 
 	if len(p.Errors()) > 0 {
 		for _, errMsg := range p.Errors() {
-			fmt.Println(errMsg)
+			fmt.Println(yikes.PrettyError(src, errMsg.Offset, errMsg.Msg))
 		}
 		os.Exit(1)
 	}
@@ -61,7 +62,7 @@ func runFile(f string) {
 
 	result := eval.Eval(expanded, env)
 	if evalError, ok := result.(*object.Error); ok {
-		fmt.Printf("runtime error: %s\n", evalError.Msg)
+		fmt.Println(yikes.PrettyError(src, evalError.Pos, evalError.Msg))
 	}
 }
 
@@ -100,7 +101,7 @@ func repl() {
 
 		if len(p.Errors()) > 0 {
 			for _, msg := range p.Errors() {
-				io.WriteString(out, msg+"\n")
+				io.WriteString(out, msg.Error()+"\n")
 			}
 			continue
 		}

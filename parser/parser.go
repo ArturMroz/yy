@@ -8,6 +8,7 @@ import (
 	"yy/ast"
 	"yy/lexer"
 	"yy/token"
+	"yy/yikes"
 )
 
 type (
@@ -17,7 +18,7 @@ type (
 
 type Parser struct {
 	l      *lexer.Lexer
-	errors []string
+	errors []yikes.YYError
 
 	curToken  token.Token
 	peekToken token.Token
@@ -26,7 +27,7 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
-func (p *Parser) Errors() []string {
+func (p *Parser) Errors() []yikes.YYError {
 	return p.errors
 }
 
@@ -102,7 +103,7 @@ func getPrecedence(tok token.Token) Precedence {
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l, errors: []string{}}
+	p := &Parser{l: l}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
 		token.IDENT:     p.parseIdentifier,
@@ -675,52 +676,12 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 // ERRORS
 //
 
-func (p *Parser) prettyError(tok token.Token, errMsg string) string {
-	src := p.l.Input
-	line := 1
-	col := 0
-	lastNewLineStart := 0
-
-	offset := tok.Offset - len(tok.Literal) + 1
-
-	i := 0
-	for ; i < offset; i++ {
-		if src[i] == '\n' {
-			line++
-			col = 0
-			lastNewLineStart = i
-		} else {
-			col++
-		}
-	}
-
-	if lastNewLineStart > 0 {
-		lastNewLineStart++
-	}
-
-	lastNewLineEnd := i
-	for lastNewLineEnd < len(src) && src[lastNewLineEnd] != '\n' {
-		lastNewLineEnd++
-	}
-
-	// fmt.Println("line", line, "col", col, "offset", offset, "start", lastNewLineStart, "end", lastNewLineEnd, "curToken", tok)
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("error: %s\n\n", errMsg))
-	b.WriteString(fmt.Sprintf("%3d | %s\n", line, src[lastNewLineStart:lastNewLineEnd]))
-	b.WriteString(fmt.Sprintf("      %s^\n", strings.Repeat(" ", col)))
-
-	return b.String()
-}
-
 func (p *Parser) peekError(t token.TokenType, errMsg string) {
 	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
-	msg = p.prettyError(p.peekToken, msg)
-	p.errors = append(p.errors, msg)
+	p.errors = append(p.errors, yikes.YYError{Msg: msg, Offset: p.peekToken.Offset})
 }
 
 func (p *Parser) newError(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
-	msg = p.prettyError(p.curToken, msg)
-	p.errors = append(p.errors, msg)
+	p.errors = append(p.errors, yikes.YYError{Msg: msg, Offset: p.curToken.Offset})
 }
