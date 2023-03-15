@@ -1,7 +1,7 @@
 :root {
     --accent: hsl(347, 56%, 50%);
     --secondary: #778;
-    --spacing: clamp(10px, 2.5vw, 22px);
+    --spacing: clamp(10px, 2.5vw, 20px);
 }
 
 html,
@@ -45,7 +45,7 @@ header {
 header h1 {
     flex: 1;
     color: white;
-    font-size: clamp(16px, 2.5vw, 32px);
+    font-size: clamp(15px, 3vw, 32px);
     font-weight: 600;
     margin: 0.2em 0;
 }
@@ -88,7 +88,7 @@ header select {
     margin: 0;
     border: none;
     border-radius: 6px;
-    font-size: clamp(12px, 1.2vw, 14px);
+    font-size: clamp(11px, 1.2vw, 14px);
     font-weight: 500;
 }
 

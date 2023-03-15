@@ -58,7 +58,7 @@ yap("Yo, {name}!")`,
 
     "fizzbuzz":
         `// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
-// interviews. But fear not, for YY is here to help you slay this beast. And rather than printing
+// interviews. But fear not, YY is here to help you slay this beast. And rather than printing
 // the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead, for it truly captures
 // the essence of YY.
 
@@ -103,91 +103,199 @@ f := fib_gen()
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
 
+    'yolo':
+        `// Yolo Mode allows you to do things that would make other self-respecting languages blush.
+// (Not JavaScript though. JavaScript wouldn't bat an eye.)
+//
+// Types can be mismatched, strings can be negated, variables don't have to be declared before use.
+// But be warned, the return value is anyone's guess. What about the Principle of Least Surprise you ask?
+// Exactly, what about it?
+//
+// Go ahead and experiment, but remember Uncle Ben's words of wisdom: "Play stupid games, win stupid prizes".
+
+yolo {
+    // you can multiply a string by an integer
+    yap("'tree' * 18 =", "tree" * 18)
+    yap("'troll' * 3 =", "troll" * 3)
+    yap("'2' * 5 =", "2" * 5)
+
+    // you can multiply an array by an integer
+    yap("[1, 2, 3] * 3 = ", [1, 2, 3] * 3)
+
+    // you can negate a string
+    yap("-'i am a string' =", -"i am a string")
+
+    // you can do useful stuff too, like bake an argument into a function
+    // (check out 'baking' example for more details)
+    greet     := \\name { yap("Hello, {name}!") }
+    greet_yan := greet + "Yan"
+    greet_yan() // look ma, no args!
+
+    // but even in yolo mode, division by zero doesn't end well (what did you expect?)
+    yap("division by zero:", "weee" / 0)
+}`,
+
+    'bake':
+        `// Brace yourselves, we're about to go into YOLO mode! We'll be adding numbers, arrays, and hashmaps
+// to a function like a mad scientist adding ingredients to a cauldron. This magically bakes the
+// arguments into the function, turning it into a deliciously self-contained recipe for success.
+// Some fancy folks call this 'partial function application' or 'currying', we'll just call it baking.
+
+// Exhibit A
+greet := \\name, message {
+    "Hello {name}! {message}"
+}
+
+greet_alice := yolo { greet + "Alice" }
+greet_bob   := yolo { greet + "Bob" }
+
+yap(greet_bob("How are you doing?"))
+yap(greet_alice("Nice to meet you!"))
+
+// To specify which arguments you want to bake in, add the function to a hashmap.
+rude_greet := yolo { greet + %{ "message": "I don't like your face." } }
+yap(rude_greet("Bob"))
+
+// Exhibit B
+converter := \\symbol, factor, offset, input {
+    result := (offset + input) * factor
+    "{result} {symbol}"
+}
+
+// To bake multiple arguments, add an array to a function.
+miles_to_km          := yolo { converter + ["km", 1.60936, 0] }
+pounds_to_kg         := yolo { converter + ["kg", 0.45460, 0] }
+farenheit_to_celsius := yolo { converter + ["C", 0.5556, -32] }
+
+yap(miles_to_km(15))
+yap(pounds_to_kg(5.5))
+yap(farenheit_to_celsius(97))
+`,
+
+    'map et al':
+        `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together
+// to process and transform collections with finesse and style.
+
+// Map transforms all elements and returns a shiny new list.
+map := \\arr fn {
+    acc := []
+    yall arr {
+        acc = push(acc, fn(yt))
+    }
+}
+
+// Reduce violently smashes a list into a single value.
+reduce := \\arr initial fn {
+    result := initial
+    yall arr {
+        result = fn(result, yt)
+    }
+}
+
+sum := \\arr {
+    add := \\a b { a + b }
+    reduce(arr, 0, add)
+}
+
+// Filter picks the juiciest elements, leaving the rest to wither away into obscurity.
+filter := \\arr fn {
+    acc := []
+    yall arr {
+        yif fn(yt) {
+            acc = push(acc, yt)
+        }
+    }
+    acc
+}
+
+arr := [1, 2, 3, 4]
+yap("original array:", arr)
+
+tripled := map(arr, \\x { x * 3 })
+yap("tripled:", tripled)
+
+summed := sum(tripled)
+yap("sum of elements:", summed)
+
+avg  := summed / len(arr)
+smol := \\x { x < avg }
+yap("smaller than average:", filter(tripled, smol))
+`,
+
     'mandelbrot':
-        `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set. 
+        `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
 // back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
 
 width  := 90
-height := 24 
+height := 24
 
 real_min := -2.0
 real_max := 0.5
 imag_min := -1.1
 imag_max := 1.1
 
-max_iter := 20
-palette  := ".-~:;=!*#$@"
-ratio    := float(max_iter) / (len(palette) - 1)
+palette  := "...--~~+:;=*!#$%W@"
+max_iter := len(palette) - 1
 
-escape_time := \\real, imag {
-    x := 0.0
-    y := 0.0
+yall py: 0..height {
+    yall px: 0..width {
+        real := (float(px) / width)  * (real_max - real_min) + real_min
+        imag := (float(py) / height) * (imag_max - imag_min) + imag_min
 
-    yall 0..max_iter {
-        xtemp := x*x - y*y + real
-        y := 2*x*y + imag
-        x := xtemp
-        yif x*x + y*y > 4.0 {
-            yeet yt
+        x := y := 0.0
+
+        i := 0
+        yet x*x + y*y < 4.0 && i < max_iter {
+            tmp := x*x - y*y + real
+            y   = 2*x*y + imag
+            x   = tmp
+            i += 1
         }
+
+        yelp(palette[i])
     }
 
-    max_iter
-}
-
-yall y: 0..height {
-    yall x: 0..width {
-        real := (float(x) / width) * (real_max - real_min) + real_min
-        imag := (float(y) / height) * (imag_max - imag_min) + imag_min
-
-        iterations := escape_time(real, imag)
-        color_idx  := int(iterations / ratio)
-        yelp(palette[color_idx])
-    }
-
-    yap() 
+    yap()
 }
 `,
 
     'brainfuck':
         `// An interpreter for the Brainfuck programming language, written in the YY programming language.
-// Does your head hurt yet, or should we go deeper? 
+// An interpreter within an interpreter. Interpreter Inception. Interpreception. Interception?
 // *BWOOOONNNNGNGGGG* <- Inception's horn sound effect
 // -_-                <- DiCaprio's face
 
-// This is an actual "Hello, World!" in Brainfuck
+// This is an actual "Hello World!" program in Brainfuck
 hello_world := "
-++++++++[>++++[>++>+++>+++>+<<
-<<-]>+>+>->>+[<]<-]>>.>---.+++
-++++..+++.>>.<-.<.+++.------.-
--------.>>+.>++.
+++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>
+---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
 "
 
 // Our very own Brainfuck VM
-ip     := 0 // instruction pointer
-dp     := 0 // data pointer
-memory := []
+ip  := 0  // instruction pointer
+dp  := 0  // data pointer
+mem := [] // memory
 
 // initialise memory
-yall 0..100 { memory = push(memory, 0) }
+yall 0..100 { mem = push(mem, 0) }
 
 code := hello_world
 
 yet ip < len(code) {
     ins := code[ip]
     yif ins == "+" {
-        memory[dp] += 1
+        mem[dp] += 1
     } yels yif ins == "-" {
-        memory[dp] -= 1
+        mem[dp] -= 1
     } yels yif ins == ">" {
         dp += 1
     } yels yif ins == "<" {
         dp -= 1
     } yels yif ins == "." {
-        yelp(chr(memory[dp]))
+        yelp(chr(mem[dp]))
     } yels yif ins == "[" {
-        yif memory[dp] == 0 {
+        yif mem[dp] == 0 {
             depth := 1
             yet depth != 0 {
                 ip += 1
@@ -198,8 +306,8 @@ yet ip < len(code) {
                 }
             }
         }
-    } yels yif ins == "]" { 
-        yif memory[dp] != 0 {
+    } yels yif ins == "]" {
+        yif mem[dp] != 0 {
             depth := 1
             yet depth != 0 {
                 ip -= 1
@@ -224,7 +332,9 @@ bubble_sort := \\arr {
     yall i: len(arr)-2..0 {
         yall j: 0..i {
             yif arr[j] > arr[j+1] {
-                arr = swap(arr, j, j+1)
+                tmp      := arr[j]
+                arr[j]   = arr[j+1]
+                arr[j+1] = tmp
             }
         }
     }
@@ -263,92 +373,6 @@ yap("Quick sorted: ", quick_sort(nums))
 yap("Btw, original array is still there, untouched:", nums)
 `,
 
-
-    'map et al':
-        `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together 
-// to process and transform collections with finesse and style.
-
-arr := [1, 2, 3, 4, 5]
-yap("original array:", arr)
-
-// Map transforms all elements and returns a shiny new list.
-map := \\arr fn {
-    acc := []
-    yall arr {
-        acc = push(acc, fn(yt))
-    }
-}
-
-double := \\x { x * 2 }
-yap("doubled:", map(arr, double))
-
-// Reduce violently smashes a list into a single value.
-reduce := \\arr initial fn {
-    result := initial
-    yall arr {
-        result = fn(result, yt)
-    }
-}
-
-sum := \\arr {
-    add := \\a b { a + b }
-    reduce(arr, 0, add)
-}
-
-yap("sum of elements:", sum(arr))
-
-// Filter picks the juiciest elements, leaving the rest to wither away into obscurity.
-filter := \\arr fn {
-    acc := []
-    yall arr {
-        yif fn(yt) {
-            acc = push(acc, yt)
-        }
-    }
-    acc
-}
-
-avg  := sum(arr) / len(arr)
-smol := \\x { x < avg }
-yap("smaller than average:", filter(arr, smol))
-`,
-
-    'yolo':
-        `// Yolo Mode allows you to do things that would make other self-respecting languages blush.
-// (Not JavaScript though. JavaScript wouldn't bat an eye.)
-//
-// Types can be mismatched, strings can be negated, variables don't have to be declared before use.
-// But be warned, the return value is anyone's guess. What about the Principle of Least Surprise you ask?
-// Exactly, what about it?
-//
-// Go ahead and experiment, but remember Uncle Ben's words of wisdom: "Play stupid games, win stupid prizes".
-
-yolo {
-    // you can multiply a string by an integer
-    yap("'tree' * 18 =", "tree" * 18)
-    yap("'troll' * 3 =", "troll" * 3)
-    yap("'2' * 5 =", "2" * 5)
-
-    // you can multiply an array by an integer
-    yap("[1, 2, 3] * 3 = ", [1, 2, 3] * 3)
-
-    // you can negate a string
-    yap("-'i am a string' =", -"i am a string")
-
-    // you can do useful stuff too, like bake an argument into a function
-    greet     := \\name { yap("Hello, {name}!") }
-    greet_yan := greet + "Yan"
-    greet_yan() // look ma, no args!
-
-    // you can specify which argument you want to bake in by adding a function to a hashmap
-    add   := \\a b { a + b }
-    add11 := add + %{ "b": 11 } // baking 'b' into 'add'
-    add11(6) // 17
-
-    // but even in yolo mode, division by zero doesn't end well (what did you expect?)
-    yap("division by zero:", "weee" / 0)
-}`,
-
     "random":
         `// A password generator so good, it'll make even the most nefarious hackers throw in the towel.
 
@@ -382,62 +406,8 @@ yall 0..length {
 yap("your other secret password:", password)
 `,
 
-    "palindrome":
-        `// Mirror words, also known as palindromes, are the true testament to the power of written word.
-// With every letter and syllable, they silently reflect their greatness back at us.
-
-is_palindrome := \\str {
-    n := len(str)
-    yall 0..n/2 {
-        yif str[yt] != str[n-yt-1] {
-            yeet false
-        }
-    }
-
-    true
-}
-
-yall ["racecar", "level", "hello", "world", "1221", "1337"] {
-    yif is_palindrome(yt) {
-        yap(yt, "is a palindrome")
-    } yels {
-        yap(yt, "is not a palindrome")
-    }
-}
-`,
-
-    'bin convert':
-        `// Don't you just hate it when you're sorting a box of uncooked spaghetti by length, and sudddenly a
-// stranger comes up to you with a piece of paper covered in ones and zeros? Like, seriously, dude,
-// can't you see I'm busy here? But alas, you know you can't resist the temptation of converting
-// that binary number to decimal right then and there. Thankfully, with YY, you can swiftly convert
-// those ones and zeros without losing your precious pasta-sorting momentum.
-
-bin_to_dec := \\bin {
-    dec := 0
-    pow := 1
-
-    yall len(bin)-1..0 {
-        digit := yif bin[yt] == "0" {
-            0 
-        } yels yif bin[yt] == "1" {
-            1
-        } yels {
-            yikes("good heavens,", bin, "is not a valid binary number!")
-        }
-
-        dec += digit * pow
-        pow *= 2
-    }
-
-    dec
-}
 
 
-bin := "1000101"
-dec := bin_to_dec(bin)
-yap(bin, "in binary equals", dec, "in decimal") 
-`
 }
 
 buildSampleSelect()
