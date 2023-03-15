@@ -27,10 +27,12 @@ func TestYoloDeclarations(t *testing.T) {
 		{"result := yolo { a := 1; b := 2; a + b }; result", 3},
 
 		// auto declaring variables if they don't exsist
-		{"a = 1; a", errmsg{"identifier not found: a"}},
 		{"yolo { a = 1; a };", 1},
 		{"a := 5; yolo { a = 69 }; a", 69},
-
+		// vars need to be declared before use outside of yolo
+		{"a = 1; a", errmsg{"identifier not found: a"}},
+		// yolo rules don't leak outside of yolo block
+		{"yolo {}; a = 1", errmsg{"identifier not found: a"}},
 		// what happens in yolo, stays in yolo
 		{"yolo { a := 1 }; a", errmsg{"identifier not found: a"}},
 	})

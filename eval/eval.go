@@ -181,7 +181,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	case *ast.YoloExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
-		env.SetYoloMode()
+		extendedEnv.SetYoloMode()
 		return Eval(node.Body, extendedEnv)
 
 	// CONTROL FLOW
