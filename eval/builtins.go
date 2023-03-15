@@ -43,11 +43,14 @@ var builtins = map[string]*object.Builtin{
 
 	"last": {
 		Fn: func(args ...object.Object) object.Object {
-			arr, err := checkArray("last", args...)
-			if err != nil {
-				return newErrorWithoutPos(err.Error())
+			if len(args) != 1 {
+				return newErrorWithoutPos("wrong number of args for `last` (got %d, want 1)", len(args))
+			}
+			if args[0].Type() != object.ARRAY_OBJ {
+				return newErrorWithoutPos("argument to `last` must be ARRAY, got %s", args[0].Type())
 			}
 
+			arr := args[0].(*object.Array)
 			length := len(arr.Elements)
 			if length > 0 {
 				return arr.Elements[length-1]
@@ -58,18 +61,29 @@ var builtins = map[string]*object.Builtin{
 
 	"rest": {
 		Fn: func(args ...object.Object) object.Object {
-			arr, err := checkArray("rest", args...)
-			if err != nil {
-				return newErrorWithoutPos(err.Error())
+			if len(args) != 1 {
+				return newErrorWithoutPos("wrong number of args for rest (got %d, want 1)", len(args))
 			}
 
-			length := len(arr.Elements)
-			if length > 0 {
-				newElements := make([]object.Object, length-1)
-				copy(newElements, arr.Elements[1:length])
-				return &object.Array{Elements: newElements}
+			switch arg := args[0].(type) {
+			case *object.Array:
+				length := len(arg.Elements)
+				if length > 0 {
+					newElements := make([]object.Object, length-1)
+					copy(newElements, arg.Elements[1:length])
+					return &object.Array{Elements: newElements}
+				}
+				return object.NULL
+
+			case *object.String:
+				if len(arg.Value) > 0 {
+					return &object.String{Value: arg.Value[1:]}
+				}
+				return object.NULL
+
+			default:
+				return newErrorWithoutPos("argument of type %s not supported by `rest` function", arg.Type())
 			}
-			return object.NULL
 		},
 	},
 
@@ -88,38 +102,6 @@ var builtins = map[string]*object.Builtin{
 			newElements := make([]object.Object, length+1)
 			copy(newElements, arr.Elements)
 			newElements[length] = args[1]
-
-			return &object.Array{Elements: newElements}
-		},
-	},
-
-	"swap": {
-		Fn: func(args ...object.Object) object.Object {
-			if len(args) != 3 {
-				return newErrorWithoutPos("wrong number of args for swap (got %d, want 3)", len(args))
-			}
-			if args[0].Type() != object.ARRAY_OBJ {
-				return newErrorWithoutPos("first argument to swap must be ARRAY, got %s", args[0].Type())
-			}
-			if args[1].Type() != object.INTEGER_OBJ {
-				return newErrorWithoutPos("second argument to swap must be INTEGER, got %s", args[1].Type())
-			}
-			if args[2].Type() != object.INTEGER_OBJ {
-				return newErrorWithoutPos("third argument to swap must be INTEGER, got %s", args[2].Type())
-			}
-
-			arr := args[0].(*object.Array)
-			i := args[1].(*object.Integer).Value
-			j := args[2].(*object.Integer).Value
-			length := len(arr.Elements)
-
-			if i < 0 || i >= int64(length) || j < 0 || j >= int64(length) {
-				return arr
-			}
-
-			newElements := make([]object.Object, length)
-			copy(newElements, arr.Elements)
-			newElements[i], newElements[j] = newElements[j], newElements[i]
 
 			return &object.Array{Elements: newElements}
 		},
@@ -355,17 +337,6 @@ var builtins = map[string]*object.Builtin{
 			return newErrorWithoutPos(msg)
 		},
 	},
-}
-
-func checkArray(fnName string, args ...object.Object) (*object.Array, error) {
-	if len(args) != 1 {
-		return nil, fmt.Errorf("wrong number of args for `%s` (got %d, want 1)", fnName, len(args))
-	}
-	if args[0].Type() != object.ARRAY_OBJ {
-		return nil, fmt.Errorf("argument to `%s` must be ARRAY, got %s", fnName, args[0].Type())
-	}
-
-	return args[0].(*object.Array), nil
 }
 
 func spaceSeparatedArgs(args ...object.Object) string {

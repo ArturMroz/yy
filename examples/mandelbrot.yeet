@@ -1,5 +1,5 @@
-width  := 25
-height := 10
+width  := 35
+height := 12
 
 real_min := -2.0
 real_max := 0.5
