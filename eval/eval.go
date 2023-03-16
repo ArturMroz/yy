@@ -171,12 +171,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(left) {
 			return left
 		}
-
 		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
-
 		return evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
 
 	case *ast.YoloExpression:
@@ -474,7 +472,11 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 		return evaluated
 
 	case *object.Builtin:
-		return fn.Fn(args...)
+		result := fn.Fn(args...)
+		if errObj, ok := result.(*object.Error); ok {
+			errObj.Pos = callExpr.Function.Pos()
+		}
+		return result
 
 	default:
 		return newError(callExpr.Pos(), "not a function: %s", fn.Type())
@@ -698,7 +700,6 @@ func isErrorOrReturn(obj object.Object) bool {
 }
 
 func newErrorWithoutPos(format string, args ...any) *object.Error {
-	// return &object.Error{Msg: fmt.Sprintf(format, args...)}
 	return newError(-1, format, args...)
 }
 
