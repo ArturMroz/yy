@@ -133,12 +133,36 @@ type HashKey struct {
 	Value uint64
 }
 
+func (n *Null) HashKey() HashKey {
+	return HashKey{Type: n.Type(), Value: uint64(0)}
+}
+
+func (b *Boolean) HashKey() HashKey {
+	var value uint64 = 0
+	if b.Value {
+		value = 1
+	}
+	return HashKey{Type: b.Type(), Value: value}
+}
+
 func (i *Integer) HashKey() HashKey {
 	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
 }
 
 func (s *String) HashKey() HashKey {
 	return HashKey{Type: s.Type(), Value: hashString(s.Value)}
+}
+
+func (a *Array) HashKey() HashKey {
+	return HashKey{Type: a.Type(), Value: hashString(a.String())}
+}
+
+func (h *Hashmap) HashKey() HashKey {
+	return HashKey{Type: h.Type(), Value: hashString(h.String())}
+}
+
+func (r *Range) HashKey() HashKey {
+	return HashKey{Type: r.Type(), Value: hashString(r.String())}
 }
 
 func hashString(key string) uint64 {

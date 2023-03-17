@@ -49,7 +49,8 @@ func TestYoloPrefixExpressions(t *testing.T) {
 		{`yolo { -(5..0) }`, rng{0, 5}},
 		{`yolo { hash := %{ "a": "z" }; (-hash)["z"] }`, "a"},
 		{`yolo { hash := %{ "a": 6, "b": 9 }; (-hash)[6] }`, "a"},
-		{`yolo { hash := %{ "a": 5, "c": [2, 3] }; len(-hash) }`, 1},
+		{`yolo { hash := %{ "a": 5, "c": [2, 3] }; len(-hash) }`, 2},
+		{`yolo { hash := %{ "a": 5, "c": [2, 3] }; (-hash)[[2, 3]] }`, "c"},
 
 		{`yolo { fn := \a { 2 * a }; fn_neg := -fn; fn_neg(5) }`, -10},
 		{
