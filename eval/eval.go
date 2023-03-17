@@ -675,10 +675,17 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 }
 
 func isTruthy(obj object.Object) bool {
-	// Ruby's truthiness rule: nil & false are falsy, everything else is truthy
-	switch obj {
-	case object.NULL, object.FALSE:
+	switch obj := obj.(type) {
+	case *object.Null:
 		return false
+	case *object.Boolean:
+		return obj.Value
+	case *object.String:
+		return len(obj.Value) > 0
+	case *object.Array:
+		return len(obj.Elements) > 0
+	case *object.Hashmap:
+		return len(obj.Pairs) > 0
 	default:
 		return true
 	}

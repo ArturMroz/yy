@@ -128,6 +128,16 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"null == null", true},
 		{"null != null", false},
 
+		// truthiness rules: false, nil and empty collections are falsy
+		{"!null", true},
+		{"!!null", false},
+		{`!""`, true},
+		{`!!""`, false},
+		{"![]", true},
+		{"!![]", false},
+		{"!%{}", true},
+		{"!!%{}", false},
+
 		// mixed types
 		{"true != null", true},
 		{"true == null", false},
