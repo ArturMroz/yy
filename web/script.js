@@ -5,7 +5,8 @@ function run() {
 
     const result = interpret(source.value)
     if (result?.error) {
-        output.innerText += "\n" + result.error
+        if (output.innerText) output.innerText += '\n'
+        output.innerText += result.error
     }
 }
 

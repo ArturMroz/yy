@@ -29,12 +29,6 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`str := "howdy"; x := yoink(str, 1); x`, "o"},
 		{`str := "howdy"; x := yoink(str, 1); str`, "hwdy"},
 		{`yoink(69)`, errmsg{"cannot yoink from INTEGER"}},
-
-		{`swap([1, 2, 3, 4], 0, 2)`, []int64{3, 2, 1, 4}},
-		{`a := swap([1, 2, 3, 4], 1, 3); a`, []int64{1, 4, 3, 2}},
-		{`a := [1, 2, 3, 4]; swap(a, 1, 3)`, []int64{1, 4, 3, 2}},
-		{`a := [1, 2, 3, 4]; swap(a, 1, 69)`, []int64{1, 2, 3, 4}},
-		{`a := [1, 2, 3, 4]; swap(a, 1, -3)`, []int64{1, 2, 3, 4}},
 	})
 }
 

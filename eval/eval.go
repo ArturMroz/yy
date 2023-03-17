@@ -49,7 +49,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				env.Set(node.Value, val)
 				return val
 			}
-			return newError("identifier not found: " + node.Value)
+			return newError(node.Pos(), "identifier not found: "+node.Value)
 
 		case *ast.IndexExpression:
 			left := Eval(node.Left, env)
@@ -66,7 +66,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				i := idx.(*object.Integer).Value
 				arr := left.(*object.Array)
 				if i < 0 || i >= int64(len(arr.Elements)) {
-					return newError("assign out of bounds for array %s", node.Left.(*ast.Identifier).Value)
+					return newError(
+						node.Left.Pos(),
+						"assign out of bounds for array %s",
+						node.Left.(*ast.Identifier).Value)
 				}
 				arr.Elements[i] = val
 				return val
@@ -75,7 +78,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				i := idx.(*object.Integer).Value
 				str := left.(*object.String)
 				if i < 0 || i >= int64(len(str.Value)) {
-					return newError("assign out of bounds for string %s", node.Left.(*ast.Identifier).Value)
+					return newError(
+						node.Left.Pos(),
+						"assign out of bounds for string %s",
+						node.Left.(*ast.Identifier).Value)
 				}
 				str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
 				return val
@@ -84,18 +90,18 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				hashmap := left.(*object.Hashmap)
 				key, ok := idx.(object.Hashable)
 				if !ok {
-					return newError("key not hashable: %s", idx.Type())
+					return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
 				}
 
 				hashmap.Pairs[key.HashKey()] = object.HashPair{Key: idx, Value: val}
 				return val
 
 			default:
-				return newError("index operator not supported: %s", idx.Type())
+				return newError(node.Index.Pos(), "index operator not supported: %s, type of %s", idx.String(), idx.Type())
 			}
 		}
 
-		return newError("identifier not found: " + node.Left.String())
+		return newError(node.Left.Pos(), "identifier not found: "+node.Left.String())
 
 	case *ast.IndexExpression:
 		left := Eval(node.Left, env)
@@ -128,7 +134,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			hashmap := left.(*object.Hashmap)
 			key, ok := idx.(object.Hashable)
 			if !ok {
-				return newError("key not hashable: %s", idx.Type())
+				return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
 			}
 
 			pair, ok := hashmap.Pairs[key.HashKey()]
@@ -138,7 +144,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return pair.Value
 
 		default:
-			return newError("index operator not supported: %s", idx.Type())
+			return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
 		}
 
 	case *ast.Identifier:
@@ -148,7 +154,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if builtin, ok := builtins[node.Value]; ok {
 			return builtin
 		}
-		return newError("identifier not found: " + node.Value)
+		return newError(node.Pos(), "identifier not found: "+node.Value)
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
@@ -158,24 +164,30 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpression(node.Operator, right, env.IsYoloMode())
+		result := evalPrefixExpression(node.Operator, right, env.IsYoloMode())
+		if errObj, ok := result.(*object.Error); ok {
+			errObj.Pos = node.Pos()
+		}
+		return result
 
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
 		if isError(left) {
 			return left
 		}
-
 		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
-
-		return evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
+		result := evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
+		if errObj, ok := result.(*object.Error); ok {
+			errObj.Pos = node.Pos()
+		}
+		return result
 
 	case *ast.YoloExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
-		env.SetYoloMode()
+		extendedEnv.SetYoloMode()
 		return Eval(node.Body, extendedEnv)
 
 	// CONTROL FLOW
@@ -292,7 +304,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 
 		default:
-			return newError("cannot iterate over %s, type of %s", iter, iter.Type())
+			return newError(node.Iterable.Pos(), "cannot iterate over %s, type of %s", iter, iter.Type())
 		}
 
 		return result
@@ -344,7 +356,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return end
 		}
 		if start.Type() != object.INTEGER_OBJ || end.Type() != object.INTEGER_OBJ {
-			return newError("only integers can be used to create a range")
+			return newError(node.Start.Pos(), "only integers can be used to create a range (got %s..%s)", start.Type(), end.Type())
 		}
 
 		return &object.Range{
@@ -372,7 +384,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 			hashKey, ok := key.(object.Hashable)
 			if !ok {
-				return newError("key not hashable: %s", key.Type())
+				return newError(k.Pos(), "key not hashable: %s", key.Type())
 			}
 
 			val := Eval(v, env)
@@ -386,10 +398,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return hashmap
 
 	case nil:
-		return newError("unexpected error: something most likely went wrong at the parsing stage")
+		return newErrorWithoutPos("unexpected error: something went wrong somewhere (that's all we know).")
 
 	default:
-		return newError("ast object not supported %q %T", node, node)
+		return newError(node.Pos(), "ast object not supported %q %T", node, node)
 	}
 }
 
@@ -448,7 +460,9 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 	switch fn := fn.(type) {
 	case *object.Function:
 		if len(fn.Parameters) != len(args) {
-			return newError("wrong number of args for %s (got %d, want %d)",
+			return newError(
+				callExpr.Pos(),
+				"wrong number of args for %s (got %d, want %d)",
 				callExpr.Function.TokenLiteral(), len(args), len(fn.Parameters))
 		}
 
@@ -466,10 +480,14 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 		return evaluated
 
 	case *object.Builtin:
-		return fn.Fn(args...)
+		result := fn.Fn(args...)
+		if errObj, ok := result.(*object.Error); ok {
+			errObj.Pos = callExpr.Function.Pos()
+		}
+		return result
 
 	default:
-		return newError("not a function: %s", fn.Type())
+		return newError(callExpr.Pos(), "not a function: %s", fn.Type())
 	}
 }
 
@@ -493,7 +511,7 @@ func evalPrefixExpression(op string, right object.Object, yoloOK bool) object.Ob
 		}
 	}
 
-	return newError("unknown operator: %s%s", op, right.Type())
+	return newErrorWithoutPos("unknown operator: %s%s", op, right.Type())
 }
 
 func evalInfixExpression(op string, left, right object.Object, yoloOK bool) object.Object {
@@ -563,7 +581,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		if yoloOK {
 			return yoloInfixExpression(op, left, right)
 		}
-		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
+		return newErrorWithoutPos("type mismatch: %s %s %s", left.Type(), op, right.Type())
 
 	case left.Type() == object.NULL_OBJ && right.Type() == object.NULL_OBJ:
 		switch op {
@@ -661,14 +679,21 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		}
 	}
 
-	return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+	return newErrorWithoutPos("unknown operator: %s %s %s", left.Type(), op, right.Type())
 }
 
 func isTruthy(obj object.Object) bool {
-	// Ruby's truthiness rule: nil & false are falsy, everything else is truthy
-	switch obj {
-	case object.NULL, object.FALSE:
+	switch obj := obj.(type) {
+	case *object.Null:
 		return false
+	case *object.Boolean:
+		return obj.Value
+	case *object.String:
+		return len(obj.Value) > 0
+	case *object.Array:
+		return len(obj.Elements) > 0
+	case *object.Hashmap:
+		return len(obj.Pairs) > 0
 	default:
 		return true
 	}
@@ -689,6 +714,10 @@ func isErrorOrReturn(obj object.Object) bool {
 	return obj != nil && (obj.Type() == object.ERROR_OBJ || obj.Type() == object.RETURN_VALUE_OBJ)
 }
 
-func newError(format string, args ...any) *object.Error {
-	return &object.Error{Msg: fmt.Sprintf(format, args...)}
+func newErrorWithoutPos(format string, args ...any) *object.Error {
+	return newError(-1, format, args...)
+}
+
+func newError(position int, format string, args ...any) *object.Error {
+	return &object.Error{Msg: fmt.Sprintf(format, args...), Pos: position}
 }

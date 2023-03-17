@@ -3,6 +3,7 @@ package eval
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -13,7 +14,7 @@ var builtins = map[string]*object.Builtin{
 	"len": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for len (got %d, want 1)", len(args))
+				return newErrorWithoutPos("wrong number of args for len (got %d, want 1)", len(args))
 			}
 
 			switch arg := args[0].(type) {
@@ -34,7 +35,7 @@ var builtins = map[string]*object.Builtin{
 				return &object.Integer{Value: length + 1}
 
 			default:
-				return newError("argument to `len` not supported, got %s", args[0].Type())
+				return newErrorWithoutPos("argument to `len` not supported, got %s", args[0].Type())
 			}
 		},
 	},
@@ -43,43 +44,65 @@ var builtins = map[string]*object.Builtin{
 
 	"last": {
 		Fn: func(args ...object.Object) object.Object {
-			arr, err := checkArray("last", args...)
-			if err != nil {
-				return newError(err.Error())
+			if len(args) != 1 {
+				return newErrorWithoutPos("wrong number of args for `last` (got %d, want 1)", len(args))
 			}
+			switch arg := args[0].(type) {
+			case *object.Array:
+				length := len(arg.Elements)
+				if length > 0 {
+					return arg.Elements[length-1]
+				}
+				return object.NULL
 
-			length := len(arr.Elements)
-			if length > 0 {
-				return arr.Elements[length-1]
+			case *object.String:
+				length := len(arg.Value)
+				if length > 0 {
+					return &object.String{Value: string(arg.Value[(length - 1)])}
+				}
+				return object.NULL
+
+			default:
+				return newErrorWithoutPos("argument of type %s not supported by `last` function", arg.Type())
 			}
-			return object.NULL
 		},
 	},
 
 	"rest": {
 		Fn: func(args ...object.Object) object.Object {
-			arr, err := checkArray("rest", args...)
-			if err != nil {
-				return newError(err.Error())
+			if len(args) != 1 {
+				return newErrorWithoutPos("wrong number of args for rest (got %d, want 1)", len(args))
 			}
 
-			length := len(arr.Elements)
-			if length > 0 {
-				newElements := make([]object.Object, length-1)
-				copy(newElements, arr.Elements[1:length])
-				return &object.Array{Elements: newElements}
+			switch arg := args[0].(type) {
+			case *object.Array:
+				length := len(arg.Elements)
+				if length > 0 {
+					newElements := make([]object.Object, length-1)
+					copy(newElements, arg.Elements[1:length])
+					return &object.Array{Elements: newElements}
+				}
+				return object.NULL
+
+			case *object.String:
+				if len(arg.Value) > 0 {
+					return &object.String{Value: arg.Value[1:]}
+				}
+				return object.NULL
+
+			default:
+				return newErrorWithoutPos("argument of type %s not supported by `rest` function", arg.Type())
 			}
-			return object.NULL
 		},
 	},
 
 	"push": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 2 {
-				return newError("wrong number of args for push (got %d, want 2)", len(args))
+				return newErrorWithoutPos("wrong number of args for push (got %d, want 2)", len(args))
 			}
 			if args[0].Type() != object.ARRAY_OBJ {
-				return newError("argument to `push` must be ARRAY, got %s", args[0].Type())
+				return newErrorWithoutPos("argument to `push` must be ARRAY, got %s", args[0].Type())
 			}
 
 			arr := args[0].(*object.Array)
@@ -93,45 +116,13 @@ var builtins = map[string]*object.Builtin{
 		},
 	},
 
-	"swap": {
-		Fn: func(args ...object.Object) object.Object {
-			if len(args) != 3 {
-				return newError("wrong number of args for swap (got %d, want 3)", len(args))
-			}
-			if args[0].Type() != object.ARRAY_OBJ {
-				return newError("first argument to swap must be ARRAY, got %s", args[0].Type())
-			}
-			if args[1].Type() != object.INTEGER_OBJ {
-				return newError("second argument to swap must be INTEGER, got %s", args[1].Type())
-			}
-			if args[2].Type() != object.INTEGER_OBJ {
-				return newError("third argument to swap must be INTEGER, got %s", args[2].Type())
-			}
-
-			arr := args[0].(*object.Array)
-			i := args[1].(*object.Integer).Value
-			j := args[2].(*object.Integer).Value
-			length := len(arr.Elements)
-
-			if i < 0 || i >= int64(length) || j < 0 || j >= int64(length) {
-				return arr
-			}
-
-			newElements := make([]object.Object, length)
-			copy(newElements, arr.Elements)
-			newElements[i], newElements[j] = newElements[j], newElements[i]
-
-			return &object.Array{Elements: newElements}
-		},
-	},
-
 	"yoink": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 && len(args) != 2 {
-				return newError("wrong number of args for yoink (got %d, want 1 or 2)", len(args))
+				return newErrorWithoutPos("wrong number of args for yoink (got %d, want 1 or 2)", len(args))
 			}
 			if len(args) == 2 && args[1].Type() != object.INTEGER_OBJ {
-				return newError("second argument to `yoink` must be INTEGER, got %s", args[1].Type())
+				return newErrorWithoutPos("second argument to `yoink` must be INTEGER, got %s", args[1].Type())
 			}
 
 			switch arg := args[0].(type) {
@@ -163,7 +154,7 @@ var builtins = map[string]*object.Builtin{
 
 			default:
 				// TODO support more types
-				return newError("cannot yoink from %s", args[0].Type())
+				return newErrorWithoutPos("cannot yoink from %s", args[0].Type())
 
 			}
 		},
@@ -174,7 +165,7 @@ var builtins = map[string]*object.Builtin{
 	"yahtzee": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 0 && len(args) != 1 {
-				return newError("wrong number of args for yahtzee (got %d, want 0 or 1)", len(args))
+				return newErrorWithoutPos("wrong number of args for yahtzee (got %d, want 0 or 1)", len(args))
 			}
 
 			if len(args) == 0 {
@@ -184,7 +175,7 @@ var builtins = map[string]*object.Builtin{
 			switch arg := args[0].(type) {
 			case *object.Integer:
 				if arg.Value <= 0 {
-					return newError("negative integer not supported by yahtzee")
+					return newErrorWithoutPos("negative integer not supported by yahtzee")
 				}
 				return &object.Integer{Value: rand.Int63n(arg.Value)}
 
@@ -207,7 +198,7 @@ var builtins = map[string]*object.Builtin{
 				return &object.Integer{Value: v}
 
 			default:
-				return newError("argument passed to yahtzee not supported, got %s", args[0].Type())
+				return newErrorWithoutPos("argument passed to yahtzee not supported, got %s", args[0].Type())
 			}
 		},
 	},
@@ -245,7 +236,7 @@ var builtins = map[string]*object.Builtin{
 	"yarn": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for yarn (got %d, want 1)", len(args))
+				return newErrorWithoutPos("wrong number of args for yarn (got %d, want 1)", len(args))
 			}
 			return &object.String{Value: args[0].String()}
 		},
@@ -254,14 +245,14 @@ var builtins = map[string]*object.Builtin{
 	"chr": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for chr (got %d, want 1)", len(args))
+				return newErrorWithoutPos("wrong number of args for chr (got %d, want 1)", len(args))
 			}
 
 			switch arg := args[0].(type) {
 			case *object.Integer:
 				return &object.String{Value: string(rune(arg.Value))}
 			default:
-				return newError("unsupported argument type for chr, got %s", arg.Type())
+				return newErrorWithoutPos("unsupported argument type for chr, got %s", arg.Type())
 			}
 		},
 	},
@@ -269,7 +260,7 @@ var builtins = map[string]*object.Builtin{
 	"int": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for int (got %d, want 1)", len(args))
+				return newErrorWithoutPos("wrong number of args for int (got %d, want 1)", len(args))
 			}
 
 			switch arg := args[0].(type) {
@@ -286,11 +277,11 @@ var builtins = map[string]*object.Builtin{
 			case *object.String:
 				val, err := strconv.ParseInt(arg.Value, 0, 64)
 				if err != nil {
-					return newError("could not parse %s as integer", arg.Value)
+					return newErrorWithoutPos("could not parse %s as integer", arg.Value)
 				}
 				return &object.Integer{Value: val}
 			default:
-				return newError("unsupported argument type for int, got %s", arg.Type())
+				return newErrorWithoutPos("unsupported argument type for int, got %s", arg.Type())
 			}
 		},
 	},
@@ -298,7 +289,7 @@ var builtins = map[string]*object.Builtin{
 	"float": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 {
-				return newError("wrong number of args for float (got %d, want 1)", len(args))
+				return newErrorWithoutPos("wrong number of args for float (got %d, want 1)", len(args))
 			}
 			switch arg := args[0].(type) {
 			case *object.Number:
@@ -308,7 +299,7 @@ var builtins = map[string]*object.Builtin{
 			case *object.String:
 				val, err := strconv.ParseFloat(arg.Value, 64)
 				if err != nil {
-					return newError("could not parse %s as float", arg.Value)
+					return newErrorWithoutPos("could not parse %s as float", arg.Value)
 				}
 				return &object.Number{Value: val}
 			case *object.Boolean:
@@ -318,7 +309,7 @@ var builtins = map[string]*object.Builtin{
 				}
 				return &object.Number{Value: float64(v)}
 			default:
-				return newError("unsupported argument type for float, got %s", arg.Type())
+				return newErrorWithoutPos("unsupported argument type for float, got %s", arg.Type())
 			}
 		},
 	},
@@ -332,14 +323,14 @@ var builtins = map[string]*object.Builtin{
 			if msg == "" {
 				msg = "yikes!"
 			}
-			return newError(msg)
+			return newErrorWithoutPos(msg)
 		},
 	},
 
 	"yassert": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 1 && len(args) != 2 {
-				return newError("wrong number of args for yassert (got %d, want 1 or 2)", len(args))
+				return newErrorWithoutPos("wrong number of args for yassert (got %d, want 1 or 2)", len(args))
 			}
 
 			if isTruthy(args[0]) {
@@ -352,20 +343,29 @@ var builtins = map[string]*object.Builtin{
 					msg += ": " + v.Value
 				}
 			}
-			return newError(msg)
+			return newErrorWithoutPos(msg)
 		},
 	},
-}
 
-func checkArray(fnName string, args ...object.Object) (*object.Array, error) {
-	if len(args) != 1 {
-		return nil, fmt.Errorf("wrong number of args for `%s` (got %d, want 1)", fnName, len(args))
-	}
-	if args[0].Type() != object.ARRAY_OBJ {
-		return nil, fmt.Errorf("argument to `%s` must be ARRAY, got %s", fnName, args[0].Type())
-	}
+	"yassert_eq": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 2 && len(args) != 3 {
+				return newErrorWithoutPos("wrong number of args for yassert_eq (got %d, want 2 or 3)", len(args))
+			}
 
-	return args[0].(*object.Array), nil
+			if reflect.DeepEqual(args[0], args[1]) {
+				return object.NULL // all good, nothing to see here
+			}
+
+			msg := fmt.Sprintf("yassert failed: want %s, got %s", args[0], args[1])
+			if len(args) == 3 {
+				if v, ok := args[2].(*object.String); ok {
+					msg += fmt.Sprintf(" (%s)", v.Value)
+				}
+			}
+			return newErrorWithoutPos(msg)
+		},
+	},
 }
 
 func spaceSeparatedArgs(args ...object.Object) string {

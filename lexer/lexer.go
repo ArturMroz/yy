@@ -60,6 +60,15 @@ func (l *Lexer) NextToken() token.Token {
 	case ':':
 		tok = l.switchEq(token.COLON, token.WALRUS)
 
+	case '.':
+		tok = l.switch2(token.DOT, token.RANGE, '.')
+	case '&':
+		tok = l.switch2(token.AMPERSAND, token.AND, '&')
+	case '|':
+		tok = l.switch2(token.PIPE, token.OR, '|')
+	case '@':
+		tok = l.switch2(token.AT, token.MACRO, '\\')
+
 	case '%':
 		switch l.peek() {
 		case '{':
@@ -72,20 +81,8 @@ func (l *Lexer) NextToken() token.Token {
 			tok = l.newToken(token.PERCENT)
 		}
 
-	case '.':
-		tok = l.switch2(token.DOT, token.RANGE, '.')
-
-	case '&':
-		tok = l.switch2(token.AMPERSAND, token.AND, '&')
-
-	case '|':
-		tok = l.switch2(token.PIPE, token.OR, '|')
-
-	case '@':
-		tok = l.switch2(token.AT, token.MACRO, '\\')
-
 	case '"':
-		tok = l.newTokenWithLiteral(token.STRING, l.readString())
+		tok = l.string()
 
 	case 0:
 		tok = l.newToken(token.EOF)
@@ -112,7 +109,7 @@ func (l *Lexer) newToken(tokenType token.TokenType) token.Token {
 }
 
 func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) token.Token {
-	return token.Token{Type: tokenType, Literal: literal, Line: l.line, Offset: l.position}
+	return token.Token{Type: tokenType, Literal: literal, Line: l.line, Offset: l.position - len(literal) + 1}
 }
 
 func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
@@ -152,7 +149,7 @@ func (l *Lexer) identifier() token.Token {
 	}
 
 	ident := l.Input[start:l.position]
-	return l.newTokenWithLiteral(token.LookupIdent(ident), ident)
+	return token.Token{Type: token.LookupIdent(ident), Literal: ident, Offset: start}
 }
 
 func (l *Lexer) number() token.Token {
@@ -167,13 +164,13 @@ func (l *Lexer) number() token.Token {
 			l.advance()
 		}
 
-		return l.newTokenWithLiteral(token.NUMBER, l.Input[start:l.position])
+		return token.Token{Type: token.NUMBER, Literal: l.Input[start:l.position], Offset: start}
 	} else {
-		return l.newTokenWithLiteral(token.INT, l.Input[start:l.position])
+		return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
 	}
 }
 
-func (l *Lexer) readString() string {
+func (l *Lexer) string() token.Token {
 	l.advance() // consume opening '"'
 
 	start := l.position
@@ -184,7 +181,7 @@ func (l *Lexer) readString() string {
 		l.advance()
 	}
 	// TODO handle unterminated strings
-	return l.Input[start:l.position]
+	return token.Token{Type: token.STRING, Literal: l.Input[start:l.position], Offset: start}
 }
 
 func (l *Lexer) skipWhitespace() {

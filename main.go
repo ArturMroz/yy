@@ -9,6 +9,7 @@ import (
 	"yy/lexer"
 	"yy/object"
 	"yy/parser"
+	"yy/yikes"
 )
 
 func main() {
@@ -48,7 +49,7 @@ func interpret(src string) error {
 	if len(p.Errors()) > 0 {
 		errMsg := ""
 		for _, err := range p.Errors() {
-			errMsg += err + "\n"
+			errMsg += yikes.PrettyError([]byte(src), err.Offset, err.Msg) + "\n"
 		}
 		return errors.New(errMsg)
 	}
@@ -61,7 +62,7 @@ func interpret(src string) error {
 
 	result := eval.Eval(expanded, env)
 	if evalError, ok := result.(*object.Error); ok {
-		return errors.New("runtime error: " + evalError.Msg)
+		return errors.New(yikes.PrettyError([]byte(src), evalError.Pos, evalError.Msg))
 	}
 	return nil
 }

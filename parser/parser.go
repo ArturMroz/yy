@@ -8,6 +8,7 @@ import (
 	"yy/ast"
 	"yy/lexer"
 	"yy/token"
+	"yy/yikes"
 )
 
 type (
@@ -16,17 +17,19 @@ type (
 )
 
 type Parser struct {
-	l      *lexer.Lexer
-	errors []string
+	l *lexer.Lexer
 
 	curToken  token.Token
 	peekToken token.Token
+
+	errors    []yikes.YYError
+	panicMode bool
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
-func (p *Parser) Errors() []string {
+func (p *Parser) Errors() []yikes.YYError {
 	return p.errors
 }
 
@@ -48,7 +51,7 @@ func (p *Parser) eat(t token.TokenType, errMsg string) bool {
 		p.advance()
 		return true
 	}
-	p.peekError(t, errMsg)
+	p.errorAtPeek(t, errMsg)
 	return false
 }
 
@@ -102,7 +105,7 @@ func getPrecedence(tok token.Token) Precedence {
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l, errors: []string{}}
+	p := &Parser{l: l}
 
 	p.prefixParseFns = map[token.TokenType]prefixParseFn{
 		token.IDENT:     p.parseIdentifier,
@@ -162,6 +165,9 @@ func (p *Parser) ParseProgram() *ast.Program {
 	for p.curToken.Type != token.EOF {
 		stmt := p.parseStatement()
 		program.Statements = append(program.Statements, stmt)
+		if p.panicMode {
+			p.sync()
+		}
 		p.advance()
 	}
 
@@ -222,7 +228,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
-		p.newError("unexpected token '%s'", p.curToken.Literal)
+		p.errorAtCurrent("unexpected token '%s'", p.curToken.Literal)
 		return nil
 	}
 
@@ -259,7 +265,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	val, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		p.newError("could not parse %s as integer", p.peekToken.Literal)
+		p.errorAtCurrent("could not parse %s as integer", p.peekToken.Literal)
 		return nil
 	}
 
@@ -269,7 +275,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 func (p *Parser) parseNumberLiteral() ast.Expression {
 	val, err := strconv.ParseFloat(p.curToken.Literal, 64)
 	if err != nil {
-		p.newError("could not parse %s as float", p.peekToken.Literal)
+		p.errorAtCurrent("could not parse %s as float", p.peekToken.Literal)
 		return nil
 	}
 
@@ -358,7 +364,7 @@ func (p *Parser) parseYifExpression() ast.Expression {
 				},
 			}
 		} else {
-			p.newError("expected yif statement or block after 'yels', found '%s'", p.peekToken.Literal)
+			p.errorAtCurrent("expected yif statement or block after 'yels', found '%s'", p.peekToken.Literal)
 			return nil
 		}
 	}
@@ -573,7 +579,7 @@ func (p *Parser) parseOrExpression(left ast.Expression) ast.Expression {
 func (p *Parser) parseDeclareExpression(maybeIdent ast.Expression) ast.Expression {
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
-		p.newError("expected a name when declaring a variable (got '%s')", maybeIdent.TokenLiteral())
+		p.errorAtCurrent("expected a name when declaring a variable (got '%s')", maybeIdent.TokenLiteral())
 		return nil
 	}
 
@@ -595,7 +601,7 @@ func (p *Parser) parseAssignExpression(left ast.Expression) ast.Expression {
 	case *ast.Identifier, *ast.IndexExpression:
 		assExpr.Left = left
 	default:
-		p.newError("expected a variable name or index expression when assigning a value (got '%s')", left.TokenLiteral())
+		p.errorAtCurrent("expected a variable name or index expression when assigning a value (got '%s')", left.TokenLiteral())
 		return nil
 	}
 
@@ -675,52 +681,42 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 // ERRORS
 //
 
-func (p *Parser) prettyError(tok token.Token, errMsg string) string {
-	src := p.l.Input
-	line := 1
-	col := 0
-	lastNewLineStart := 0
+func (p *Parser) newError(msg string, offset int) {
+	if p.panicMode {
+		return // don't log cascading errors if we're already panicking
+	}
 
-	offset := tok.Offset - len(tok.Literal) + 1
+	p.panicMode = true
+	p.errors = append(p.errors, yikes.YYError{Msg: msg, Offset: offset})
+}
 
-	i := 0
-	for ; i < offset; i++ {
-		if src[i] == '\n' {
-			line++
-			col = 0
-			lastNewLineStart = i
-		} else {
-			col++
+func (p *Parser) errorAtPeek(t token.TokenType, errMsg string) {
+	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
+	p.newError(msg, p.peekToken.Offset)
+}
+
+func (p *Parser) errorAtCurrent(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	p.newError(msg, p.curToken.Offset)
+}
+
+// sync recovers from panic mode by fastforwarding to the next expr/stmt
+func (p *Parser) sync() {
+	p.panicMode = false
+
+	p.advance()
+
+	for !p.curIs(token.EOF) {
+		if p.curIs(token.SEMICOLON) {
+			return
+		}
+
+		switch p.peekToken.Type {
+		case token.YEET, token.YIF, token.YALL, token.YET, token.YOLO, token.BACKSLASH, token.MACRO:
+			return
+
+		default:
+			p.advance()
 		}
 	}
-
-	if lastNewLineStart > 0 {
-		lastNewLineStart++
-	}
-
-	lastNewLineEnd := i
-	for lastNewLineEnd < len(src) && src[lastNewLineEnd] != '\n' {
-		lastNewLineEnd++
-	}
-
-	// fmt.Println("line", line, "col", col, "offset", offset, "start", lastNewLineStart, "end", lastNewLineEnd, "curToken", tok)
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("error: %s\n\n", errMsg))
-	b.WriteString(fmt.Sprintf("%3d | %s\n", line, src[lastNewLineStart:lastNewLineEnd]))
-	b.WriteString(fmt.Sprintf("      %s^\n", strings.Repeat(" ", col)))
-
-	return b.String()
-}
-
-func (p *Parser) peekError(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
-	msg = p.prettyError(p.peekToken, msg)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) newError(format string, args ...any) {
-	msg := fmt.Sprintf(format, args...)
-	msg = p.prettyError(p.curToken, msg)
-	p.errors = append(p.errors, msg)
 }
