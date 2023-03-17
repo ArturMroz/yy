@@ -164,7 +164,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpression(node.Operator, right, env.IsYoloMode())
+		result := evalPrefixExpression(node.Operator, right, env.IsYoloMode())
+		if errObj, ok := result.(*object.Error); ok {
+			errObj.Pos = node.Pos()
+		}
+		return result
 
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
@@ -175,7 +179,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
+		result := evalInfixExpression(node.Operator, left, right, env.IsYoloMode())
+		if errObj, ok := result.(*object.Error); ok {
+			errObj.Pos = node.Pos()
+		}
+		return result
 
 	case *ast.YoloExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)

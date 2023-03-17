@@ -3,6 +3,7 @@ package eval
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -46,16 +47,24 @@ var builtins = map[string]*object.Builtin{
 			if len(args) != 1 {
 				return newErrorWithoutPos("wrong number of args for `last` (got %d, want 1)", len(args))
 			}
-			if args[0].Type() != object.ARRAY_OBJ {
-				return newErrorWithoutPos("argument to `last` must be ARRAY, got %s", args[0].Type())
-			}
+			switch arg := args[0].(type) {
+			case *object.Array:
+				length := len(arg.Elements)
+				if length > 0 {
+					return arg.Elements[length-1]
+				}
+				return object.NULL
 
-			arr := args[0].(*object.Array)
-			length := len(arr.Elements)
-			if length > 0 {
-				return arr.Elements[length-1]
+			case *object.String:
+				length := len(arg.Value)
+				if length > 0 {
+					return &object.String{Value: string(arg.Value[(length - 1)])}
+				}
+				return object.NULL
+
+			default:
+				return newErrorWithoutPos("argument of type %s not supported by `last` function", arg.Type())
 			}
-			return object.NULL
 		},
 	},
 
@@ -332,6 +341,26 @@ var builtins = map[string]*object.Builtin{
 			if len(args) == 2 {
 				if v, ok := args[1].(*object.String); ok {
 					msg += ": " + v.Value
+				}
+			}
+			return newErrorWithoutPos(msg)
+		},
+	},
+
+	"yassert_eq": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 2 && len(args) != 3 {
+				return newErrorWithoutPos("wrong number of args for yassert_eq (got %d, want 2 or 3)", len(args))
+			}
+
+			if reflect.DeepEqual(args[0], args[1]) {
+				return object.NULL // all good, nothing to see here
+			}
+
+			msg := fmt.Sprintf("yassert failed: want %s, got %s", args[0], args[1])
+			if len(args) == 3 {
+				if v, ok := args[2].(*object.String); ok {
+					msg += fmt.Sprintf(" (%s)", v.Value)
 				}
 			}
 			return newErrorWithoutPos(msg)
