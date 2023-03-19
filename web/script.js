@@ -185,7 +185,7 @@ yap(farenheit_to_celsius(97))
 map := \\arr fn {
     acc := []
     yall arr {
-        acc = push(acc, fn(yt))
+        acc << fn(yt)
     }
 }
 
@@ -202,7 +202,7 @@ filter := \\arr fn {
     acc := []
     yall arr {
         yif fn(yt) {
-            acc = push(acc, yt)
+            acc << yt
         }
     }
     acc
@@ -214,7 +214,7 @@ yap("original array:", arr)
 tripled := map(arr, \\x { x * 3 })
 yap("tripled:", tripled)
 
-summed := reduce(tripled, 0, \\a b { a + b })
+summed := reduce(tripled, 0, \\x y { x + y })
 yap("sum of elements:", summed)
 
 avg  := summed / len(arr)
@@ -240,79 +240,87 @@ maze := [
     "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@", 
 ]
 
-start := [0, 1]
-queue := [start]
+solve := \\maze {
+    // hardcoding start position to make the code less verbose
+    // normally we should scan the maze for the 'S' character
+    start := [0, 1]
 
-// YY doesn't support sets, so we'll use a hashmap instead
-seen := %{ start: true }
+    queue := [start]
 
-// keep track of the path to reconstruct our way through the maze
-path := %{ start: null }
+    // YY doesn't support sets, so we'll use a hashmap instead
+    seen := %{ start: true }
 
-// run until the queue is empty or we found a way out
-yet queue {
-    // since we're using depth-first seach, we'll get the next position by taking 
-    // the last element from the queue
-    cur := yoink(queue)
+    // keep track of the path to reconstruct our way through the maze
+    path := %{ start: null }
 
-    // we could change this algorithm to breadth-first search by taking the first element like so
-    // cur := yoink(queue, 0)
-    
-    // check if we have reached the end
-    yif maze[cur[0]][cur[1]] == "E" {
-        maze[cur[0]][cur[1]] = "."
+    // run until the queue is empty or we found a way out
+    yoyo queue {
+        // since we're using depth-first seach, we'll get the next position by taking 
+        // the last element from the queue
+        cur := yoink(queue)
 
-        // backtrack to find the path
-        yet cur != start {
-            prev := path[cur]
-            maze[prev[0]][prev[1]] = "."
-            cur := prev
-        }
+        // we could change this algorithm to breadth-first search by taking the first element like so
+        // cur := yoink(queue, 0)
+        
+        // check if we have reached the end
+        yif maze[cur[0]][cur[1]] == "E" {
+            maze[cur[0]][cur[1]] = "."
 
-        // print the maze with the path
-        yall row: maze {
-            yall col: row {
-                yelp(col)
+            // backtrack to find and mark the path
+            yoyo cur != start {
+                prev := path[cur]
+                maze[prev[0]][prev[1]] = "."
+                cur := prev
             }
-            yap()
-        }
 
-        // exit early, we're done here
-        yeet true
-    }
-    
-    // get neighbors of the current position
-    neighbors := []
-    yif cur[0] > 0 {
-        neighbors = push(neighbors, [cur[0]-1, cur[1]])
-    }
-    yif cur[0] < len(maze)-1 {
-        neighbors = push(neighbors, [cur[0]+1, cur[1]])
-    }
-    yif cur[1] > 0 {
-        neighbors = push(neighbors, [cur[0], cur[1]-1])
-    }
-    yif cur[1] < len(maze[0])-1 {
-        neighbors = push(neighbors, [cur[0], cur[1]+1])
-    }
-    
-    // add unseen neighbors to the queue
-    yall neighbors {
-        yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
-            queue    = push(queue, yt)
-            seen[yt] = true
-            path[yt] = cur
+            // exit early, we're done here
+            yeet true
+        }
+        
+        // get neighbours of the current position
+        neighbours := []
+        yif cur[0] > 0 {
+            neighbours << [cur[0]-1, cur[1]]
+        }
+        yif cur[0] <= len(maze) {
+            neighbours << [cur[0]+1, cur[1]]
+        }
+        yif cur[1] > 0 {
+            neighbours << [cur[0], cur[1]-1]
+        }
+        yif cur[1] <= len(maze[0]) {
+            neighbours << [cur[0], cur[1]+1]
+        }
+        
+        // add unseen neighbours to the queue
+        yall neighbours {
+            yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
+                seen[yt] = true
+                path[yt] = cur
+                queue << yt
+            }
         }
     }
 }
-`,
+
+yif solve(maze) {
+    // print out the maze with our path
+    yall row: maze {
+        yall col: row {
+            yelp(col)
+        }
+        yap()
+    }
+} yels {
+    yap("there's no way out :(")
+}`,
 
     'mandelbrot':
         `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
 // back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
 
-width  := 80
+width  := 70
 height := 24
 
 real_min := -2.0
@@ -331,7 +339,7 @@ yall py: 0..height {
         x := y := 0.0
 
         i := 0
-        yet x*x + y*y < 4.0 && i < max_iter {
+        yoyo x*x + y*y < 4.0 && i < max_iter {
             tmp := x*x - y*y + real
             y   = 2*x*y + imag
             x   = tmp
@@ -363,11 +371,11 @@ dp  := 0  // data pointer
 mem := [] // memory
 
 // initialise memory
-yall 0..100 { mem = push(mem, 0) }
+yall 0..100 { mem << 0 }
 
 code := hello_world
 
-yet ip < len(code) {
+yoyo ip < len(code) {
     ins := code[ip]
     yif ins == "+" {
         mem[dp] += 1
@@ -382,7 +390,7 @@ yet ip < len(code) {
     } yels yif ins == "[" {
         yif mem[dp] == 0 {
             depth := 1
-            yet depth != 0 {
+            yoyo depth != 0 {
                 ip += 1
                 yif code[ip] == "[" {
                     depth += 1
@@ -394,7 +402,7 @@ yet ip < len(code) {
     } yels yif ins == "]" {
         yif mem[dp] != 0 {
             depth := 1
-            yet depth != 0 {
+            yoyo depth != 0 {
                 ip -= 1
                 yif code[ip] == "[" {
                     depth -= 1
@@ -419,7 +427,7 @@ yet ip < len(code) {
 // from scratch? Contgratulations, now we have 3 problems.
 //
 // We'll yoink Rob Pike's beautifully simple regex matcher from 'The Practice of Programming' (1998).
-// It supports 4 special characters: '*', '^', '$' and '.', which account for 95% of use.
+// It supports 4 special characters: '*', '^', '$' and '.', which account for 95% of real use.
 // More details: https://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html
 
 // search for regex anywhere in text
@@ -427,7 +435,7 @@ match := \\regex text {
     yif regex && regex[0] == "^" {
         yeet match_here(rest(regex), text)
     }
-    yet true {
+    yoyo true {
         yif match_here(regex, text) {
             yeet true
         }
@@ -457,7 +465,7 @@ match_here := \\regex text {
 
 // search for c*regex at beginning of text
 match_star := \\c regex text {
-    yet true {
+    yoyo true {
         yif match_here(regex, text) {
             yeet true
         }
@@ -476,7 +484,7 @@ yap("all words:", words)
 yall re: regexes {
     result := []
     yall words {
-        yif match(re, yt) { result = push(result, yt) }
+        yif match(re, yt) { result << yt } 
     }
     yap("words matching /" + re + "/:", result)
 }
@@ -513,11 +521,11 @@ quick_sort := \\arr {
 
     yall arr {
         yif yt < pivot {
-            left = push(left, yt)
+            left << yt
         } yels yif yt > pivot {
-            right = push(right, yt)
+            right << yt
         } yels {
-            middle = push(middle, yt)
+            middle << yt
         }
     }
 
@@ -554,7 +562,7 @@ yap("your first secret password:", password)
 password = ""
 
 yall 0..length {
-    idx := yahtzee(len(charset)-1)
+    idx      := yahtzee(len(charset)-1)
     password += charset[idx]
 }
 
