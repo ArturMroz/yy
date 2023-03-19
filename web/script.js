@@ -93,9 +93,9 @@ fib_gen := \\{
     a := 0
     b := 1
     \\{
-        temp := a
+        tmp := a
         a = b
-        b += temp
+        b += tmp
         a
     }
 }
@@ -127,7 +127,7 @@ yolo {
     yap("-'i am a string' =", -"i am a string")
 
     // you can do useful stuff too, like bake an argument into a function
-    // (check out 'baking' example for more details)
+    // (check out 'bake' example for more details)
     greet     := \\name { yap("Hello, {name}!") }
     greet_yan := greet + "Yan"
     greet_yan() // look ma, no args!
@@ -140,6 +140,10 @@ yolo {
         `// Brace yourselves, we're about to go into YOLO mode! We'll be adding numbers, arrays, and hashmaps
 // to a function like a mad scientist adding ingredients to a cauldron. This magically bakes the
 // arguments into the function, turning it into a deliciously self-contained recipe for success.
+//
+// This is a powerful technique that can make your code more concise and easier to read, especially
+// when you have functions with many arguments that are frequently used with certain fixed values.
+//
 // Some fancy folks call this 'partial function application' or 'currying', we'll just call it baking.
 
 // Exhibit A
@@ -153,7 +157,7 @@ greet_bob   := yolo { greet + "Bob" }
 yap(greet_bob("How are you doing?"))
 yap(greet_alice("Nice to meet you!"))
 
-// To specify which arguments you want to bake in, add the function to a hashmap.
+// To specify which arguments you want to bake in, add a hashmap.
 rude_greet := yolo { greet + %{ "message": "I don't like your face." } }
 yap(rude_greet("Bob"))
 
@@ -163,7 +167,7 @@ converter := \\symbol, factor, offset, input {
     "{result} {symbol}"
 }
 
-// To bake multiple arguments, add an array to a function.
+// To bake multiple arguments, add an array.
 miles_to_km          := yolo { converter + ["km", 1.60936, 0] }
 pounds_to_kg         := yolo { converter + ["kg", 0.45460, 0] }
 farenheit_to_celsius := yolo { converter + ["C", 0.5556, -32] }
@@ -193,11 +197,6 @@ reduce := \\arr initial fn {
     }
 }
 
-sum := \\arr {
-    add := \\a b { a + b }
-    reduce(arr, 0, add)
-}
-
 // Filter picks the juiciest elements, leaving the rest to wither away into obscurity.
 filter := \\arr fn {
     acc := []
@@ -215,7 +214,7 @@ yap("original array:", arr)
 tripled := map(arr, \\x { x * 3 })
 yap("tripled:", tripled)
 
-summed := sum(tripled)
+summed := reduce(tripled, 0, \\a b { a + b })
 yap("sum of elements:", summed)
 
 avg  := summed / len(arr)
@@ -223,12 +222,97 @@ smol := \\x { x < avg }
 yap("smaller than average:", filter(tripled, smol))
 `,
 
+    'maze':
+        `// Have you ever got lost in a supermarket when you were a child? Perfect!
+// We'll recreate that traumatic event by building a maze solver in YY.
+
+maze := [
+    "@S@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 
+    "@     @   @ @         @       @", 
+    "@@@@@ @@@ @ @ @@@@@ @@@@@ @@@ @", 
+    "@   @ @   @ @   @ @     @   @ @", 
+    "@ @ @ @ @ @ @ @@@ @@@@@@@@@@@ @", 
+    "@ @     @ @     @ @     @     @", 
+    "@@@@@@@@@ @@@ @@@ @@@ @@@ @@@@@", 
+    "@       @       @       @   @ @", 
+    "@@@ @ @@@ @@@@@ @@@ @@@@@ @ @ @", 
+    "@   @     @               @   @", 
+    "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@", 
+]
+
+start := [0, 1]
+queue := [start]
+
+// YY doesn't support sets, so we'll use a hashmap instead
+seen := %{ start: true }
+
+// keep track of the path to reconstruct our way through the maze
+path := %{ start: null }
+
+// run until the queue is empty or we found a way out
+yet queue {
+    // since we're using depth-first seach, we'll get the next position by taking 
+    // the last element from the queue
+    cur := yoink(queue)
+
+    // we could change this algorithm to breadth-first search by taking the first element like so
+    // cur := yoink(queue, 0)
+    
+    // check if we have reached the end
+    yif maze[cur[0]][cur[1]] == "E" {
+        maze[cur[0]][cur[1]] = "."
+
+        // backtrack to find the path
+        yet cur != start {
+            prev := path[cur]
+            maze[prev[0]][prev[1]] = "."
+            cur := prev
+        }
+
+        // print the maze with the path
+        yall row: maze {
+            yall col: row {
+                yelp(col)
+            }
+            yap()
+        }
+
+        // exit early, we're done here
+        yeet true
+    }
+    
+    // get neighbors of the current position
+    neighbors := []
+    yif cur[0] > 0 {
+        neighbors = push(neighbors, [cur[0]-1, cur[1]])
+    }
+    yif cur[0] < len(maze)-1 {
+        neighbors = push(neighbors, [cur[0]+1, cur[1]])
+    }
+    yif cur[1] > 0 {
+        neighbors = push(neighbors, [cur[0], cur[1]-1])
+    }
+    yif cur[1] < len(maze[0])-1 {
+        neighbors = push(neighbors, [cur[0], cur[1]+1])
+    }
+    
+    // add unseen neighbors to the queue
+    yall neighbors {
+        yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
+            queue    = push(queue, yt)
+            seen[yt] = true
+            path[yt] = cur
+        }
+    }
+}
+`,
+
     'mandelbrot':
         `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
 // back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
 
-width  := 90
+width  := 80
 height := 24
 
 real_min := -2.0
@@ -236,7 +320,7 @@ real_max := 0.5
 imag_min := -1.1
 imag_max := 1.1
 
-palette  := "...--~~+:;=*!#$%W@"
+palette  := "..--~~:;+=!*#%@"
 max_iter := len(palette) - 1
 
 yall py: 0..height {
@@ -325,6 +409,79 @@ yet ip < len(code) {
 }
 `,
 
+    'regex':
+        `//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'. 
+//   Now they have two problems.”
+//                           -- Jamie Zawinski
+//
+// But we're not satisfied with just two problems - we like to live dangerously. How about using
+// regular expressions in a language that doesn't have them, so we'll have to implement them ourselves
+// from scratch? Contgratulations, now we have 3 problems.
+//
+// We'll yoink Rob Pike's beautifully simple regex matcher from 'The Practice of Programming' (1998).
+// It supports 4 special characters: '*', '^', '$' and '.', which account for 95% of use.
+// More details: https://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html
+
+// search for regex anywhere in text
+match := \\regex text {
+    yif regex && regex[0] == "^" {
+        yeet match_here(rest(regex), text)
+    }
+    yet true {
+        yif match_here(regex, text) {
+            yeet true
+        }
+        yif !text {
+            yeet false
+        }
+        text = rest(text)
+    }
+}
+
+// search for regex at beginning of text 
+match_here := \\regex text {
+    yif !regex {
+        yeet true
+    } 
+    yif regex == "$" {
+        yeet text == ""
+    } 
+    yif len(regex) > 1 && regex[1] == "*" {
+        yeet match_star(regex[0], rest(rest(regex)), text)
+    }  
+    yif text && (regex[0] == "." || regex[0] == text[0]) {
+        yeet match_here(rest(regex), rest(text))
+    }
+    yeet false
+}
+
+// search for c*regex at beginning of text
+match_star := \\c regex text {
+    yet true {
+        yif match_here(regex, text) {
+            yeet true
+        }
+        yif !text || (text[0] != c && c != ".") {
+            yeet false
+        }
+        text = rest(text)
+    }
+}
+
+regexes := [ "cat" ,"^cat" "cat$",  "^c.*t$" ]
+words   := [ "cat", "cult", "concat", "category", "concatenation" ]
+
+yap("all words:", words)
+
+yall re: regexes {
+    result := []
+    yall words {
+        yif match(re, yt) { result = push(result, yt) }
+    }
+    yap("words matching /" + re + "/:", result)
+}
+`,
+
     'sort':
         `// Sorting algorithms of different sorts.
 
@@ -367,11 +524,8 @@ quick_sort := \\arr {
     quick_sort(left) + middle + quick_sort(right)
 }
 
-nums := [3, 6, 9, 1, 5, 4, 2, 0, 8, 7]
-
-yap("Bubble sorted:", bubble_sort(nums))
-yap("Quick sorted: ", quick_sort(nums))
-yap("Btw, original array is still there, untouched:", nums)
+yap("Bubble sorted:", bubble_sort([3, 6, 9, 1, 5, 4, 2, 0, 8, 7]))
+yap("Quick sorted: ", quick_sort([3, 6, 9, 1, 5, 4, 2, 0, 8, 7]))
 `,
 
     "random":
