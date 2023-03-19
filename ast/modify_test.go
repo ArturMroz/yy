@@ -88,7 +88,7 @@ func TestModify(t *testing.T) {
 			},
 		},
 		{
-			&YetExpression{
+			&YoyoExpression{
 				Condition: one(),
 				Body: &BlockStatement{
 					Statements: []Statement{
@@ -96,7 +96,7 @@ func TestModify(t *testing.T) {
 					},
 				},
 			},
-			&YetExpression{
+			&YoyoExpression{
 				Condition: two(),
 				Body: &BlockStatement{
 					Statements: []Statement{

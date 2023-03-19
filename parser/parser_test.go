@@ -636,19 +636,19 @@ func TestYoloExpression(t *testing.T) {
 	}
 }
 
-func TestYetExpression(t *testing.T) {
+func TestYoyoExpression(t *testing.T) {
 	tests := []struct {
 		input     string
 		condition string
 		body      string
 	}{
 		{
-			"yet i < 5 { i = i + 1 }",
+			"yoyo i < 5 { i = i + 1 }",
 			"(i < 5)",
 			"{ (i = (i + 1)) }",
 		},
 		{
-			"yet true { yowl() }",
+			"yoyo true { yowl() }",
 			"true",
 			"{ yowl() }",
 		},
@@ -657,9 +657,9 @@ func TestYetExpression(t *testing.T) {
 	for _, tt := range tests {
 		stmt := parseSingleExprStmt(t, tt.input)
 
-		yyExpr, ok := stmt.Expression.(*ast.YetExpression)
+		yyExpr, ok := stmt.Expression.(*ast.YoyoExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.YetExpression. got=%T", stmt.Expression)
+			t.Fatalf("stmt.Expression is not ast.YoyoExpression. got=%T", stmt.Expression)
 		}
 
 		if yyExpr.Condition.String() != tt.condition {
@@ -971,6 +971,8 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 //
 
 func parse(t *testing.T, input string) *ast.Program {
+	t.Helper()
+
 	l := lexer.New(input)
 	parser := New(l)
 	program := parser.ParseProgram()

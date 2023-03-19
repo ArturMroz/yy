@@ -11,7 +11,7 @@ yif 2*2 < 1 {
     "math.exe stopped working"
 }
 
-// there are 2 looping constructs in YY: yall and yet
+// there are 2 looping constructs in YY: yall and yoyo
 
 // yall (Y'all) yeeterates over a collection (array, string or range)
 // and declares 'yt' (short for yeeterator) variable automatically in the loop's scope
@@ -89,18 +89,18 @@ smol := \x { x < 3}
 yassert(filter(b, smol) == [1, 2])
 
 
-// 2nd type of loop: 'yet' as in 'are we there yet?'
+// 2nd type of loop: 'yoyo', inspired by the motion of a yoyo, going up and down
 
 i := 0
-yet i < 5 {
+yoyo i < 5 {
     i += 1
 }
 
 yassert(i == 5)
 
-// yet loop expression evaluates to the last result
+// yoyo loop expression evaluates to the last result
 j := 0
-result := yet j < 4 {
+result := yoyo j < 4 {
     j += 1
 }
 
@@ -109,14 +109,14 @@ yassert(result == 4)
 
 arr := []
 i   := 1
-yet len(arr) < 5 {
+yoyo len(arr) < 5 {
     arr = push(arr, i)
     i += 3
 }
 
 yassert(arr == [1, 4, 7, 10, 13])
 
-yet len(arr) > 0 {
+yoyo len(arr) > 0 {
     arr = rest(arr)
     yap(arr)
 }

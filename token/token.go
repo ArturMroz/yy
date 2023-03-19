@@ -155,7 +155,7 @@ var keywords = map[string]TokenType{
 	"yels":  YELS,
 	"yeet":  YEET,
 	"yolo":  YOLO,
-	"yet":   YET,
+	"yoyo":  YOYO,
 	"yall":  YALL,
 }
 

@@ -334,17 +334,17 @@ func (ye *YoloExpression) String() string {
 	return fmt.Sprintf("yolo { %s }", ye.Body.String())
 }
 
-type YetExpression struct {
+type YoyoExpression struct {
 	Token     token.Token
 	Condition Expression
 	Body      *BlockStatement
 }
 
-func (ye *YetExpression) expressionNode()      {}
-func (de *YetExpression) Pos() int             { return de.Token.Offset }
-func (ye *YetExpression) TokenLiteral() string { return ye.Token.Literal }
-func (ye *YetExpression) String() string {
-	return fmt.Sprintf("yet %s { %s }", ye.Condition.String(), ye.Body.String())
+func (ye *YoyoExpression) expressionNode()      {}
+func (de *YoyoExpression) Pos() int             { return de.Token.Offset }
+func (ye *YoyoExpression) TokenLiteral() string { return ye.Token.Literal }
+func (ye *YoyoExpression) String() string {
+	return fmt.Sprintf("yoyo %s { %s }", ye.Condition.String(), ye.Body.String())
 }
 
 type YallExpression struct {

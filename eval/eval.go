@@ -240,7 +240,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return object.NULL
 		}
 
-	case *ast.YetExpression:
+	case *ast.YoyoExpression:
 		extendedEnv := object.NewEnclosedEnvironment(env)
 
 		var result object.Object

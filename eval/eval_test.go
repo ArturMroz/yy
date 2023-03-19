@@ -344,13 +344,13 @@ func TestYifYelsExpressions(t *testing.T) {
 	})
 }
 
-func TestYetExpressions(t *testing.T) {
+func TestYoyoExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{"i := 0; yet i < 5 { i = i + 1 }", 5},
-		{"sum := 0; i := 1; yet i < 5 { sum = sum + i; i = i + 1 }; sum", 10},
-		{"sum := 0; i := 1; yet i < 5 { sum += i; i += 1 }; sum", 10},
-		{"i := 1; yet false { i = 69 }; i", 1},
-		{"i := 0; yet i < 5 { i += 1; yif i == 2 { yeet 69 }; -1 }", 69},
+		{"i := 0; yoyo i < 5 { i = i + 1 }", 5},
+		{"sum := 0; i := 1; yoyo i < 5 { sum = sum + i; i = i + 1 }; sum", 10},
+		{"sum := 0; i := 1; yoyo i < 5 { sum += i; i += 1 }; sum", 10},
+		{"i := 1; yoyo false { i = 69 }; i", 1},
+		{"i := 0; yoyo i < 5 { i += 1; yif i == 2 { yeet 69 }; -1 }", 69},
 	})
 }
 
