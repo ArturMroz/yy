@@ -222,99 +222,6 @@ smol := \\x { x < avg }
 yap("smaller than average:", filter(tripled, smol))
 `,
 
-    'maze':
-        `// Have you ever got lost in a supermarket when you were a child? Perfect!
-// We'll recreate that traumatic event by building a maze solver in YY.
-
-maze := [
-    "@S@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 
-    "@     @   @ @         @       @", 
-    "@@@@@ @@@ @ @ @@@@@ @@@@@ @@@ @", 
-    "@   @ @   @ @   @ @     @   @ @", 
-    "@ @ @ @ @ @ @ @@@ @@@@@@@@@@@ @", 
-    "@ @     @ @     @ @     @     @", 
-    "@@@@@@@@@ @@@ @@@ @@@ @@@ @@@@@", 
-    "@       @       @       @   @ @", 
-    "@@@ @ @@@ @@@@@ @@@ @@@@@ @ @ @", 
-    "@   @     @               @   @", 
-    "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@", 
-]
-
-solve := \\maze {
-    // hardcoding start position to make the code less verbose
-    // normally we should scan the maze for the 'S' character
-    start := [0, 1]
-
-    queue := [start]
-
-    // YY doesn't support sets, so we'll use a hashmap instead
-    seen := %{ start: true }
-
-    // keep track of the path to reconstruct our way through the maze
-    path := %{ start: null }
-
-    // run until the queue is empty or we found a way out
-    yoyo queue {
-        // since we're using depth-first seach, we'll get the next position by taking 
-        // the last element from the queue
-        cur := yoink(queue)
-
-        // we could change this algorithm to breadth-first search by taking the first element like so
-        // cur := yoink(queue, 0)
-        
-        // check if we have reached the end
-        yif maze[cur[0]][cur[1]] == "E" {
-            maze[cur[0]][cur[1]] = "."
-
-            // backtrack to find and mark the path
-            yoyo cur != start {
-                prev := path[cur]
-                maze[prev[0]][prev[1]] = "."
-                cur := prev
-            }
-
-            // exit early, we're done here
-            yeet true
-        }
-        
-        // get neighbours of the current position
-        neighbours := []
-        yif cur[0] > 0 {
-            neighbours << [cur[0]-1, cur[1]]
-        }
-        yif cur[0] <= len(maze) {
-            neighbours << [cur[0]+1, cur[1]]
-        }
-        yif cur[1] > 0 {
-            neighbours << [cur[0], cur[1]-1]
-        }
-        yif cur[1] <= len(maze[0]) {
-            neighbours << [cur[0], cur[1]+1]
-        }
-        
-        // add unseen neighbours to the queue
-        yall neighbours {
-            yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
-                seen[yt] = true
-                path[yt] = cur
-                queue << yt
-            }
-        }
-    }
-}
-
-yif solve(maze) {
-    // print out the maze with our path
-    yall row: maze {
-        yall col: row {
-            yelp(col)
-        }
-        yap()
-    }
-} yels {
-    yap("there's no way out :(")
-}`,
-
     'mandelbrot':
         `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
@@ -416,6 +323,100 @@ yoyo ip < len(code) {
     ip += 1
 }
 `,
+
+    'maze':
+        `// Have you ever got lost in a supermarket when you were a child? Perfect!
+// We'll recreate that traumatic event by building a maze solver in YY.
+
+maze := [
+    "@S@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 
+    "@     @   @ @         @       @", 
+    "@@@@@ @@@ @ @ @@@@@ @@@@@ @@@ @", 
+    "@   @ @   @ @   @ @     @   @ @", 
+    "@ @ @ @ @ @ @ @@@ @@@@@@@@@@@ @", 
+    "@ @     @ @     @ @     @     @", 
+    "@@@@@@@@@ @@@ @@@ @@@ @@@ @@@@@", 
+    "@       @       @       @   @ @", 
+    "@@@ @ @@@ @@@@@ @@@ @@@@@ @ @ @", 
+    "@   @     @               @   @", 
+    "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@", 
+]
+
+solve := \\maze {
+    // hardcoding start position to make the code less verbose
+    // normally we should scan the maze for the 'S' character
+    start := [0, 1]
+
+    queue := [start]
+
+    // YY doesn't support sets, so we'll use a hashmap instead
+    seen := %{ start: true }
+
+    // keep track of the path to reconstruct our way through the maze
+    path := %{ start: null }
+
+    // run until the queue is empty or we found a way out
+    yoyo queue {
+        // since we're using depth-first seach, we'll get the next position by taking 
+        // the last element from the queue
+        cur := yoink(queue)
+
+        // we could change this algorithm to breadth-first search by taking the first element like so
+        // cur := yoink(queue, 0)
+        
+        // check if we have reached the end
+        yif maze[cur[0]][cur[1]] == "E" {
+            maze[cur[0]][cur[1]] = "."
+
+            // backtrack to find and mark the path
+            yoyo cur != start {
+                prev := path[cur]
+                maze[prev[0]][prev[1]] = "."
+                cur := prev
+            }
+
+            // exit early, we're done here
+            yeet true
+        }
+        
+        // get neighbours of the current position
+        neighbours := []
+        yif cur[0] > 0 {
+            neighbours << [cur[0]-1, cur[1]]
+        }
+        yif cur[0] <= len(maze) {
+            neighbours << [cur[0]+1, cur[1]]
+        }
+        yif cur[1] > 0 {
+            neighbours << [cur[0], cur[1]-1]
+        }
+        yif cur[1] <= len(maze[0]) {
+            neighbours << [cur[0], cur[1]+1]
+        }
+        
+        // add unseen neighbours to the queue
+        yall neighbours {
+            yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
+                seen[yt] = true
+                path[yt] = cur
+                queue << yt
+            }
+        }
+    }
+}
+
+yif solve(maze) {
+    // print out the maze with our path
+    yall row: maze {
+        yall col: row {
+            yelp(col)
+        }
+        yap()
+    }
+} yels {
+    yap("there's no way out :(")
+}`,
+
 
     'regex':
         `//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'. 
