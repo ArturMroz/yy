@@ -104,6 +104,8 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"1 > 2", false},
 		{"1 < 1", false},
 		{"1 > 1", false},
+		{"1 <= 1", true},
+		{"1 >= 1", true},
 		{"1 == 1", true},
 		{"1 != 1", false},
 		{"1 == 2", false},
@@ -232,6 +234,27 @@ func TestIntegerArrayLiterals(t *testing.T) {
 		{
 			"[1 + 2 * 3 2 + 2 / 2 3 + 3]",
 			[]int64{7, 3, 6},
+		},
+	})
+}
+
+func TestArrayAppend(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{
+			"a := []; a << 1",
+			[]int64{1},
+		},
+		{
+			"a := []; a << 1; a << 2",
+			[]int64{1, 2},
+		},
+		{
+			"a := []; a << 1; a << 2; a",
+			[]int64{1, 2},
+		},
+		{
+			"a := [9]; a << 1; a << 2; a",
+			[]int64{9, 1, 2},
 		},
 	})
 }

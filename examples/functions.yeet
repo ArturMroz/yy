@@ -124,7 +124,7 @@ yassert(map(a, \x { x * 3 }) == [3, 6, 9, 12])
 map2 := \arr fn {
     acc := []
     yall arr {
-        acc = push(acc, fn(yt))
+        acc << fn(yt)
     }
 }
 

@@ -516,6 +516,11 @@ func evalPrefixExpression(op string, right object.Object, yoloOK bool) object.Ob
 
 func evalInfixExpression(op string, left, right object.Object, yoloOK bool) object.Object {
 	switch {
+	case left.Type() == object.ARRAY_OBJ && op == "<<":
+		left := left.(*object.Array)
+		left.Elements = append(left.Elements, right)
+		return left
+
 	// as a special case, NUMBER & INTEGER types can be mixed together outside of yolo mode
 	case left.Type() == object.NUMBER_OBJ && right.Type() == object.INTEGER_OBJ:
 		left := left.(*object.Number)
@@ -537,6 +542,10 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return toYeetBool(left.Value < rVal)
 		case ">":
 			return toYeetBool(left.Value > rVal)
+		case "<=":
+			return toYeetBool(left.Value <= rVal)
+		case ">=":
+			return toYeetBool(left.Value >= rVal)
 		case "==":
 			return toYeetBool(left.Value == rVal)
 		case "!=":
@@ -558,11 +567,15 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		case "/":
 			return &object.Number{Value: lVal / right.Value}
 		case "%":
-			return &object.Number{Value: float64(int64(left.Value) % int64(right.Value))}
+			return &object.Number{Value: float64(left.Value % int64(right.Value))}
 		case "<":
 			return toYeetBool(lVal < right.Value)
 		case ">":
 			return toYeetBool(lVal > right.Value)
+		case "<=":
+			return toYeetBool(lVal <= right.Value)
+		case ">=":
+			return toYeetBool(lVal >= right.Value)
 		case "==":
 			return toYeetBool(lVal == right.Value)
 		case "!=":
@@ -610,6 +623,10 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return toYeetBool(left.Value < right.Value)
 		case ">":
 			return toYeetBool(left.Value > right.Value)
+		case "<=":
+			return toYeetBool(left.Value <= right.Value)
+		case ">=":
+			return toYeetBool(left.Value >= right.Value)
 		case "==":
 			return toYeetBool(left.Value == right.Value)
 		case "!=":
@@ -635,6 +652,10 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return toYeetBool(left.Value < right.Value)
 		case ">":
 			return toYeetBool(left.Value > right.Value)
+		case "<=":
+			return toYeetBool(left.Value <= right.Value)
+		case ">=":
+			return toYeetBool(left.Value >= right.Value)
 		case "==":
 			return toYeetBool(left.Value == right.Value)
 		case "!=":

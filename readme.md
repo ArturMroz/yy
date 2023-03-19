@@ -90,6 +90,9 @@ yoyo i < 5 { // body executes while the condition is truthy
 my_array := [7, true, "hello", null, [2, "inception"]]
 
 yap(my_array[2]) // "hello"
+
+// use shovel operator '<<' to append to an array
+my_array << 5
 ```
 
 ```c

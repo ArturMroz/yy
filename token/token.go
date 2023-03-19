@@ -45,6 +45,9 @@ const (
 	AND
 	EQ
 	NOT_EQ
+	LT_EQ
+	GT_EQ
+	LT_LT
 	WALRUS
 	RANGE
 	MACRO
@@ -102,8 +105,8 @@ var tokens = [...]string{
 	AMPERSAND: "&",
 	PIPE:      "|",
 	BACKSLASH: `\`,
+	ASSIGN:    "=",
 
-	ASSIGN:     "=",
 	ADD_ASSIGN: "+=",
 	SUB_ASSIGN: "-=",
 	MUL_ASSIGN: "*=",
@@ -113,6 +116,9 @@ var tokens = [...]string{
 	AND:        "&&",
 	EQ:         "==",
 	NOT_EQ:     "!=",
+	LT_EQ:      "<=",
+	GT_EQ:      ">=",
+	LT_LT:      "<<",
 	WALRUS:     ":=",
 	RANGE:      "..",
 	MACRO:      `@\`,
