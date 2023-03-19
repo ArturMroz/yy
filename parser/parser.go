@@ -81,12 +81,15 @@ var precedences = map[token.TokenType]Precedence{
 	token.MUL_ASSIGN: ASSIGNMENT,
 	token.DIV_ASSIGN: ASSIGNMENT,
 	token.MOD_ASSIGN: ASSIGNMENT,
+	token.LT_LT:      ASSIGNMENT,
 	token.OR:         OR,
 	token.AND:        AND,
 	token.EQ:         EQUALS,
 	token.NOT_EQ:     EQUALS,
 	token.LT:         LESSGREATER,
 	token.GT:         LESSGREATER,
+	token.LT_EQ:      LESSGREATER,
+	token.GT_EQ:      LESSGREATER,
 	token.RANGE:      RANGE,
 	token.PLUS:       SUM,
 	token.MINUS:      SUM,
@@ -123,7 +126,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.YIF:       p.parseYifExpression,
 		token.YOLO:      p.parseYoloExpression,
 		token.YALL:      p.parseYallExpression,
-		token.YET:       p.parseYetExpression,
+		token.YOYO:      p.parseYoyoExpression,
 		token.BACKSLASH: p.parseLambdaLiteral,
 		token.MACRO:     p.parseMacroLiteral,
 	}
@@ -140,6 +143,9 @@ func New(l *lexer.Lexer) *Parser {
 		token.NOT_EQ:     p.parseInfixExpression,
 		token.LT:         p.parseInfixExpression,
 		token.GT:         p.parseInfixExpression,
+		token.LT_EQ:      p.parseInfixExpression,
+		token.GT_EQ:      p.parseInfixExpression,
+		token.LT_LT:      p.parseInfixExpression,
 		token.RANGE:      p.parseRangeLiteral,
 		token.WALRUS:     p.parseDeclareExpression,
 		token.ASSIGN:     p.parseAssignExpression,
@@ -384,19 +390,19 @@ func (p *Parser) parseYoloExpression() ast.Expression {
 	return yoloExpr
 }
 
-func (p *Parser) parseYetExpression() ast.Expression {
-	yetExpr := &ast.YetExpression{Token: p.curToken}
+func (p *Parser) parseYoyoExpression() ast.Expression {
+	yoyoExpr := &ast.YoyoExpression{Token: p.curToken}
 	p.advance()
 
-	yetExpr.Condition = p.parseExpression(LOWEST)
+	yoyoExpr.Condition = p.parseExpression(LOWEST)
 
-	if !p.eat(token.LBRACE, "missing opening '{' after 'yet'") {
+	if !p.eat(token.LBRACE, "missing opening '{' after 'yoyo'") {
 		return nil
 	}
 
-	yetExpr.Body = p.parseBlockStatement()
+	yoyoExpr.Body = p.parseBlockStatement()
 
-	return yetExpr
+	return yoyoExpr
 }
 
 func (p *Parser) parseYallExpression() ast.Expression {
@@ -712,7 +718,7 @@ func (p *Parser) sync() {
 		}
 
 		switch p.peekToken.Type {
-		case token.YEET, token.YIF, token.YALL, token.YET, token.YOLO, token.BACKSLASH, token.MACRO:
+		case token.YEET, token.YIF, token.YALL, token.YOYO, token.YOLO, token.BACKSLASH, token.MACRO:
 			return
 
 		default:

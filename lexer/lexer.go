@@ -22,10 +22,6 @@ func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
 	switch l.ch {
-	case '<':
-		tok = l.newToken(token.LT)
-	case '>':
-		tok = l.newToken(token.GT)
 	case ';':
 		tok = l.newToken(token.SEMICOLON)
 	case '(':
@@ -59,6 +55,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.switchEq(token.BANG, token.NOT_EQ)
 	case ':':
 		tok = l.switchEq(token.COLON, token.WALRUS)
+	case '>':
+		tok = l.switchEq(token.GT, token.GT_EQ)
 
 	case '.':
 		tok = l.switch2(token.DOT, token.RANGE, '.')
@@ -68,6 +66,18 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.switch2(token.PIPE, token.OR, '|')
 	case '@':
 		tok = l.switch2(token.AT, token.MACRO, '\\')
+
+	case '<':
+		switch l.peek() {
+		case '=':
+			l.advance()
+			tok = l.newToken(token.LT_EQ)
+		case '<':
+			l.advance()
+			tok = l.newToken(token.LT_LT)
+		default:
+			tok = l.newToken(token.LT)
+		}
 
 	case '%':
 		switch l.peek() {

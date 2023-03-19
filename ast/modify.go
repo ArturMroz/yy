@@ -36,7 +36,7 @@ func Modify(node Node, modifier ModifierFunc) Node {
 			node.Alternative, _ = Modify(node.Alternative, modifier).(*BlockStatement)
 		}
 
-	case *YetExpression:
+	case *YoyoExpression:
 		node.Condition, _ = Modify(node.Condition, modifier).(Expression)
 		node.Body, _ = Modify(node.Body, modifier).(*BlockStatement)
 
