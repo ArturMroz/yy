@@ -227,24 +227,34 @@ yap("smaller than average:", filter(tripled, smol))
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
 // back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
 
+// set up the width and height of the output image
 width  := 70
 height := 24
 
+// set up the complex plane boundaries for the fractal
 real_min := -2.0
 real_max := 0.5
 imag_min := -1.1
 imag_max := 1.1
 
-palette  := "..--~~:;+=!*#%@"
+// a palette of characters to use for the fractal, with increasing "intensity"
+palette := "..--~~:;+=!*#%@"
+
+// the maximum number of iterations to perform, which determines the "intensity" of each pixel
 max_iter := len(palette) - 1
 
+// loop through each pixel in the output image
 yall py: 0..height {
     yall px: 0..width {
+        // calculate the corresponding complex number for the current pixel
         real := (float(px) / width)  * (real_max - real_min) + real_min
         imag := (float(py) / height) * (imag_max - imag_min) + imag_min
 
+        // set up initial values for the complex number sequence
         x := y := 0.0
 
+        // loop through the complex number sequence until the sequence diverges
+        // or the maximum number of iterations is reached
         i := 0
         yoyo x*x + y*y < 4.0 && i < max_iter {
             tmp := x*x - y*y + real
@@ -253,9 +263,11 @@ yall py: 0..height {
             i += 1
         }
 
+        // output the corresponding color for the current pixel
         yelp(palette[i])
     }
 
+    // output a newline to move to the next row in the output image
     yap()
 }
 `,
@@ -266,13 +278,13 @@ yall py: 0..height {
 // *BWOOOONNNNGNGGGG* <- Inception's horn sound effect
 // -_-                <- DiCaprio's face
 
-// This is an actual "Hello World!" program in Brainfuck
+// this is an actual "Hello World!" program in Brainfuck
 hello_world := "
 ++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>
 ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
 "
 
-// Our very own Brainfuck VM
+// our very own Brainfuck VM
 ip  := 0  // instruction pointer
 dp  := 0  // data pointer
 mem := [] // memory
@@ -282,19 +294,20 @@ yall 0..100 { mem << 0 }
 
 code := hello_world
 
+// loop through the code and execute each instruction
 yoyo ip < len(code) {
     ins := code[ip]
-    yif ins == "+" {
+    yif ins == "+" {        // increment the value in memory at the data pointer
         mem[dp] += 1
-    } yels yif ins == "-" {
+    } yels yif ins == "-" { // decrement the value in memory at the data pointer
         mem[dp] -= 1
-    } yels yif ins == ">" {
+    } yels yif ins == ">" { // move the data pointer to the right
         dp += 1
-    } yels yif ins == "<" {
+    } yels yif ins == "<" { // move the data pointer to the left
         dp -= 1
-    } yels yif ins == "." {
+    } yels yif ins == "." { // print the ASCII character for the value in memory at the data pointer
         yelp(chr(mem[dp]))
-    } yels yif ins == "[" {
+    } yels yif ins == "[" { // if the memory at the data pointer is 0, jump to the corresponding "]" char
         yif mem[dp] == 0 {
             depth := 1
             yoyo depth != 0 {
@@ -306,7 +319,7 @@ yoyo ip < len(code) {
                 }
             }
         }
-    } yels yif ins == "]" {
+    } yels yif ins == "]" { // if the value at the data pointer isn't 0, jump back to the corresponding "[" char
         yif mem[dp] != 0 {
             depth := 1
             yoyo depth != 0 {
@@ -320,6 +333,7 @@ yoyo ip < len(code) {
         }
     }
 
+    // move to the next instruction
     ip += 1
 }
 `,
@@ -329,24 +343,33 @@ yoyo ip < len(code) {
 // We'll recreate that traumatic event by building a maze solver in YY.
 
 maze := [
-    "@S@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 
-    "@     @   @ @         @       @", 
-    "@@@@@ @@@ @ @ @@@@@ @@@@@ @@@ @", 
-    "@   @ @   @ @   @ @     @   @ @", 
-    "@ @ @ @ @ @ @ @@@ @@@@@@@@@@@ @", 
-    "@ @     @ @     @ @     @     @", 
-    "@@@@@@@@@ @@@ @@@ @@@ @@@ @@@@@", 
-    "@       @       @       @   @ @", 
-    "@@@ @ @@@ @@@@@ @@@ @@@@@ @ @ @", 
-    "@   @     @               @   @", 
-    "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@", 
+    "@S@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+    "@     @   @ @         @       @",
+    "@@@@@ @@@ @ @ @@@@@ @@@@@ @@@ @",
+    "@   @ @   @ @   @ @     @   @ @",
+    "@ @ @ @ @ @ @ @@@ @@@@@@@@@@@ @",
+    "@ @     @ @     @ @           @",
+    "@@@@@@@@@ @@@ @@@ @@@ @@@ @@@@@",
+    "@       @       @       @   @ @",
+    "@@@ @ @@@ @@@@@ @@@ @@@@@ @ @ @",
+    "@   @     @          @    @   @",
+    "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@",
 ]
 
-solve := \\maze {
-    // hardcoding start position to make the code less verbose
-    // normally we should scan the maze for the 'S' character
-    start := [0, 1]
+// locate the starting position by searching for the 'S' character
+find_start := \\maze {
+    yall row: 0..len(maze)-1 {
+        yall col: 0..len(maze[0])-1 {
+            yif maze[row][col] == "S" {
+                yeet [row, col]
+            }
+        }
+    }
+    yikes("invalid maze: no starting position found")
+}
 
+solve := \\maze {
+    start := find_start(maze)
     queue := [start]
 
     // YY doesn't support sets, so we'll use a hashmap instead
@@ -357,13 +380,13 @@ solve := \\maze {
 
     // run until the queue is empty or we found a way out
     yoyo queue {
-        // since we're using depth-first seach, we'll get the next position by taking 
-        // the last element from the queue
+        // since we're using depth-first seach, we'll get the next position by taking
+        // the last element from the queue (we're using queue as a stack)
         cur := yoink(queue)
 
         // we could change this algorithm to breadth-first search by taking the first element like so
         // cur := yoink(queue, 0)
-        
+
         // check if we have reached the end
         yif maze[cur[0]][cur[1]] == "E" {
             maze[cur[0]][cur[1]] = "."
@@ -378,7 +401,7 @@ solve := \\maze {
             // exit early, we're done here
             yeet true
         }
-        
+
         // get neighbours of the current position
         neighbours := []
         yif cur[0] > 0 {
@@ -393,7 +416,7 @@ solve := \\maze {
         yif cur[1] <= len(maze[0]) {
             neighbours << [cur[0], cur[1]+1]
         }
-        
+
         // add unseen neighbours to the queue
         yall neighbours {
             yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
@@ -417,9 +440,8 @@ yif solve(maze) {
     yap("there's no way out :(")
 }`,
 
-
     'regex':
-        `//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'. 
+        `//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'.
 //   Now they have two problems.”
 //                           -- Jamie Zawinski
 //
@@ -447,17 +469,17 @@ match := \\regex text {
     }
 }
 
-// search for regex at beginning of text 
+// search for regex at beginning of text
 match_here := \\regex text {
     yif !regex {
         yeet true
-    } 
+    }
     yif regex == "$" {
         yeet text == ""
-    } 
+    }
     yif len(regex) > 1 && regex[1] == "*" {
         yeet match_star(regex[0], rest(rest(regex)), text)
-    }  
+    }
     yif text && (regex[0] == "." || regex[0] == text[0]) {
         yeet match_here(rest(regex), rest(text))
     }
@@ -477,7 +499,7 @@ match_star := \\c regex text {
     }
 }
 
-regexes := [ "cat" ,"^cat" "cat$",  "^c.*t$" ]
+regexes := [ "cat" ,"^cat" "cat$", "c.*t", "^c.*t$" ]
 words   := [ "cat", "cult", "concat", "category", "concatenation" ]
 
 yap("all words:", words)
@@ -485,9 +507,9 @@ yap("all words:", words)
 yall re: regexes {
     result := []
     yall words {
-        yif match(re, yt) { result << yt } 
+        yif match(re, yt) { result << yt }
     }
-    yap("words matching /" + re + "/:", result)
+    yap("words matching /{re}/: {result}")
 }
 `,
 
