@@ -435,8 +435,11 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 
 		arr.Elements = append(arr.Elements, p.parseExpression(LOWEST))
 
-		if p.peekIs(token.COMMA) { // TODO make comma nonoptional
+		if p.peekIs(token.COMMA) {
 			p.advance()
+		} else if !p.peekIs(token.RBRACKET) {
+			p.errorAtPeek(token.COMMA, "missing comma after element in array literal")
+			return nil
 		}
 	}
 
@@ -467,8 +470,11 @@ func (p *Parser) parseHashmapLiteral() ast.Expression {
 
 		hashmap.Pairs[key] = val
 
-		if p.peekIs(token.COMMA) { // TODO tighten up after writing more unit tests
+		if p.peekIs(token.COMMA) {
 			p.advance()
+		} else if !p.peekIs(token.RBRACE) {
+			p.errorAtPeek(token.COMMA, "missing comma after key-value pair in hashmap literal")
+			return nil
 		}
 	}
 
@@ -658,27 +664,26 @@ func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
 
 func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 	callExpr := &ast.CallExpression{
-		Token:     p.curToken,
-		Function:  fn,
-		Arguments: []ast.Expression{},
+		Token:    p.curToken,
+		Function: fn,
 	}
 
-	p.advance()
-
-	for !p.curIs(token.RPAREN) && !p.curIs(token.EOF) {
-		callExpr.Arguments = append(callExpr.Arguments, p.parseExpression(LOWEST))
-
+	for !p.peekIs(token.RPAREN) && !p.peekIs(token.EOF) {
 		p.advance()
 
-		if p.curIs(token.COMMA) { // TODO has to be more strict
+		callExpr.Arguments = append(callExpr.Arguments, p.parseExpression(LOWEST))
+
+		if p.peekIs(token.COMMA) {
 			p.advance()
+		} else if !p.peekIs(token.RPAREN) {
+			p.errorAtPeek(token.COMMA, "missing comma after an argument in call expression")
+			return nil
 		}
 	}
 
-	// TODO check this
-	// if !p.consume(token.RPAREN, "missing closing ')' after call expression") {
-	// 	return nil
-	// }
+	if !p.eat(token.RPAREN, "missing closing ')' in call expression") {
+		return nil
+	}
 
 	return callExpr
 }

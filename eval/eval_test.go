@@ -231,10 +231,6 @@ func TestIntegerArrayLiterals(t *testing.T) {
 			"[1 + 1, 2 + 2, 3 + 3]",
 			[]int64{2, 4, 6},
 		},
-		{
-			"[1 + 2 * 3 2 + 2 / 2 3 + 3]",
-			[]int64{7, 3, 6},
-		},
 	})
 }
 
@@ -299,7 +295,7 @@ func TestArrayIndexExpressions(t *testing.T) {
 		{"[1, 2, 3][0]", 1},
 		{"[1, 2, 3][1]", 2},
 		{"[1, 2, 3][2]", 3},
-		{"[1 2 3][2]", 3},
+		{"[1, 2, 3,][2]", 3},
 		{"i := 0; [1][i];", 1},
 		{"[1, 2, 3][1 + 1];", 3},
 		{
@@ -465,7 +461,7 @@ func TestAssignExpressions(t *testing.T) {
 		{"x += 8", errmsg{"identifier not found: x"}},
 
 		// TODO add more tests
-		{"a := [1, 2 3]; a[1] = 69; a", []int64{1, 69, 3}},
+		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
 		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
 		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
 	})
@@ -487,19 +483,14 @@ func TestLambdaApplication(t *testing.T) {
 		{`add := \x, y, z { x + y + z; }; add(1, 2, 3);`, 6},
 
 		{`add := \x y { x + y; }; add(5, 5);`, 10},
-		{`add := \x y { x + y; }; add(5+5 add(5, 5));`, 20},
-		{`add := \x y z { x + y + z }; add(1 2 3);`, 6},
-
-		{`add := \x y { x + y; }; add(5, 5);`, 10},
-		{`add := \x y { x + y; }; add(5+5 add(5, 5));`, 20},
-		{`add := \x y z { x + y + z }; add(1 2 3);`, 6},
+		{`add := \x y { x + y; }; add(5+5, add(5, 5));`, 20},
+		{`add := \x y z { x + y + z }; add(1, 2, 3);`, 6},
 
 		{`\(x) { x; }(5)`, 5},
 		{`\x { x }(5)`, 5},
 		{`\x, y { x * y }(3, 5)`, 15},
-		{`\x y { x * y }(3 5)`, 15},
-		{`\x y { x * y }(3+2 5+1)`, 30},
-		{`\x y { x * y }(3 + 2 5 + 1)`, 30},
+		{`\x y { x * y }(3, 5)`, 15},
+		{`\x y { x * y }(3+2, 5+1)`, 30},
 		{`\x y { x * y }(3 + 2, 5 + 1)`, 30},
 	})
 }
