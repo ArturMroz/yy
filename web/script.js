@@ -237,10 +237,10 @@ real_max := 0.5
 imag_min := -1.1
 imag_max := 1.1
 
-// a palette of characters to use for the fractal, with increasing "intensity"
+// a palette of characters to use for the fractal, with increasing 'intensity'
 palette := "..--~~:;+=!*#%@"
 
-// the maximum number of iterations to perform, which determines the "intensity" of each pixel
+// the maximum number of iterations to perform, which determines the 'intensity' of each pixel
 max_iter := len(palette) - 1
 
 // loop through each pixel in the output image
@@ -269,8 +269,7 @@ yall py: 0..height {
 
     // output a newline to move to the next row in the output image
     yap()
-}
-`,
+}`,
 
     'brainfuck':
         `// An interpreter for the Brainfuck programming language, written in the YY programming language.
@@ -319,7 +318,7 @@ yoyo ip < len(code) {
                 }
             }
         }
-    } yels yif ins == "]" { // if the value at the data pointer isn't 0, jump back to the corresponding "[" char
+    } yels yif ins == "]" { // if the memory at the data pointer isn't 0, jump back to the corresponding "[" char
         yif mem[dp] != 0 {
             depth := 1
             yoyo depth != 0 {
@@ -339,7 +338,7 @@ yoyo ip < len(code) {
 `,
 
     'maze':
-        `// Have you ever got lost in a supermarket when you were a child? Perfect!
+        `// Have you ever got lost in a supermarket as a child? Perfect!
 // We'll recreate that traumatic event by building a maze solver in YY.
 
 maze := [
@@ -359,7 +358,7 @@ maze := [
 // locate the starting position by searching for the 'S' character
 find_start := \\maze {
     yall row: 0..len(maze)-1 {
-        yall col: 0..len(maze[0])-1 {
+        yall col: 0..len(maze[row])-1 {
             yif maze[row][col] == "S" {
                 yeet [row, col]
             }
@@ -407,13 +406,13 @@ solve := \\maze {
         yif cur[0] > 0 {
             neighbours << [cur[0]-1, cur[1]]
         }
-        yif cur[0] <= len(maze) {
+        yif cur[0] < len(maze)-1 {
             neighbours << [cur[0]+1, cur[1]]
         }
         yif cur[1] > 0 {
             neighbours << [cur[0], cur[1]-1]
         }
-        yif cur[1] <= len(maze[0]) {
+        yif cur[1] < len(maze[0])-1 {
             neighbours << [cur[0], cur[1]+1]
         }
 
@@ -533,7 +532,7 @@ bubble_sort := \\arr {
 
 // Quick sort, unlike bubble sort, is quick and nimble like a young yak yodelling in a yurt (O(n log n)).
 quick_sort := \\arr {
-    yif len(arr) < 2 {
+    yif len(arr) <= 1 {
         yeet arr
     }
 
