@@ -469,15 +469,10 @@ func TestAssignExpressions(t *testing.T) {
 
 func TestLambdaApplication(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{`nope := \() { 69 }; nope();`, 69},
-		{`identity := \(x) { x; }; identity(5);`, 5},
-		{`identity := \(x) { yeet x; }; identity(5);`, 5},
-		{`double := \(x) { x * 2; }; double(5);`, 10},
-		{`add := \(x, y) { x + y; }; add(5, 5);`, 10},
-		{`add := \(x, y) { x + y; }; add(5 + 5, add(5, 5));`, 20},
-		{`add := \(x, y, z) { x + y + z; }; add(1, 2, 3);`, 6},
-
 		{`nope := \ { 69 }; nope();`, 69},
+		{`identity := \x { x; }; identity(5);`, 5},
+		{`identity := \x { yeet x; }; identity(5);`, 5},
+		{`double := \x { x * 2; }; double(5);`, 10},
 		{`add := \x, y { x + y; }; add(5, 5);`, 10},
 		{`add := \x, y { x + y; }; add(5 + 5, add(5, 5));`, 20},
 		{`add := \x, y, z { x + y + z; }; add(1, 2, 3);`, 6},
@@ -486,7 +481,6 @@ func TestLambdaApplication(t *testing.T) {
 		{`add := \x y { x + y; }; add(5+5, add(5, 5));`, 20},
 		{`add := \x y z { x + y + z }; add(1, 2, 3);`, 6},
 
-		{`\(x) { x; }(5)`, 5},
 		{`\x { x }(5)`, 5},
 		{`\x, y { x * y }(3, 5)`, 15},
 		{`\x y { x * y }(3, 5)`, 15},

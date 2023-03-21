@@ -488,23 +488,20 @@ func (p *Parser) parseHashmapLiteral() ast.Expression {
 func (p *Parser) parseLambdaLiteral() ast.Expression {
 	fn := &ast.FunctionLiteral{Token: p.curToken}
 
-	if p.peekIs(token.LPAREN) { // parens are optional
-		p.advance()
-	}
-
-	for !p.peekIs(token.RPAREN) && !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
+	for !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
 		p.advance()
 
-		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-		fn.Parameters = append(fn.Parameters, param)
+		if p.curIs(token.IDENT) {
+			param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+			fn.Parameters = append(fn.Parameters, param)
+		} else {
+			p.errorAtCurrent("expected a parameter in lambda declaration, found " + p.curToken.Literal)
+			return nil
+		}
 
 		if p.peekIs(token.COMMA) { // comma is optional
 			p.advance()
 		}
-	}
-
-	if p.peekIs(token.RPAREN) { // parens are optional
-		p.advance()
 	}
 
 	if !p.eat(token.LBRACE, "missing opening '{' before lambda body") {
@@ -519,24 +516,20 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 func (p *Parser) parseMacroLiteral() ast.Expression {
 	fn := &ast.MacroLiteral{Token: p.curToken}
 
-	if p.peekIs(token.LPAREN) { // parens are optional
-		p.advance()
-	}
-
-	// TODO dry param parsing
-	for !p.peekIs(token.RPAREN) && !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
+	for !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
 		p.advance()
 
-		param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-		fn.Parameters = append(fn.Parameters, param)
+		if p.curIs(token.IDENT) {
+			param := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+			fn.Parameters = append(fn.Parameters, param)
+		} else {
+			p.errorAtCurrent("expected a parameter in macro declaration, found " + p.curToken.Literal)
+			return nil
+		}
 
 		if p.peekIs(token.COMMA) { // comma is optional
 			p.advance()
 		}
-	}
-
-	if p.peekIs(token.RPAREN) { // parens are optional
-		p.advance()
 	}
 
 	if !p.eat(token.LBRACE, "missing opening '{' before lambda body") {
