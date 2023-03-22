@@ -13,8 +13,7 @@ Take YY out for a spin in [the interactive playground](https://mroz.dev/yy).
 - **Everything is an expression.** Even statements like control flow constructs (yif, yall, etc.) and yassignments yeet a value. This allows for a more concise and expressive code - peak efficiency unlocked.
 - **First-class functions.** Functions are first-class citizens, meaning they can be passed around like hot potatoes, yeeted as values, and stored in data structures like arrays and hashmaps.
 - **Closures.** Functions capture variables from their surrounding scope, making them more powerful and flexible than your above average yak.
-- **REPL**. YY comes with a REPL (Read-Eval-Print Loop), allowing you to try out code snippets, experiment, and test your functions on the fly.
-
+- **Random yak facts.** YY's REPL comes with a built-in yak fact generator, so you can learn interesting tidbits about these majestic animals while you code. Did you know that yaks can live up to 20 years in the wild?
 
 # Quick tour
 
@@ -228,6 +227,7 @@ $ ./yy
 - **Not Object-Oriented.** You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy. Also, OOP is dead, haven't you heard the news. 
 - **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).
 - **Built-in functions.** YY's built-in functions are so reliable, you could trust them with your firstborn child. Just kidding, please don't do that. 
+- **Partial function application.** Too many arguments to handle? Say no more! With partial function application, you can create new functions by applying some arguments to an existing function. This results in a simpler, more modular code that can be reused and composed more easily. 
 - **No dependencies.** Unlike your needy ex, YY doesn't rely on anyone else. With no bloated third-party libraries weighing it down, YY is as nimble as a young yak frolicking in a field. Also, you won't need to worry about some random person in Nebraska giving up on thanklessly maintaining a package you depend on.
 - **Tree walking interpreter.** YY's interpreter may not be the most efficient, but it sure is leisurely. Sit back, relax, and let YY take its time to execute your code. You deserve a break anyway.
 
