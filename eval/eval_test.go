@@ -311,6 +311,12 @@ func TestArrayIndexExpressions(t *testing.T) {
 			2,
 		},
 
+		{"a := [1, 2, 3]; a[0..len(a)]", []int64{1, 2, 3}},
+		{"[1, 2, 3][0..999]", []int64{1, 2, 3}},
+		{"[1, 2, 3][0..2]", []int64{1, 2}},
+		{"[1, 2, 3][1..2]", []int64{2}},
+		{"[1, 2, 3][-10..2]", []int64{1, 2}},
+
 		// out of bounds access returns nil
 		{"[1, 2, 3][3]", nil},
 		{"[1, 2, 3][-1]", nil},
@@ -322,6 +328,9 @@ func TestStringIndexExpressions(t *testing.T) {
 		{`"Yolo McYoloface"[2]`, "l"},
 		{`"Yarn"[1 + 1]`, "r"},
 		{`y := "Yarn"; y[1 + 1]`, "r"},
+		{`"Yolo McYoloface"[0..4]`, "Yolo"},
+		{`"Yolo McYoloface"[5..11]`, "McYolo"},
+		{`s := "Yolo McYoloface"; s[5..len(s)]`, "McYoloface"},
 	})
 }
 
