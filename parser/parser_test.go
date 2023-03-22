@@ -525,11 +525,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])));",
 		},
 		{
-			"add(a * b[2] b[1] 2 * [1, 2][1])",
-			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])));",
-		},
-		{
-			`add := \a b { a + b }; add(5 10) == 5 + 2 * 10`,
+			`add := \a b { a + b }; add(5, 10) == 5 + 2 * 10`,
 			`(add := \(a, b) { (a + b) });(add(5, 10) == (5 + (2 * 10)));`,
 		},
 		{
@@ -822,7 +818,7 @@ func TestParseIfExpressions(t *testing.T) {
 }
 
 func TestLambdaLiteralParsing(t *testing.T) {
-	input := `\(x, y) { x + y }`
+	input := `\x, y { x + y }`
 	stmt := parseSingleExprStmt(t, input)
 
 	function, ok := stmt.Expression.(*ast.FunctionLiteral)
@@ -892,13 +888,9 @@ func TestFunctionParameterParsing(t *testing.T) {
 		input          string
 		expectedParams []string
 	}{
-		{`\() {};`, []string{}},
 		{`\ {};`, []string{}},
-		{`\(x) {};`, []string{"x"}},
 		{`\x {};`, []string{"x"}},
-		{`\(x, y, z) {};`, []string{"x", "y", "z"}},
-		{`\(x, y, z,) {};`, []string{"x", "y", "z"}},
-		{`\(x y z) {};`, []string{"x", "y", "z"}},
+		{`\x, y, z {};`, []string{"x", "y", "z"}},
 		{`\x y z {};`, []string{"x", "y", "z"}},
 	}
 

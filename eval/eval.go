@@ -113,39 +113,63 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return idx
 		}
 
-		switch {
-		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
-			i := idx.(*object.Integer).Value
-			arr := left.(*object.Array)
-			if i < 0 || i >= int64(len(arr.Elements)) {
-				return object.NULL
-			}
-			return arr.Elements[i]
+		switch left := left.(type) {
+		case *object.Array:
+			switch idx := idx.(type) {
+			case *object.Integer:
+				i := idx.Value
+				if i < 0 || i >= int64(len(left.Elements)) {
+					return object.NULL
+				}
+				return left.Elements[i]
 
-		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
-			i := idx.(*object.Integer).Value
-			str := left.(*object.String)
-			if i < 0 || i >= int64(len(str.Value)) {
-				return object.NULL
+			case *object.Range:
+				start := idx.Start
+				end := idx.End
+				if start < 0 {
+					start = 0
+				}
+				if end > int64(len(left.Elements)) {
+					end = int64(len(left.Elements))
+				}
+				return &object.Array{Elements: left.Elements[start:end]}
 			}
-			return &object.String{Value: string(str.Value[i])}
 
-		case left.Type() == object.HASHMAP_OBJ:
-			hashmap := left.(*object.Hashmap)
+		case *object.String:
+			switch idx := idx.(type) {
+			case *object.Integer:
+				i := idx.Value
+				if i < 0 || i >= int64(len(left.Value)) {
+					return object.NULL
+				}
+				return &object.String{Value: string(left.Value[i])}
+
+			case *object.Range:
+				start := idx.Start
+				end := idx.End
+				if start < 0 {
+					start = 0
+				}
+				if end > int64(len(left.Value)) {
+					end = int64(len(left.Value))
+				}
+				return &object.String{Value: left.Value[start:end]}
+			}
+
+		case *object.Hashmap:
 			key, ok := idx.(object.Hashable)
 			if !ok {
 				return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
 			}
 
-			pair, ok := hashmap.Pairs[key.HashKey()]
+			pair, ok := left.Pairs[key.HashKey()]
 			if !ok {
 				return object.NULL
 			}
 			return pair.Value
 
-		default:
-			return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
 		}
+		return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
 
 	case *ast.Identifier:
 		if val, ok := env.Get(node.Value); ok {
