@@ -251,6 +251,11 @@ var builtins = map[string]*object.Builtin{
 			switch arg := args[0].(type) {
 			case *object.Integer:
 				return &object.String{Value: string(rune(arg.Value))}
+			case *object.String:
+				if len(arg.Value) == 0 {
+					return object.NULL
+				}
+				return &object.String{Value: string(arg.Value[0])}
 			default:
 				return newErrorWithoutPos("unsupported argument type for chr, got %s", arg.Type())
 			}
