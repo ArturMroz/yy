@@ -498,7 +498,7 @@ match_star := \\c regex text {
     }
 }
 
-regexes := [ "cat" ,"^cat" "cat$", "c.*t", "^c.*t$" ]
+regexes := [ "cat", "^cat", "cat$", "c.*t", "^c.*t$" ]
 words   := [ "cat", "cult", "concat", "category", "concatenation" ]
 
 yap("all words:", words)
@@ -517,45 +517,121 @@ yall re: regexes {
 
 // Bubble sort: silly name, sillier algorithm (O(n^2)). As useful as 'g' in 'lasagna'. But it is a staple.
 bubble_sort := \\arr {
-    yall i: len(arr)-2..0 {
-        yall j: 0..i {
-            yif arr[j] > arr[j+1] {
-                tmp      := arr[j]
-                arr[j]   = arr[j+1]
-                arr[j+1] = tmp
+    yall i: len(arr)-2..0 {         // iterate over each element from the second-to-last to the first element
+        yall j: 0..i {              // iterate over each element from the first to the i-th element
+            yif arr[j] > arr[j+1] { // if the current element is greater than the next element, swap them
+                swap(arr, j, j+1)
             }
         }
     }
 
-    arr
+    arr // return the sorted array
 }
 
-// Quick sort, unlike bubble sort, is quick and nimble like a young yak yodelling in a yurt (O(n log n)).
-quick_sort := \\arr {
+// Insertion sort: again, not the fastest (O(n^2)), but it's a patient sorter and gets the job done.
+insertion_sort := \\arr {
+    i := 1                                // start from the second element
+    yoyo i < len(arr) {                   // iterate until the end of the array
+        j := i                            // set j as the current element's index
+        yoyo j > 0 && arr[j-1] > arr[j] { // keep swapping the element with the previous one
+            swap(arr, j, j-1)             // until it's in the correct order
+
+            j -= 1
+        }
+        i += 1 // move to the next element
+    }
+
+    arr // return the sorted array
+}
+
+// Quick sort: unlike previous sorts, is quick and nimble like a young yak yodelling in a yurt (O(n log n)).
+quick_sort := \\arr, lo, hi {
+    yif lo < hi && lo >= 0 { // ensure indices are in correct order
+        pivot := arr[hi]     // choose the last element as the pivot
+        i := lo - 1          // temporary pivot index
+
+        yall j: lo .. hi-1 {
+            yif arr[j] <= pivot {
+                i += 1          // move the temporary pivot index forward
+                swap(arr, i, j) // swap the current element with the element at the temporary pivot index
+            }
+        }
+
+        // move the pivot element to the correct pivot position (between the smaller and larger elements)
+        i += 1
+        swap(arr, i, hi)
+
+        // sort the two partitions
+        quick_sort(arr, lo, i - 1) // left side of pivot
+        quick_sort(arr, i + 1, hi) // right side of pivot
+    }
+
+    arr // return the sorted array
+}
+
+// Last, but not least, merge sort.
+merge_sort := \\arr {
+    // base case: if the array has 0 or 1 element, it is already sorted
     yif len(arr) <= 1 {
         yeet arr
     }
 
-    pivot  := arr[len(arr) / 2]
-    left   := []
-    right  := []
-    middle := []
+    mid   := len(arr) / 2                   // find the middle index of the array
+    left  := merge_sort(arr[0..mid])        // recursively sort the left half of the array
+    right := merge_sort(arr[mid..len(arr)]) // recursively sort the right half of the array
 
-    yall arr {
-        yif yt < pivot {
-            left << yt
-        } yels yif yt > pivot {
-            right << yt
+    result := [] // initialize an empty list to store the merged result
+    i := j := 0  // initialize indices for left and right subarrays
+
+    // merge the sorted left and right subarrays into the result list
+    yoyo i < len(left) && j < len(right) {
+        yif left[i] < right[j] {
+            result << left[i] // append the element from the left subarray to the result
+            i += 1            // move to the next element in the left subarray
         } yels {
-            middle << yt
+            result << right[j] // append the element from the right subarray to the result
+            j += 1             // move to the next element in the right subarray
         }
     }
 
-    quick_sort(left) + middle + quick_sort(right)
+    // add any remaining elements from left or right subarrays
+    yoyo i < len(left) {
+        result << left[i]
+        i += 1
+    }
+    yoyo j < len(right) {
+        result << right[j]
+        j += 1
+    }
+
+    result // return the merged and sorted result
 }
 
-yap("Bubble sorted:", bubble_sort([3, 6, 9, 1, 5, 4, 2, 0, 8, 7]))
-yap("Quick sorted: ", quick_sort([3, 6, 9, 1, 5, 4, 2, 0, 8, 7]))
+// And lastly, let's setup two helper functions, these will come in handy.
+// As you probably noticed, functions in YY can be called before their declaration, this isn't C.
+
+// swap function swaps the positions of two elements in an array 
+swap := \\arr, i, j {
+    tmp    := arr[i]
+    arr[i] = arr[j]
+    arr[j] = tmp
+}
+
+// copy function copies an entire array, using slicing operator
+copy := \\arr { arr[0..len(arr)] }
+
+nums := [3, 6, 9, 1, 5, 4, 2, 0, 8, 7]
+yap("Original nums:", nums)
+
+// since bubble, insertion, and quick sort are an in-place algorithms, we'll pass a copy of the nums array to preserve the original
+yap("Bubble sorted:", bubble_sort(copy(nums)))
+yap("Quick sorted: ", quick_sort(copy(nums), 0, len(nums)-1))
+yap("Insert sorted:", insertion_sort(copy(nums)))
+
+// merge sort doesn't modify the array passed as an arg so we don't have to copy 'nums'
+yap("Merge sorted: ", merge_sort(nums))
+
+yap("original array is still a beautiful mess:", nums)
 `,
 
     "random":
