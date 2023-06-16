@@ -132,7 +132,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				if end > int64(len(left.Elements)) {
 					end = int64(len(left.Elements))
 				}
-				return &object.Array{Elements: left.Elements[start:end]}
+
+				// copy the array so modyfing a value in the original array doesn't affect copied array
+				return &object.Array{Elements: append([]object.Object{}, left.Elements[start:end]...)}
 			}
 
 		case *object.String:
