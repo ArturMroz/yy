@@ -22,7 +22,7 @@ For more details, check out [examples](examples) directory or [live playground](
 ## Hello world
 
 ```c
-// print with yap() 
+// print with yap()
 name := "Yennefer"
 yap("Hello, {name}!") // "Hello, Yennefer!"
 
@@ -36,11 +36,12 @@ yowl("Hello, {name}!") // "HELLO, YENNEFER!"
 a := 5 // variables are declared and assigned using walrus operator
 a = 9  // variable assignment, variables must be declared before use
 
-// supported types: integer, string, bool, null
-my_yint := 5
-my_yarn := "how long is a piece of string?"
-my_yup  := true
-my_void := null
+// supported types: integer, float, string, bool, null
+my_yint  := 5
+my_float := 6.9
+my_yarn  := "how long is a piece of string?"
+my_yup   := true
+my_void  := null
 ```
 
 ## Control flow
@@ -72,7 +73,6 @@ yall elt: yarray { // optionally, you can name the yeeterator
 
 yap(sum) // 6
 ```
-
 
 ```c
 // 2nd looping contruct: 'yoyo'
@@ -196,7 +196,6 @@ yolo {
 }
 ```
 
-
 # Usage
 
 Build with
@@ -214,23 +213,21 @@ $ ./yy filename
 Or start a REPL session
 
 ```
-$ ./yy 
+$ ./yy
 ```
-
 
 # More features
 
 - **Two data structures.** YY supports arrays and hashmaps, providing twice as many data structures as Lua.
 - **Very basic data types**. YY supports the basic data types of yinteger, string, bool and null. And yes, null isn't technically a data type.
 - **Optional semicolons.** YY has taken the modern approach of making semicolons optional, allowing for a cleaner codebase (semicolons are so 1970s anyway).
-- **Garbage collected.** YY's automated memory management, also known as the code-cleaning yoyoi, takes care of freeing up memory so you don't have to. It's like having a furry friend who loves to tidy up after you, without the added hassle of having to feed it.
-- **Not Object-Oriented.** You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy. Also, OOP is dead, haven't you heard the news. 
+- **Garbage collected.** YY's automated memory management, also known as the code-cleaning yeti, takes care of freeing up memory so you don't have to. It's like having a furry friend who loves to tidy up after you, without the added hassle of having to feed it.
+- **Not Object-Oriented.** You don't have to wrap your head around inheritance hierarchy if there's no inheritance hierarchy. Also, OOP is dead, haven't you heard the news.
 - **No exception handling**. No more wrangling with complex error handling mechanisms. In YY, you can throw an exception, but there is no mechanism for catching it (we're not half-assing it like Go, with its weird panic-recover mechanism).
-- **Built-in functions.** YY's built-in functions are so reliable, you could trust them with your firstborn child. Just kidding, please don't do that. 
-- **Partial function application.** Too many arguments to handle? Say no more! With partial function application, you can create new functions by applying some arguments to an existing function. This results in a simpler, more modular code that can be reused and composed more easily. 
+- **Built-in functions.** YY's built-in functions are so reliable, you could trust them with your firstborn child. Just kidding, please don't do that.
+- **Partial function application.** Too many arguments to handle? Say no more! With partial function application, you can create new functions by applying some arguments to an existing function. This results in a simpler, more modular code that can be composed more easily.
 - **No dependencies.** Unlike your needy ex, YY doesn't rely on anyone else. With no bloated third-party libraries weighing it down, YY is as nimble as a young yak frolicking in a field. Also, you won't need to worry about some random person in Nebraska giving up on thanklessly maintaining a package you depend on.
 - **Tree walking interpreter.** YY's interpreter may not be the most efficient, but it sure is leisurely. Sit back, relax, and let YY take its time to execute your code. You deserve a break anyway.
-
 
 # FAQ
 
