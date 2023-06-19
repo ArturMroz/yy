@@ -12,6 +12,7 @@ type TokenType int
 const (
 	ILLEGAL TokenType = iota
 	EOF
+	ERROR
 
 	// Identifiers + literals
 
@@ -82,6 +83,7 @@ const (
 var tokens = [...]string{
 	ILLEGAL: "ILLEGAL",
 	EOF:     "EOF",
+	ERROR:   "ERROR",
 
 	// Identifiers + literals
 
