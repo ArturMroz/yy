@@ -138,12 +138,12 @@ func TestTemplStringLiteralExpression(t *testing.T) {
 			"i have %s apples and %s carrots",
 		},
 		{
-			`"i have {apples} apples and {carrots} carrots and {kiwi} kiwis`,
+			`"i have {apples} apples and {carrots} carrots and {kiwi} kiwis"`,
 			"i have {apples} apples and {carrots} carrots and {kiwi} kiwis",
 			"i have %s apples and %s carrots and %s kiwis",
 		},
 		{
-			`"i have fruit: {apples} {carrots} {kiwi}.`,
+			`"i have fruit: {apples} {carrots} {kiwi}."`,
 			"i have fruit: {apples} {carrots} {kiwi}.",
 			"i have fruit: %s %s %s.",
 		},
@@ -954,6 +954,33 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 			if err := testLiteralExpression(callExpr.Arguments[i], ident); err != nil {
 				t.Error(err)
 			}
+		}
+	}
+}
+
+func TestParsingUnterminatedStrings(t *testing.T) {
+	tests := []string{
+		`x := "5`,
+		`x := "5""`,
+		`x := "5"";`,
+		`x := "5; z := 2;`,
+		`x := "5; 
+z := 2;`,
+		`x := "5"; z := "2;`,
+	}
+
+	for _, tt := range tests {
+		parser := New(lexer.New(tt))
+		_ = parser.ParseProgram()
+		errors := parser.Errors()
+
+		if len(errors) != 1 {
+			t.Errorf("expected 1 parsing error, got %d", len(errors))
+		}
+
+		expectedErrMsg := "unterminated string"
+		if errors[0].Msg != expectedErrMsg {
+			t.Errorf("Wrong error msg, want `%s`, got `%s`", expectedErrMsg, errors[0].Msg)
 		}
 	}
 }

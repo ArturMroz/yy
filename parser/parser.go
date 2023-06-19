@@ -36,6 +36,9 @@ func (p *Parser) Errors() []yikes.YYError {
 func (p *Parser) advance() {
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
+	if p.curToken.Type == token.ERROR {
+		p.newError(p.curToken.Literal, p.curToken.Offset)
+	}
 }
 
 func (p *Parser) curIs(t token.TokenType) bool {
@@ -694,8 +697,8 @@ func (p *Parser) newError(msg string, offset int) {
 	p.errors = append(p.errors, yikes.YYError{Msg: msg, Offset: offset})
 }
 
-func (p *Parser) errorAtPeek(t token.TokenType, errMsg string) {
-	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, t, p.peekToken.Literal)
+func (p *Parser) errorAtPeek(expected token.TokenType, errMsg string) {
+	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, expected, p.peekToken.Literal)
 	p.newError(msg, p.peekToken.Offset)
 }
 

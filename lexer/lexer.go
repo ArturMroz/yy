@@ -190,7 +190,11 @@ func (l *Lexer) string() token.Token {
 		}
 		l.advance()
 	}
-	// TODO handle unterminated strings
+
+	if l.ch == 0 {
+		return token.Token{Type: token.ERROR, Literal: "unterminated string", Offset: start - 1}
+	}
+
 	return token.Token{Type: token.STRING, Literal: l.Input[start:l.position], Offset: start}
 }
 
