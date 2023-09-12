@@ -24,10 +24,10 @@ For more details, check out [examples](examples) directory or [live playground](
 ```c
 // print with yap()
 name := "Yennefer"
-yap("Hello, {name}!") // "Hello, Yennefer!"
+yap("Hello, $name!") // "Hello, Yennefer!"
 
 // or yowl() if urgent
-yowl("Hello, {name}!") // "HELLO, YENNEFER!"
+yowl("Hello, $name!") // "HELLO, YENNEFER!"
 ```
 
 ## Variables
@@ -180,7 +180,7 @@ yolo {
     new_var = 5
 
     // variables can be baked into a function
-    greet     := \name { "Hello, {name}!" }
+    greet     := \name { "Hello, $name!" }
     greet_yan := greet + "Yan"
     greet_yan() // "Hello, Yan!"
 
@@ -233,7 +233,7 @@ $ ./yy
 
 ## Why is the project called YeetYoink?
 
-Yeet and Yoink symbolise two complementary, yoyo opposing forces that exist in the universe. Everything has both Yeet and Yoink aspects and they are interconnected and interdependent. Together, Yeet and Yoink form a whole, and the balance between the two is necessary for harmony and balance in the universe.
+Yeet and Yoink symbolise two complementary, yet opposing forces that exist in the universe. Everything has both Yeet and Yoink aspects and they are interconnected and interdependent. Together, Yeet and Yoink form a whole, and the balance between the two is necessary for harmony and balance in the universe.
 
 ## What's the deal with the fishies in the logo?
 
