@@ -55,43 +55,52 @@ const samples = {
 // To run the code press Ctrl+Enter or click 'Run' button.
 
 name := "Yennefer"
-yap("Yo, {name}!")`,
+yap("Yo, $name!")`,
 
     "fizzbuzz":
         `// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
 // interviews. But fear not, YY is here to help you slay this beast. And rather than printing
-// the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead, for it truly captures
+// the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead, as it truly captures
 // the essence of YY.
 
 yall 1..100 {
-    yif yt % 15 == 0 {
-        yap("YeetYoink")
+    // implicitly defined variable 'yt' represents the current number in the loop
+    // 'yt' is short for 'yeeterator'
+
+    yif yt % 3 == 0 && yt % 5 == 0 {
+        yap("YeetYoink")      // print "YeetYoink" if divisible by both 3 and 5
     } yels yif yt % 3 == 0 {
-        yap("Yeet")
+        yap("Yeet")           // print "Yeet" if divisible by 3
     } yels yif yt % 5 == 0 {
-        yap("Yoink")
+        yap("Yoink")          // print "Yoink" if divisible by 5
     } yels {
-        yap(yt)
+        yap(yt)               // print the number itself if not divisible by 3 or 5
     }
 }
 `,
 
     'fibonacci':
         `// Implementation of Fibbonacci numbers using two ways: recursion and closure. Just like choosing
-// between pizza and tacos, there is no right or wrong way to do it, both are equally satisfying.
+// between pizza and spaghetti, there is no right or wrong way to do it, both are equally satisfying.
 // And while these methods may not be the fastest, they add some spicy flavor to this demo.
 
 // Recursion
 fib := \\n {
-    yif n < 2 { n } yels { fib(n-1) + fib(n-2) }
+    yif n < 2 { 
+        n                   // if n is less than 2, return n (base case)
+    } yels { 
+        fib(n-1) + fib(n-2) // otherwise, calculate Fibonacci recursively
+    }
 }
 
 yap("seventh Fibonacci number:", fib(7))
+
 
 // Closure
 fib_gen := \\{
     a := 0
     b := 1
+    // return a closure that will return next Fibonnacci number
     \\{
         tmp := a
         a = b
@@ -100,7 +109,7 @@ fib_gen := \\{
     }
 }
 
-f := fib_gen()
+f := fib_gen() // create a closure instance 'f' for generating Fibonacci numbers
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
 
@@ -128,7 +137,7 @@ yolo {
 
     // you can do useful stuff too, like bake an argument into a function
     // (check out 'bake' example for more details)
-    greet     := \\name { yap("Hello, {name}!") }
+    greet     := \\name { yap("Hello, $name!") }
     greet_yan := greet + "Yan"
     greet_yan() // look ma, no args!
 
@@ -148,7 +157,7 @@ yolo {
 
 // Exhibit A
 greet := \\name, message {
-    "Hello {name}! {message}"
+    "Hello $name! $message"
 }
 
 greet_alice := yolo { greet + "Alice" }
@@ -164,7 +173,7 @@ yap(rude_greet("Bob"))
 // Exhibit B
 converter := \\symbol, factor, offset, input {
     result := (offset + input) * factor
-    "{result} {symbol}"
+    "$result $symbol"
 }
 
 // To bake multiple arguments, add an array.
@@ -182,7 +191,7 @@ yap(farenheit_to_celsius(97))
 // to process and transform collections with finesse and style.
 
 // Map transforms all elements and returns a shiny new list.
-map := \\arr fn {
+map := \\arr, fn {
     acc := []
     yall arr {
         acc << fn(yt)
@@ -190,7 +199,7 @@ map := \\arr fn {
 }
 
 // Reduce violently smashes a list into a single value.
-reduce := \\arr initial fn {
+reduce := \\arr, initial, fn {
     result := initial
     yall arr {
         result = fn(result, yt)
@@ -198,7 +207,7 @@ reduce := \\arr initial fn {
 }
 
 // Filter picks the juiciest elements, leaving the rest to wither away into obscurity.
-filter := \\arr fn {
+filter := \\arr, fn {
     acc := []
     yall arr {
         yif fn(yt) {
@@ -214,7 +223,7 @@ yap("original array:", arr)
 tripled := map(arr, \\x { x * 3 })
 yap("tripled:", tripled)
 
-summed := reduce(tripled, 0, \\x y { x + y })
+summed := reduce(tripled, 0, \\x, y { x + y })
 yap("sum of elements:", summed)
 
 avg  := summed / len(arr)
@@ -227,7 +236,7 @@ yap("smaller than average:", filter(tripled, smol))
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
 // back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
 
-// set up the width and height of the output image
+// set up the width and height of the output 'image'
 width  := 70
 height := 24
 
@@ -508,7 +517,7 @@ yall re: regexes {
     yall words {
         yif match(re, yt) { result << yt }
     }
-    yap("words matching /{re}/: {result}")
+    yap("words matching /$re/: $result")
 }
 `,
 
