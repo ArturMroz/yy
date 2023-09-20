@@ -128,23 +128,18 @@ func TestTemplStringLiteralExpression(t *testing.T) {
 		templ    string
 	}{
 		{
-			`"i'm {age} years old"`,
-			"i'm {age} years old",
+			`"i'm $age years old"`,
+			"i'm $age years old",
 			"i'm %s years old",
 		},
 		{
-			`"i have {apples} apples and {carrots} carrots"`,
-			"i have {apples} apples and {carrots} carrots",
+			`"i have $apples apples and $carrots carrots"`,
+			"i have $apples apples and $carrots carrots",
 			"i have %s apples and %s carrots",
 		},
 		{
-			`"i have {apples} apples and {carrots} carrots and {kiwi} kiwis"`,
-			"i have {apples} apples and {carrots} carrots and {kiwi} kiwis",
-			"i have %s apples and %s carrots and %s kiwis",
-		},
-		{
-			`"i have fruit: {apples} {carrots} {kiwi}."`,
-			"i have fruit: {apples} {carrots} {kiwi}.",
+			`"i have fruit: $apples $carrots $kiwi."`,
+			"i have fruit: $apples $carrots $kiwi.",
 			"i have fruit: %s %s %s.",
 		},
 	}
@@ -1123,25 +1118,6 @@ func testPrefixExpression(expr ast.Expression, expectedRight any, operator strin
 
 	return testLiteralExpression(prefixExpr.Right, expectedRight)
 }
-
-// func testLetStatement(stmt ast.Statement, name string) error {
-// 	if stmt.TokenLiteral() != "let" {
-// 		return fmt.Errorf("s.TokenLiteral not 'let'. got=%q", stmt.TokenLiteral())
-// 	}
-
-// 	letStmt, ok := stmt.(*ast.LetStatement)
-// 	if !ok {
-// 		return fmt.Errorf("s not *ast.LetStatement. got=%T", stmt)
-// 	}
-// 	if letStmt.Name.Value != name {
-// 		return fmt.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStmt.Name.Value)
-// 	}
-// 	if letStmt.Name.TokenLiteral() != name {
-// 		return fmt.Errorf("letStmt.Name.TokenLiteral() not '%s'. got=%s", name, letStmt.Name.TokenLiteral())
-// 	}
-
-// 	return nil
-// }
 
 //
 // PROGRAMS FROM EXAMPLES/

@@ -99,10 +99,10 @@ func (l *Lexer) NextToken() token.Token {
 
 	default:
 		switch {
-		case isLetter(l.ch):
+		case IsLetter(l.ch):
 			return l.identifier()
 
-		case isDigit(l.ch):
+		case IsDigit(l.ch):
 			return l.number()
 
 		default:
@@ -154,7 +154,7 @@ func (l *Lexer) peek() byte {
 
 func (l *Lexer) identifier() token.Token {
 	start := l.position
-	for isLetter(l.ch) || isDigit(l.ch) {
+	for IsLetter(l.ch) || IsDigit(l.ch) {
 		l.advance()
 	}
 
@@ -164,13 +164,13 @@ func (l *Lexer) identifier() token.Token {
 
 func (l *Lexer) number() token.Token {
 	start := l.position
-	for isDigit(l.ch) {
+	for IsDigit(l.ch) {
 		l.advance()
 	}
 
-	if l.ch == '.' && isDigit(l.peek()) {
+	if l.ch == '.' && IsDigit(l.peek()) {
 		l.advance() // dot
-		for isDigit(l.ch) {
+		for IsDigit(l.ch) {
 			l.advance()
 		}
 
@@ -226,10 +226,10 @@ func (l *Lexer) skipWhitespace() {
 
 // utils
 
-func isLetter(ch byte) bool {
+func IsLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
-func isDigit(ch byte) bool {
+func IsDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }

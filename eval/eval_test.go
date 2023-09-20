@@ -55,35 +55,53 @@ func TestEvalFloatExpression(t *testing.T) {
 
 func TestStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
+		{`""`, ""},
 		{`"piece of yarn"`, "piece of yarn"},
 		{`"Żółć ∈ 陽子, ようこ ヨウコ"`, "Żółć ∈ 陽子, ようこ ヨウコ"},
 	})
 }
 
 func TestTemplateStringLiteral(t *testing.T) {
-	// TODO fix failing tests
-	// TODO add unhappy path tests
 	runEvalTests(t, []evalTestCase{
-		{`age := 69; "i'm {age} yr old"`, "i'm 69 yr old"},
-		{`age := 69; "i'm { age } yr old"`, "i'm 69 yr old"},
-		{`age := 69; "i'm 陽 {age} 陽 yr old"`, "i'm 陽 69 陽 yr old"},
-		// {`age := 69; "i'm {{age}} yr old"`, "i'm {age} yr old"},
+		{`age := 69; "i'm $age yr old"`, "i'm 69 yr old"},
+		{`age := 69; "i'm $age! yr old"`, "i'm 69! yr old"},
+		{`age := 69; "i'm $age"`, "i'm 69"},
 		{
-			`n1 := 69; n2 := 8; "i've got {n1} apples and {n2} pears"`,
+			`age := 69; "i'm Żółć ∈ 陽子 ようこ 陽 $age 陽 yr old"`,
+			"i'm Żółć ∈ 陽子 ようこ 陽 69 陽 yr old",
+		},
+		{`name := "Yolanda"; "Hello, $name!"`, "Hello, Yolanda!"},
+		{
+			`age := 69; name := "Yolanda"; "i'm $name and i'm $age yr old"`,
+			"i'm Yolanda and i'm 69 yr old",
+		},
+		{
+			`apples := 69; pears := 8; "i've got $apples apples and $pears pears"`,
 			"i've got 69 apples and 8 pears",
 		},
 		{
-			`n1 := 69; n2 := 8; n3 := 7; "i've got {n1} apples and {n2}, {n3} other things"`,
-			"i've got 69 apples and 8, 7 other things",
+			`n1 := 69; n2 := 8; "i've got $n1 apples and $n2 pears"`,
+			"i've got 69 apples and 8 pears",
 		},
 		{
-			`n1 := 69; n2 := 8; n3 := 7; "{n1}{n2}{n3}"`,
-			"6987",
+			`n1 := 69; n2 := 8; n3 := 7; "i've got $n1 apples and $n2, $n3 other things"`,
+			"i've got 69 apples and 8, 7 other things",
 		},
-		// {
-		// 	"n1 := 69; n2 := 8; `i've got {n1 + n2} apples and pears`",
-		// 	"i've got 77 apples and pears",
-		// },
+		{`apples := 1; kiwis := 2; mangos := 3; "$apples$kiwis$mangos"`, "123"},
+		{`n1 := 69; n2 := 8; n3 := 420; "$n1$n2$n3"`, "698420"},
+		{`"i'm $$age yr old"`, "i'm $age yr old"},
+		{`age := 69; "$$age = $age"`, "$age = 69"},
+		{`"i'm $"`, "i'm $"},
+		{`"$"`, "$"},
+		{`"$$"`, "$"},
+		{`"$$$"`, "$$"},
+		{`"t $$"`, "t $"},
+		{`"t $$$"`, "t $$"},
+		{`"this will be $15"`, "this will be $15"},
+		{`cost := 9; "this will be $$ $cost"`, "this will be $ 9"},
+		{`cost := 9; "this will be $$$cost"`, "this will be $9"},
+		{`"this will be 15$"`, "this will be 15$"},
+		{`cost := 9; "this will be $cost$"`, "this will be 9$"},
 	})
 }
 

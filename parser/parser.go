@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"yy/ast"
 	"yy/lexer"
@@ -293,36 +292,46 @@ func (p *Parser) parseNumberLiteral() ast.Expression {
 
 func (p *Parser) parseStringLiteral() ast.Expression {
 	lit := p.curToken.Literal
+	matches := []string{}
+	result := ""
+	lastIdx := 0
 
-	// TODO this handles only the happy path
-	matches := []int{}
-	for i, ch := range lit {
-		if ch == '{' || ch == '}' {
-			matches = append(matches, i)
+	// scan the string to see if it contains any template expressions
+	for i := 0; i < len(lit); i++ {
+		if lit[i] == '$' && i+1 < len(lit) {
+			i++
+			if lit[i] == '$' {
+				// replace $$ with $
+				result += lit[lastIdx : i-1]
+				lastIdx = i
+			} else if lexer.IsLetter(lit[i]) {
+				// replace template expression $var with %s
+				start := i
+				for i+1 < len(lit) && (lexer.IsLetter(lit[i+1]) || lexer.IsDigit(lit[i+1])) {
+					i++
+				}
+				matches = append(matches, lit[start:i+1])
+				result += lit[lastIdx:start-1] + "%s"
+				lastIdx = i + 1
+			}
 		}
 	}
 
-	if len(matches) == 0 {
+	if lastIdx == 0 {
+		// there were no template expressions, return regular string literal
 		return &ast.StringLiteral{Token: p.curToken, Value: lit}
 	}
 
-	// TODO support expr in templated strings (currently only Identifiers are supported)
-	idents := make([]ast.Expression, 0, len(matches)/2)
-	replaced := lit
-	offset := 0
-	for i := 0; i < len(matches); i += 2 {
-		fst, snd := matches[i], matches[i+1]
+	result += lit[lastIdx:]
 
-		ident := strings.TrimSpace(lit[fst+1 : snd])
-		replaced = replaced[:fst-offset] + "%s" + replaced[snd+1-offset:]
-		offset += snd - fst - 1
-
-		idents = append(idents, &ast.Identifier{Value: ident})
+	idents := make([]ast.Expression, 0, len(matches))
+	for _, v := range matches {
+		idents = append(idents, &ast.Identifier{Value: v})
 	}
 
 	return &ast.TemplateStringLiteral{
 		Token:    p.curToken,
-		Template: replaced,
+		Template: result,
 		Values:   idents,
 	}
 }

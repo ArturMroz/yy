@@ -192,7 +192,7 @@ func TestYoloFunctionBaking(t *testing.T) {
 		},
 		{
 			`yolo {
-				greet     := \name { "Hello, {name}!" }
+				greet     := \name { "Hello, $name!" }
 				greet_yan := greet + "Yan"; // baking arg "Yan" into function 
 				greet_yan()
 			}`,
@@ -200,7 +200,7 @@ func TestYoloFunctionBaking(t *testing.T) {
 		},
 		{
 			`yolo {
-				greet     := \name { "Hello, {name}!" }
+				greet     := \name { "Hello, $name!" }
 				greet_yan := "Yan" + greet 
 				greet_yan()
 			}`,
