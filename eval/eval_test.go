@@ -340,6 +340,10 @@ func TestArrayIndexExpressions(t *testing.T) {
 		// out of bounds access returns nil
 		{"[1, 2, 3][3]", nil},
 		{"[1, 2, 3][-1]", nil},
+
+		{"arr[-1]", errmsg{"identifier not found: arr"}},
+		{"arr := [2]; arr[idx]", errmsg{"identifier not found: idx"}},
+		{"arr := [2]; arr[[]]", errmsg{"index operator not supported: ARRAY"}},
 	})
 }
 
@@ -351,6 +355,8 @@ func TestStringIndexExpressions(t *testing.T) {
 		{`"Yolo McYoloface"[0..4]`, "Yolo"},
 		{`"Yolo McYoloface"[5..11]`, "McYolo"},
 		{`s := "Yolo McYoloface"; s[5..len(s)]`, "McYoloface"},
+		{`s := "Yolo McYoloface"; s[-5..len(s)+5]`, "Yolo McYoloface"},
+		{`"Yolo McYoloface"[69]`, nil},
 
 		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; len(s1) == len(s2)`, true},
 		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; s1[1] == s2[1]`, true},
@@ -479,6 +485,7 @@ func TestDeclareExpressions(t *testing.T) {
 		{"a := 8; a = 15", 15},
 		{"a := 8; b := 2; a = b", 2},
 		{"a := b := c := 8; a + b + c", 24},
+		{"a := b", errmsg{"identifier not found: b"}},
 	})
 }
 
@@ -495,8 +502,13 @@ func TestAssignExpressions(t *testing.T) {
 
 		// TODO add more tests
 		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
+		{"a := [1, 2, 3]; a[8] = 69", errmsg{"attempted to assign out of bounds for array 'a'"}},
+
 		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
+		{`h := %{ "a": 1 }; h[[]] = 2`, 2},
+
 		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
+		{`s := "yeet"; s[69] = "z"`, errmsg{"attempted to assign out of bounds for string 's'"}},
 	})
 }
 

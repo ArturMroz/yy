@@ -566,9 +566,8 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
-func TestIfExpression(t *testing.T) {
-	// TODO add more test cases
-	input := `yif (x < y) { x }`
+func TestIfExpression2(t *testing.T) {
+	input := `yif (x < y) { x } yels { y }`
 	stmt := parseSingleExprStmt(t, input)
 
 	expr, ok := stmt.Expression.(*ast.YifExpression)
@@ -579,6 +578,7 @@ func TestIfExpression(t *testing.T) {
 	if err := testInfixExpression(expr.Condition, "x", "<", "y"); err != nil {
 		t.Error(err)
 	}
+
 	if len(expr.Consequence.Statements) != 1 {
 		t.Errorf("consequence is not 1 statements. got=%d\n", len(expr.Consequence.Statements))
 	}
@@ -589,8 +589,16 @@ func TestIfExpression(t *testing.T) {
 	if err := testIdentifier(consequence.Expression, "x"); err != nil {
 		t.Error(err)
 	}
-	if expr.Alternative != nil {
-		t.Errorf("expr.Alternative.Statements was not nil. got=%+v", expr.Alternative)
+
+	if len(expr.Alternative.Statements) != 1 {
+		t.Errorf("consequence is not 1 statements. got=%d\n", len(expr.Alternative.Statements))
+	}
+	alternative, ok := expr.Alternative.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T", expr.Alternative.Statements[0])
+	}
+	if err := testIdentifier(alternative.Expression, "y"); err != nil {
+		t.Error(err)
 	}
 }
 

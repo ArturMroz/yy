@@ -68,7 +68,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				if i < 0 || i >= int64(len(arr.Elements)) {
 					return newError(
 						node.Left.Pos(),
-						"assign out of bounds for array %s",
+						"attempted to assign out of bounds for array '%s'",
 						node.Left.(*ast.Identifier).Value)
 				}
 				arr.Elements[i] = val
@@ -80,7 +80,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				if i < 0 || i >= int64(len(str.Value)) {
 					return newError(
 						node.Left.Pos(),
-						"assign out of bounds for string %s",
+						"attempted to assign out of bounds for string '%s'",
 						node.Left.(*ast.Identifier).Value)
 				}
 				str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
