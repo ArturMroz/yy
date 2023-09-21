@@ -60,8 +60,7 @@ yap("Yo, $name!")`,
     "fizzbuzz":
         `// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
 // interviews. But fear not, YY is here to help you slay this beast. And rather than printing
-// the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead, as it truly captures
-// the essence of YY.
+// the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead. 
 
 yall 1..100 {
     // implicitly defined variable 'yt' represents the current number in the loop
@@ -112,6 +111,51 @@ fib_gen := \\{
 f := fib_gen() // create a closure instance 'f' for generating Fibonacci numbers
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
 ` ,
+
+    'map et al':
+        `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together
+// to process and transform collections with finesse and style.
+
+// Map transforms all elements and returns a shiny new list.
+map := \\arr, fn {
+    acc := []
+    yall arr {
+        acc << fn(yt)
+    }
+}
+
+// Reduce violently smashes a list into a single value.
+reduce := \\arr, initial, fn {
+    result := initial
+    yall arr {
+        result = fn(result, yt)
+    }
+}
+
+// Filter picks the juiciest elements, leaving the rest to wither away into obscurity.
+filter := \\arr, fn {
+    acc := []
+    yall arr {
+        yif fn(yt) {
+            acc << yt
+        }
+    }
+    acc
+}
+
+arr := [1, 2, 3, 4]
+yap("original array:", arr)
+
+tripled := map(arr, \\x { x * 3 })
+yap("tripled:", tripled)
+
+summed := reduce(tripled, 0, \\x, y { x + y })
+yap("sum of elements:", summed)
+
+avg  := summed / len(arr)
+smol := \\x { x < avg }
+yap("smaller than average:", filter(tripled, smol))
+`,
 
     'yolo':
         `// Yolo Mode allows you to do things that would make other self-respecting languages blush.
@@ -186,51 +230,6 @@ yap(pounds_to_kg(5.5))
 yap(farenheit_to_celsius(97))
 `,
 
-    'map et al':
-        `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together
-// to process and transform collections with finesse and style.
-
-// Map transforms all elements and returns a shiny new list.
-map := \\arr, fn {
-    acc := []
-    yall arr {
-        acc << fn(yt)
-    }
-}
-
-// Reduce violently smashes a list into a single value.
-reduce := \\arr, initial, fn {
-    result := initial
-    yall arr {
-        result = fn(result, yt)
-    }
-}
-
-// Filter picks the juiciest elements, leaving the rest to wither away into obscurity.
-filter := \\arr, fn {
-    acc := []
-    yall arr {
-        yif fn(yt) {
-            acc << yt
-        }
-    }
-    acc
-}
-
-arr := [1, 2, 3, 4]
-yap("original array:", arr)
-
-tripled := map(arr, \\x { x * 3 })
-yap("tripled:", tripled)
-
-summed := reduce(tripled, 0, \\x, y { x + y })
-yap("sum of elements:", summed)
-
-avg  := summed / len(arr)
-smol := \\x { x < avg }
-yap("smaller than average:", filter(tripled, smol))
-`,
-
     'mandelbrot':
         `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
@@ -283,24 +282,23 @@ yall py: 0..height {
     'brainfuck':
         `// An interpreter for the Brainfuck programming language, written in the YY programming language.
 // An interpreter within an interpreter. Interpreter Inception. Interpreception. Interception?
+// 
 // *BWOOOONNNNGNGGGG* <- Inception's horn sound effect
 // -_-                <- DiCaprio's face
 
 // this is an actual "Hello World!" program in Brainfuck
-hello_world := "
+code := "
 ++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>
 ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
 "
 
-// our very own Brainfuck VM
+// our very own Brainfuck Virtual Machine
 ip  := 0  // instruction pointer
 dp  := 0  // data pointer
 mem := [] // memory
 
 // initialise memory
 yall 0..100 { mem << 0 }
-
-code := hello_world
 
 // loop through the code and execute each instruction
 yoyo ip < len(code) {
@@ -462,7 +460,7 @@ yif solve(maze) {
 // More details: https://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html
 
 // search for regex anywhere in text
-match := \\regex text {
+match := \\regex, text {
     yif regex && regex[0] == "^" {
         yeet match_here(rest(regex), text)
     }
@@ -478,7 +476,7 @@ match := \\regex text {
 }
 
 // search for regex at beginning of text
-match_here := \\regex text {
+match_here := \\regex, text {
     yif !regex {
         yeet true
     }
@@ -495,7 +493,7 @@ match_here := \\regex text {
 }
 
 // search for c*regex at beginning of text
-match_star := \\c regex text {
+match_star := \\c, regex, text {
     yoyo true {
         yif match_here(regex, text) {
             yeet true
@@ -675,9 +673,6 @@ yall 0..length {
 
 yap("your other secret password:", password)
 `,
-
-
-
 }
 
 buildSampleSelect()
