@@ -392,7 +392,10 @@ func TestYifYelsExpressions(t *testing.T) {
 		{"5 + yif null { 10 } yels { 20 }", 25},
 		{"yif null { 10 } yels { 20 } * 2", 40},
 		{"5 + yif null { 10 } yels { 20 } * 2", 45},
+		{"5 + yif null { a := 10; a } yels { 20 } * 2", 45},
 		{"result := 3 * yif null { 10 } yels { 20 } + 9; result", 69},
+		{"yif true { a := 10; a } yels { 20 }", 10},
+		{"yif true { a := 10; a } yels { 20 }; a", errmsg{"identifier not found: a"}},
 	})
 }
 
@@ -497,6 +500,15 @@ func TestAssignExpressions(t *testing.T) {
 		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
 		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
 		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
+	})
+}
+
+func TestBlockExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"x := { 5 }; x", 5},
+		{"x := { a := 6; b := 9; a + b }; x", 15},
+
+		{"x := { a := 6; a }; a", errmsg{"identifier not found: a"}},
 	})
 }
 

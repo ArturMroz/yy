@@ -16,6 +16,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.BlockStatement:
 		return evalBlockStatement(node.Statements, env)
 
+	case *ast.BlockExpression:
+		return evalBlockStatement(node.Statements, env)
+
 	case *ast.YeetStatement:
 		val := Eval(node.ReturnValue, env)
 		if isError(val) {
@@ -449,8 +452,9 @@ func evalProgram(statements []ast.Statement, env *object.Environment) object.Obj
 
 func evalBlockStatement(statements []ast.Statement, env *object.Environment) object.Object {
 	var result object.Object
+	extendedEnv := object.NewEnclosedEnvironment(env)
 	for _, stmt := range statements {
-		result = Eval(stmt, env)
+		result = Eval(stmt, extendedEnv)
 
 		if result != nil {
 			rtype := result.Type()

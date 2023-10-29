@@ -378,7 +378,27 @@ func (bs *BlockStatement) String() string {
 
 	var b strings.Builder
 	b.WriteString("{ ")
+	b.WriteString(strings.Join(stmts, "; "))
+	b.WriteString(" }")
+	return b.String()
+}
 
+type BlockExpression struct {
+	Token      token.Token // the { token
+	Statements []Statement
+}
+
+func (be *BlockExpression) expressionNode()      {}
+func (be *BlockExpression) Pos() int             { return be.Token.Offset }
+func (be *BlockExpression) TokenLiteral() string { return be.Token.Literal }
+func (be *BlockExpression) String() string {
+	stmts := []string{}
+	for _, p := range be.Statements {
+		stmts = append(stmts, p.String())
+	}
+
+	var b strings.Builder
+	b.WriteString("{ ")
 	b.WriteString(strings.Join(stmts, "; "))
 	b.WriteString(" }")
 	return b.String()

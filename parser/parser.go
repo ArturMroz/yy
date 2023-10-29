@@ -125,6 +125,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LPAREN:    p.parseGroupedExpression,
 		token.LBRACKET:  p.parseArrayLiteral,
 		token.HASHMAP:   p.parseHashmapLiteral,
+		token.LBRACE:    p.parseBlockExpression,
 		token.YIF:       p.parseYifExpression,
 		token.YOLO:      p.parseYoloExpression,
 		token.YALL:      p.parseYallExpression,
@@ -182,7 +183,9 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
+//
 // STATEMENTS
+//
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
@@ -231,7 +234,9 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return exprStmt
 }
 
+//
 // EXPRESSIONS
+//
 
 func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
@@ -353,6 +358,18 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	}
 
 	return expr
+}
+
+func (p *Parser) parseBlockExpression() ast.Expression {
+	block := &ast.BlockExpression{Token: p.curToken, Statements: []ast.Statement{}}
+
+	p.advance()
+	for !p.curIs(token.RBRACE) && !p.curIs(token.EOF) {
+		stmt := p.parseStatement()
+		block.Statements = append(block.Statements, stmt)
+		p.advance()
+	}
+	return block
 }
 
 func (p *Parser) parseYifExpression() ast.Expression {
@@ -553,7 +570,9 @@ func (p *Parser) parseMacroLiteral() ast.Expression {
 	return fn
 }
 
+//
 // INFIX EXPRESSIONS
+//
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expr := &ast.InfixExpression{
