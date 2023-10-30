@@ -10,7 +10,7 @@ func Modify(node Node, modifier ModifierFunc) Node {
 			node.Statements[i], _ = Modify(stmt, modifier).(Statement)
 		}
 
-	case *BlockStatement:
+	case *BlockExpression:
 		for i := range node.Statements {
 			node.Statements[i], _ = Modify(node.Statements[i], modifier).(Statement)
 		}
@@ -31,18 +31,18 @@ func Modify(node Node, modifier ModifierFunc) Node {
 
 	case *YifExpression:
 		node.Condition, _ = Modify(node.Condition, modifier).(Expression)
-		node.Consequence, _ = Modify(node.Consequence, modifier).(*BlockStatement)
+		node.Consequence, _ = Modify(node.Consequence, modifier).(*BlockExpression)
 		if node.Alternative != nil {
-			node.Alternative, _ = Modify(node.Alternative, modifier).(*BlockStatement)
+			node.Alternative, _ = Modify(node.Alternative, modifier).(*BlockExpression)
 		}
 
 	case *YoyoExpression:
 		node.Condition, _ = Modify(node.Condition, modifier).(Expression)
-		node.Body, _ = Modify(node.Body, modifier).(*BlockStatement)
+		node.Body, _ = Modify(node.Body, modifier).(*BlockExpression)
 
 	case *YallExpression:
 		node.Iterable, _ = Modify(node.Iterable, modifier).(Expression)
-		node.Body, _ = Modify(node.Body, modifier).(*BlockStatement)
+		node.Body, _ = Modify(node.Body, modifier).(*BlockExpression)
 
 	case *DeclareExpression:
 		node.Value, _ = Modify(node.Value, modifier).(Expression)

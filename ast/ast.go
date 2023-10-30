@@ -305,8 +305,8 @@ func (oe *OrExpression) String() string {
 type YifExpression struct {
 	Token       token.Token
 	Condition   Expression
-	Consequence *BlockStatement
-	Alternative *BlockStatement
+	Consequence *BlockExpression
+	Alternative *BlockExpression
 }
 
 func (ye *YifExpression) expressionNode()      {}
@@ -324,7 +324,7 @@ func (ye *YifExpression) String() string {
 
 type YoloExpression struct {
 	Token token.Token
-	Body  *BlockStatement
+	Body  *BlockExpression
 }
 
 func (ye *YoloExpression) expressionNode()      {}
@@ -337,7 +337,7 @@ func (ye *YoloExpression) String() string {
 type YoyoExpression struct {
 	Token     token.Token
 	Condition Expression
-	Body      *BlockStatement
+	Body      *BlockExpression
 }
 
 func (ye *YoyoExpression) expressionNode()      {}
@@ -351,7 +351,7 @@ type YallExpression struct {
 	Token    token.Token
 	Iterable Expression
 	KeyName  string
-	Body     *BlockStatement
+	Body     *BlockExpression
 }
 
 func (ye *YallExpression) expressionNode()      {}
@@ -361,24 +361,22 @@ func (ye *YallExpression) String() string {
 	return fmt.Sprintf("yall %s: %s { %s }", ye.KeyName, ye.Iterable.String(), ye.Body.String())
 }
 
-type BlockStatement struct {
+type BlockExpression struct {
 	Token      token.Token // the { token
 	Statements []Statement
 }
 
-func (bs *BlockStatement) expressionNode()      {}
-func (bs *BlockStatement) statementNode()       {}
-func (bs *BlockStatement) Pos() int             { return bs.Token.Offset }
-func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
-func (bs *BlockStatement) String() string {
+func (be *BlockExpression) expressionNode()      {}
+func (be *BlockExpression) Pos() int             { return be.Token.Offset }
+func (be *BlockExpression) TokenLiteral() string { return be.Token.Literal }
+func (be *BlockExpression) String() string {
 	stmts := []string{}
-	for _, p := range bs.Statements {
+	for _, p := range be.Statements {
 		stmts = append(stmts, p.String())
 	}
 
 	var b strings.Builder
 	b.WriteString("{ ")
-
 	b.WriteString(strings.Join(stmts, "; "))
 	b.WriteString(" }")
 	return b.String()
@@ -387,7 +385,7 @@ func (bs *BlockStatement) String() string {
 type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
-	Body       *BlockStatement
+	Body       *BlockExpression
 }
 
 func (fl *FunctionLiteral) expressionNode()      {}
@@ -413,7 +411,7 @@ func (fl *FunctionLiteral) String() string {
 type MacroLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
-	Body       *BlockStatement
+	Body       *BlockExpression
 }
 
 func (ml *MacroLiteral) expressionNode()      {}

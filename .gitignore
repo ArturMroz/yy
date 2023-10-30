@@ -3,3 +3,4 @@ scratchpad/
 coverage.out
 
 .vscode
+*.out

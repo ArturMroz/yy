@@ -211,7 +211,7 @@ func (e *Error) String() string   { return e.Msg }
 
 type Function struct {
 	Parameters []*ast.Identifier
-	Body       *ast.BlockStatement
+	Body       *ast.BlockExpression
 	Env        *Environment
 }
 
@@ -236,7 +236,7 @@ func (f *Function) String() string {
 
 type Macro struct {
 	Parameters []*ast.Identifier
-	Body       *ast.BlockStatement
+	Body       *ast.BlockExpression
 	Env        *Environment
 }
 
