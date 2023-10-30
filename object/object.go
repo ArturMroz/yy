@@ -149,6 +149,10 @@ func (i *Integer) HashKey() HashKey {
 	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
 }
 
+func (i *Number) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
 func (s *String) HashKey() HashKey {
 	return HashKey{Type: s.Type(), Value: hashString(s.Value)}
 }
