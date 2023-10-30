@@ -58,7 +58,7 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 			}
 
 		case *object.Function:
-			newBody := &ast.BlockStatement{
+			newBody := &ast.BlockExpression{
 				Statements: []ast.Statement{
 					&ast.ExpressionStatement{
 						Expression: &ast.PrefixExpression{
@@ -211,7 +211,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 
 	case left.Type() == object.FUNCTION_OBJ:
 		fn := left.(*object.Function)
-		newBody := &ast.BlockStatement{
+		newBody := &ast.BlockExpression{
 			Statements: []ast.Statement{
 				&ast.ExpressionStatement{
 					Expression: &ast.InfixExpression{
@@ -231,7 +231,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 
 	case right.Type() == object.FUNCTION_OBJ:
 		fn := right.(*object.Function)
-		newBody := &ast.BlockStatement{
+		newBody := &ast.BlockExpression{
 			Statements: []ast.Statement{
 				&ast.ExpressionStatement{
 					Expression: &ast.InfixExpression{

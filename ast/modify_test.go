@@ -62,12 +62,12 @@ func TestModify(t *testing.T) {
 		{
 			&YifExpression{
 				Condition: one(),
-				Consequence: &BlockStatement{
+				Consequence: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: one()},
 					},
 				},
-				Alternative: &BlockStatement{
+				Alternative: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: one()},
 					},
@@ -75,12 +75,12 @@ func TestModify(t *testing.T) {
 			},
 			&YifExpression{
 				Condition: two(),
-				Consequence: &BlockStatement{
+				Consequence: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: two()},
 					},
 				},
-				Alternative: &BlockStatement{
+				Alternative: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: two()},
 					},
@@ -90,7 +90,7 @@ func TestModify(t *testing.T) {
 		{
 			&YoyoExpression{
 				Condition: one(),
-				Body: &BlockStatement{
+				Body: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: one()},
 					},
@@ -98,7 +98,7 @@ func TestModify(t *testing.T) {
 			},
 			&YoyoExpression{
 				Condition: two(),
-				Body: &BlockStatement{
+				Body: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: two()},
 					},
@@ -110,7 +110,7 @@ func TestModify(t *testing.T) {
 				Iterable: &ArrayLiteral{
 					Elements: []Expression{one()},
 				},
-				Body: &BlockStatement{
+				Body: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: one()},
 					},
@@ -120,7 +120,7 @@ func TestModify(t *testing.T) {
 				Iterable: &ArrayLiteral{
 					Elements: []Expression{two()},
 				},
-				Body: &BlockStatement{
+				Body: &BlockExpression{
 					Statements: []Statement{
 						&ExpressionStatement{Expression: two()},
 					},

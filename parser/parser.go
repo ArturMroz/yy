@@ -122,10 +122,10 @@ func New(l *lexer.Lexer) *Parser {
 		token.TRUE:      p.parseBoolean,
 		token.FALSE:     p.parseBoolean,
 		token.NULL:      p.parseNull,
+		token.HASHMAP:   p.parseHashmapLiteral,
 		token.LPAREN:    p.parseGroupedExpression,
 		token.LBRACKET:  p.parseArrayLiteral,
-		token.HASHMAP:   p.parseHashmapLiteral,
-		token.LBRACE:    p.parseBlockExpression,
+		token.LBRACE:    func() ast.Expression { return p.parseBlockExpression() },
 		token.YIF:       p.parseYifExpression,
 		token.YOLO:      p.parseYoloExpression,
 		token.YALL:      p.parseYallExpression,
@@ -194,18 +194,6 @@ func (p *Parser) parseStatement() ast.Statement {
 	default:
 		return p.parseExpressionStatement()
 	}
-}
-
-func (p *Parser) parseBlockStatement() *ast.BlockStatement {
-	block := &ast.BlockStatement{Token: p.curToken, Statements: []ast.Statement{}}
-
-	p.advance()
-	for !p.curIs(token.RBRACE) && !p.curIs(token.EOF) {
-		stmt := p.parseStatement()
-		block.Statements = append(block.Statements, stmt)
-		p.advance()
-	}
-	return block
 }
 
 func (p *Parser) parseYeetStatement() *ast.YeetStatement {
@@ -360,7 +348,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseBlockExpression() ast.Expression {
+func (p *Parser) parseBlockExpression() *ast.BlockExpression {
 	block := &ast.BlockExpression{Token: p.curToken, Statements: []ast.Statement{}}
 
 	p.advance()
@@ -382,22 +370,25 @@ func (p *Parser) parseYifExpression() ast.Expression {
 		return nil
 	}
 
-	yifExpr.Consequence = p.parseBlockStatement()
+	yifExpr.Consequence = p.parseBlockExpression()
 
 	if p.peekIs(token.YELS) {
 		p.advance()
 
 		if p.peekIs(token.LBRACE) {
 			p.advance()
-			yifExpr.Alternative = p.parseBlockStatement()
+			yifExpr.Alternative = p.parseBlockExpression()
 		} else if p.peekIs(token.YIF) {
 			p.advance()
-			// TODO this is a bit clunky
-			yifExpr.Alternative = &ast.BlockStatement{
+
+			// this is a bit long-winded, but the other option would be to set Alternative's type to
+			// just ast.Expression instead of *ast.BlockExpression
+			alternativeBlock := &ast.BlockExpression{
 				Statements: []ast.Statement{
 					&ast.ExpressionStatement{Expression: p.parseYifExpression()},
 				},
 			}
+			yifExpr.Alternative = alternativeBlock
 		} else {
 			p.errorAtCurrent("expected yif statement or block after 'yels', found '%s'", p.peekToken.Literal)
 			return nil
@@ -414,7 +405,7 @@ func (p *Parser) parseYoloExpression() ast.Expression {
 		return nil
 	}
 
-	yoloExpr.Body = p.parseBlockStatement()
+	yoloExpr.Body = p.parseBlockExpression()
 
 	return yoloExpr
 }
@@ -429,7 +420,7 @@ func (p *Parser) parseYoyoExpression() ast.Expression {
 		return nil
 	}
 
-	yoyoExpr.Body = p.parseBlockStatement()
+	yoyoExpr.Body = p.parseBlockExpression()
 
 	return yoyoExpr
 }
@@ -451,7 +442,7 @@ func (p *Parser) parseYallExpression() ast.Expression {
 		return nil
 	}
 
-	yallExpr.Body = p.parseBlockStatement()
+	yallExpr.Body = p.parseBlockExpression()
 
 	return yallExpr
 }
@@ -537,7 +528,7 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 		return nil
 	}
 
-	fn.Body = p.parseBlockStatement()
+	fn.Body = p.parseBlockExpression()
 
 	return fn
 }
@@ -565,14 +556,12 @@ func (p *Parser) parseMacroLiteral() ast.Expression {
 		return nil
 	}
 
-	fn.Body = p.parseBlockStatement()
+	fn.Body = p.parseBlockExpression()
 
 	return fn
 }
 
-//
 // INFIX EXPRESSIONS
-//
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expr := &ast.InfixExpression{

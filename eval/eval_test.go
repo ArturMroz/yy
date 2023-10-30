@@ -505,6 +505,8 @@ func TestAssignExpressions(t *testing.T) {
 
 func TestBlockExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
+		{"{ 5 }", 5},
+		{"{ a := 6; b := 9; a + b }", 15},
 		{"x := { 5 }; x", 5},
 		{"x := { a := 6; b := 9; a + b }; x", 15},
 
