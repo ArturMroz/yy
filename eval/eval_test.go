@@ -827,12 +827,8 @@ func testEval(t *testing.T, input string) object.Object {
 	}
 
 	env := object.NewEnvironment()
-	macroEnv := object.NewEnvironment()
 
-	DefineMacros(program, macroEnv)
-	expanded := ExpandMacros(program, macroEnv)
-
-	return Eval(expanded, env)
+	return Eval(program, env)
 }
 
 func testIntegerObject(obj object.Object, expected int64) error {

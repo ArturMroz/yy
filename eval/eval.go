@@ -466,10 +466,6 @@ func evalBlockExpression(statements []ast.Statement, env *object.Environment) ob
 }
 
 func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.Object {
-	if callExpr.Function.TokenLiteral() == "quote" { // TODO this is ugly
-		return quote(callExpr.Arguments[0], env) // quote only supports 1 arg
-	}
-
 	fn := Eval(callExpr.Function, env)
 	if isError(fn) {
 		return fn

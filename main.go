@@ -50,18 +50,8 @@ func runFile(f string) {
 	}
 
 	env := object.NewEnvironment()
-	macroEnv := object.NewEnvironment()
 
-	eval.DefineMacros(program, macroEnv)
-	expanded := eval.ExpandMacros(program, macroEnv)
-
-	if debug {
-		fmt.Println("after macro expansion:")
-		fmt.Println(expanded)
-		fmt.Println()
-	}
-
-	result := eval.Eval(expanded, env)
+	result := eval.Eval(program, env)
 	if evalError, ok := result.(*object.Error); ok {
 		fmt.Println(yikes.PrettyError(src, evalError.Pos, evalError.Msg))
 	}
@@ -79,7 +69,6 @@ func repl() {
 	scanner := bufio.NewScanner(in)
 
 	env := object.NewEnvironment()
-	macroEnv := object.NewEnvironment()
 
 	fmt.Println(greet)
 
@@ -107,18 +96,9 @@ func repl() {
 			continue
 		}
 
-		eval.DefineMacros(program, macroEnv)
-		expanded := eval.ExpandMacros(program, macroEnv)
-
-		if debug {
-			io.WriteString(out, padLeft)
-			io.WriteString(out, expanded.String())
-			io.WriteString(out, "\n")
-		}
-
-		evaluated := eval.Eval(expanded, env)
-		if evaluated != nil {
-			io.WriteString(out, evaluated.String())
+		result := eval.Eval(program, env)
+		if result != nil {
+			io.WriteString(out, result.String())
 			io.WriteString(out, "\n")
 		}
 

@@ -6,6 +6,7 @@ import (
 
 	"yy/ast"
 	"yy/object"
+	"yy/token"
 )
 
 func yoloPrefixExpression(op string, right object.Object) object.Object {
@@ -309,6 +310,32 @@ func rot13(ch rune) rune {
 		ch -= 13
 	}
 	return ch
+}
+
+func objectToASTNode(obj object.Object) ast.Node {
+	switch obj := obj.(type) {
+	case *object.Integer:
+		tok := token.Token{
+			Type:    token.INT,
+			Literal: strconv.Itoa(int(obj.Value)),
+		}
+		return &ast.IntegerLiteral{Token: tok, Value: obj.Value}
+
+	case *object.Boolean:
+		var tok token.Token
+		if obj.Value {
+			tok = token.Token{Type: token.TRUE, Literal: "true"}
+		} else {
+			tok = token.Token{Type: token.FALSE, Literal: "false"}
+		}
+		return &ast.BooleanLiteral{Token: tok, Value: obj.Value}
+
+	case *object.Quote:
+		return obj.Node
+
+	default:
+		return nil
+	}
 }
 
 var collectiveNouns = map[string]string{
