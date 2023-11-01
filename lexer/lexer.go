@@ -6,12 +6,11 @@ type Lexer struct {
 	Input        string
 	position     int  // current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
-	line         int  // current line
 	ch           byte // current char under examination
 }
 
 func New(input string) *Lexer {
-	l := &Lexer{Input: input, line: 1}
+	l := &Lexer{Input: input}
 	l.advance()
 	return l
 }
@@ -119,7 +118,7 @@ func (l *Lexer) newToken(tokenType token.TokenType) token.Token {
 }
 
 func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) token.Token {
-	return token.Token{Type: tokenType, Literal: literal, Line: l.line, Offset: l.position - len(literal) + 1}
+	return token.Token{Type: tokenType, Literal: literal, Offset: l.position - len(literal) + 1}
 }
 
 func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
@@ -185,9 +184,6 @@ func (l *Lexer) string() token.Token {
 
 	start := l.position
 	for l.ch != '"' && l.ch != 0 {
-		if l.ch == '\n' {
-			l.line++
-		}
 		l.advance()
 	}
 
@@ -205,7 +201,6 @@ func (l *Lexer) skipWhitespace() {
 			l.advance()
 
 		case '\n':
-			l.line++
 			l.advance()
 
 		case '/':

@@ -27,7 +27,7 @@ func main() {
 		runFile(os.Args[1])
 
 	default:
-		fmt.Println("usage: yy [path_to_script] ")
+		fmt.Println("usage: yy [path_to_script]")
 	}
 }
 
