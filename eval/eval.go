@@ -605,7 +605,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return toYeetBool(lVal != right.Value)
 		}
 
-		// mixing of all the other types is allowed only in yolo mode
+	// mixing of all the other types is allowed only in yolo mode
 	case left.Type() != right.Type():
 		switch op {
 		case "==":
@@ -721,6 +721,10 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		case "!=":
 			return toYeetBool(!reflect.DeepEqual(left.Elements, right.Elements))
 		}
+	}
+
+	if yoloOK {
+		return yoloInfixExpression(op, left, right)
 	}
 
 	return newErrorWithoutPos("unknown operator: %s %s %s", left.Type(), op, right.Type())

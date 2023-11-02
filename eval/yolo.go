@@ -202,6 +202,32 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			return &object.Range{Start: intVal / rng.Start, End: intVal / rng.End}
 		}
 
+	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.FUNCTION_OBJ:
+		fn := left.(*object.Function)
+		right := right.(*object.Function)
+
+		newBody := &ast.BlockExpression{
+			Statements: []ast.Statement{
+				&ast.ExpressionStatement{
+					Expression: &ast.DeclareExpression{
+						Name:  right.Parameters[0],
+						Value: fn.Body,
+					},
+				},
+				&ast.ExpressionStatement{
+					Expression: right.Body,
+				},
+			},
+		}
+
+		result := &object.Function{
+			Parameters: fn.Parameters,
+			Env:        right.Env,
+			Body:       newBody,
+		}
+
+		return result
+
 	case left.Type() == object.FUNCTION_OBJ && op == "+":
 		fn := left.(*object.Function)
 		return bakeArgs(fn, right)
@@ -218,7 +244,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 					Expression: &ast.InfixExpression{
 						Left:     fn.Body,
 						Operator: op,
-						Right:    objectToASTNode(right).(ast.Expression),
+						Right:    objectToAST(right).(ast.Expression),
 					},
 				},
 			},
@@ -236,7 +262,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			Statements: []ast.Statement{
 				&ast.ExpressionStatement{
 					Expression: &ast.InfixExpression{
-						Left:     objectToASTNode(left).(ast.Expression),
+						Left:     objectToAST(left).(ast.Expression),
 						Operator: op,
 						Right:    fn.Body,
 					},
@@ -255,7 +281,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	return &object.String{Value: left.String() + right.String()}
 }
 
-func bakeArgs(fn *object.Function, right object.Object) object.Object {
+func bakeArgs(fn *object.Function, right object.Object) *object.Function {
 	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 	newParams := []*ast.Identifier{}
 
@@ -284,10 +310,6 @@ func bakeArgs(fn *object.Function, right object.Object) object.Object {
 	case *object.Null:
 		return fn
 
-	case *object.Function:
-		// TODO handle properly
-		return fn
-
 	default:
 		if len(fn.Parameters) > 0 {
 			extendedEnv.Set(fn.Parameters[0].Value, right)
@@ -312,7 +334,7 @@ func rot13(ch rune) rune {
 	return ch
 }
 
-func objectToASTNode(obj object.Object) ast.Node {
+func objectToAST(obj object.Object) ast.Node {
 	switch obj := obj.(type) {
 	case *object.Integer:
 		tok := token.Token{

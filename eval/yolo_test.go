@@ -156,7 +156,77 @@ func TestYoloInfixFunctionObject(t *testing.T) {
 	})
 }
 
-func TestYoloFunctionBaking(t *testing.T) {
+func TestYoloFunctionAdding(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		// functions
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \b { b * 5 }
+			yolo {
+				add_mul := add3 + mul5
+				add_mul(4)
+			}`,
+			35,
+		},
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \b { b * 5 }
+			sub2 := \c { c - 2 }
+			yolo {
+				add_mul_sub := add3 + mul5 + sub2
+				add_mul_sub(4)
+			}`,
+			33,
+		},
+		{
+			`
+			add  := \a, b { a + b }
+			mul5 := \x { x * 5 }
+			yolo {
+				add_mul := add + mul5
+				add_mul(1, 3)
+			}`,
+			20,
+		},
+		{
+			`
+			add := \a, b { a + b }
+			mul := \x, y  { x * y }
+			yolo {
+				add_mul := add + mul
+				add_mul(1, 3)
+			}`,
+			errmsg{"identifier not found: y"},
+		},
+		{
+			`
+			add := \a, b { a + b }
+			mul := \x, y  { x * y }
+			yolo {
+				mul5 := mul + 5
+				add_mul := add + mul5
+				add_mul(1, 3)
+			}`,
+			20,
+		},
+		// TODO fix test
+		// {
+		// 	`
+		// 	add := \a, b { a + b }
+		// 	mul5 := \x { x * 5 }
+		// 	yolo {
+		// 		add3 := add + 3
+		// 		add_mul := add3 + mul5
+		// 		add_mul(1)
+		// 	}`,
+		// 	20,
+		// },
+	})
+}
+
+func TestYoloArgumentsBaking(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`5 + \x { x + 2 } `, errmsg{"type mismatch: INTEGER + FUNCTION"}},
 

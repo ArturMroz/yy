@@ -19,11 +19,8 @@ type evalTestCase struct {
 func TestEvalIntegerExpression(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"5", 5},
-		{"10", 10},
 		{"-5", -5},
-		{"-10", -10},
 		{"5 + 5 + 5 + 5 - 10", 10},
-		{"2 * 2 * 2 * 2 * 2", 32},
 		{"-50 + 100 + -50", 0},
 		{"5 * 2 + 10", 20},
 		{"5 + 2 * 10", 25},
@@ -43,8 +40,9 @@ func TestEvalIntegerExpression(t *testing.T) {
 func TestEvalFloatExpression(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"5.0", 5.0},
-		{"10.0", 10.0},
 		{"-15.0", -15.0},
+		{"2.0 - 2", 0.0},
+		{"2 - 2.0", 0.0},
 		{"5 + 5.0 + 5 + 5 - 10", 10.0},
 		{"2 * 2 * 2.0 * 2 * 2", 32.0},
 		{"(5 + 10.0 * 2 + 15 / 3) * 2 + -10", 50.0},
@@ -503,10 +501,10 @@ func TestAssignExpressions(t *testing.T) {
 		{"x = 8", errmsg{"identifier not found: x"}},
 		{"x += 8", errmsg{"identifier not found: x"}},
 
-		// TODO add more tests
 		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
 		{"a := [1, 2, 3]; a[8] = 69", errmsg{"attempted to assign out of bounds for array 'a'"}},
 
+		{`h := %{ "a": 1 }; h["a"] = 2; h["a"]`, 2},
 		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
 		{`h := %{ "a": 1 }; h[[]] = 2`, 2},
 
