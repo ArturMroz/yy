@@ -220,13 +220,16 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			},
 		}
 
-		result := &object.Function{
-			Parameters: fn.Parameters,
-			Env:        right.Env,
-			Body:       newBody,
+		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+		for k, v := range right.Env.GetAll() {
+			extendedEnv.Set(k, v)
 		}
 
-		return result
+		return &object.Function{
+			Parameters: fn.Parameters,
+			Env:        extendedEnv,
+			Body:       newBody,
+		}
 
 	case left.Type() == object.FUNCTION_OBJ && op == "+":
 		fn := left.(*object.Function)
