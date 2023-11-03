@@ -290,10 +290,10 @@ two := "two";
 	evaluated := testEval(t, input)
 	result, ok := evaluated.(*object.Hashmap)
 	if !ok {
-		t.Fatalf("Eval didn't return Hash. got=%T (%+v)", evaluated, evaluated)
+		t.Fatalf("Eval didn't return Hash. got %T (%+v)", evaluated, evaluated)
 	}
 	if len(result.Pairs) != len(expected) {
-		t.Fatalf("Hash has wrong num of pairs. got=%d", len(result.Pairs))
+		t.Fatalf("Hash has wrong num of pairs. got %d", len(result.Pairs))
 	}
 	for expectedKey, expectedValue := range expected {
 		pair, ok := result.Pairs[expectedKey]
@@ -417,23 +417,34 @@ func TestYallExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"yall [1, 2, 3] { yt }", 3},
 		{"arr := [1, 2, 3]; yall arr { yt }", 3},
-		{`yall "testme" { yt }`, "e"},
-		{`s := ""; yall "test" { s = s + yt + "-" }; s`, "t-e-s-t-"},
-		{`s := ""; yall "test" { s += yt + "-" }; s`, "t-e-s-t-"},
 		{"sum := 0; yall [1, 2, 3] { sum = sum + yt }; sum", 6},
 		{"sum := 0; yall [1, 2, 3] { sum += yt }; sum", 6},
+
+		{`s := ""; yall "test" { s = s + yt + "-" }; s`, "t-e-s-t-"},
+		{`s := ""; yall "test" { s += yt + "-" }; s`, "t-e-s-t-"},
+		{`yall "testme" { yt }`, "e"},
 		{`my_str := "swag"; yall my_str { yt }`, "g"},
+
 		{`yall 0..5 { yt }`, 5},
 		{`yall 4..4 { yt }`, 4},
 		{`sum := 0; yall 1..4 { sum += yt }; sum`, 10},
 		{`yall i: 0..5 { i }`, 5},
 		{`sum := 0; yall j: 1..4 { sum += j }; sum`, 10},
 
+		{`sum := 0; yall 5 { sum += 1 }; sum`, 6},
+		{`sum := 0; yall 5 { sum += yt }; sum`, 15},
+		{`arr := []; yall 5 { arr << yt }; arr`, []int64{0, 1, 2, 3, 4, 5}},
+		{`sum := 0; yall -5 { sum += 1 }; sum`, 6},
+		{`sum := 0; yall -5 { sum += yt }; sum`, -15},
+		{`arr := []; yall -5 { arr << yt }; arr`, []int64{-5, -4, -3, -2, -1, 0}},
+
+		// early exit
 		{`yall 1..4 { yif yt == 1 { yeet 69 }; -1 }`, 69},
 		{`yall 4..1 { yif yt == 3 { yeet 69 }; -1 }`, 69},
 		{`yall [1, 2, 3] { yif yt == 1 { yeet 69 }; -1 }`, 69},
 		{`yall "testme" { yif yt == "t" { yeet 69 }; -1 }`, 69},
 
+		// scope leaking
 		{`yall 0..5 { x }`, errmsg{"identifier not found: x"}},
 		{`yall i: 0..5 { yt }`, errmsg{"identifier not found: yt"}},
 	})
@@ -805,7 +816,7 @@ func runEvalTests(t *testing.T, tests []evalTestCase) {
 			}
 
 		default:
-			t.Errorf("unexpected type, got=%T", expected)
+			t.Errorf("unexpected type, got %T", expected)
 		}
 	}
 }
@@ -832,10 +843,10 @@ func testEval(t *testing.T, input string) object.Object {
 func testIntegerObject(obj object.Object, expected int64) error {
 	result, ok := obj.(*object.Integer)
 	if !ok {
-		return fmt.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Integer. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("Integer object has wrong value. got=%d, want=%d", result.Value, expected)
+		return fmt.Errorf("Integer object has wrong value. got %d, want %d", result.Value, expected)
 	}
 	return nil
 }
@@ -843,7 +854,11 @@ func testIntegerObject(obj object.Object, expected int64) error {
 func testIntegerArray(obj object.Object, expected []int64) error {
 	result, ok := obj.(*object.Array)
 	if !ok {
-		return fmt.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Array. got %T (%+v)", obj, obj)
+	}
+	if len(result.Elements) != len(expected) {
+		return fmt.Errorf("Array has wrong number of elements. got %d, want %d",
+			len(result.Elements), len(expected))
 	}
 	for i := range expected {
 		if err := testIntegerObject(result.Elements[i], expected[i]); err != nil {
@@ -856,10 +871,10 @@ func testIntegerArray(obj object.Object, expected []int64) error {
 func testNumberObject(obj object.Object, expected float64) error {
 	result, ok := obj.(*object.Number)
 	if !ok {
-		return fmt.Errorf("object is not Number. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Number. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("Number object has wrong value. got=%g, want=%g", result.Value, expected)
+		return fmt.Errorf("Number object has wrong value. got %g, want %g", result.Value, expected)
 	}
 	return nil
 }
@@ -867,7 +882,7 @@ func testNumberObject(obj object.Object, expected float64) error {
 func testNumberArray(obj object.Object, expected []float64) error {
 	result, ok := obj.(*object.Array)
 	if !ok {
-		return fmt.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Array. got %T (%+v)", obj, obj)
 	}
 	for i := range expected {
 		if err := testNumberObject(result.Elements[i], expected[i]); err != nil {
@@ -880,10 +895,10 @@ func testNumberArray(obj object.Object, expected []float64) error {
 func testStringObject(obj object.Object, expected string) error {
 	result, ok := obj.(*object.String)
 	if !ok {
-		return fmt.Errorf("object is not String. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not String. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("String has wrong value. want=%q, got=%q", expected, result.Value)
+		return fmt.Errorf("String has wrong value. want %q, got %q", expected, result.Value)
 	}
 	return nil
 }
@@ -891,13 +906,13 @@ func testStringObject(obj object.Object, expected string) error {
 func testRangeObject(obj object.Object, expectedRng rng) error {
 	result, ok := obj.(*object.Range)
 	if !ok {
-		return fmt.Errorf("object is not Range. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Range. got %T (%+v)", obj, obj)
 	}
 	if result.Start != expectedRng.start {
-		return fmt.Errorf("wrong range start. want=%d, got=%d", expectedRng.start, result.Start)
+		return fmt.Errorf("wrong range start. want %d, got %d", expectedRng.start, result.Start)
 	}
 	if result.End != expectedRng.end {
-		return fmt.Errorf("wrong range end. want=%d, got=%d", expectedRng.end, result.End)
+		return fmt.Errorf("wrong range end. want %d, got %d", expectedRng.end, result.End)
 	}
 	return nil
 }
@@ -905,17 +920,17 @@ func testRangeObject(obj object.Object, expectedRng rng) error {
 func testBooleanObject(obj object.Object, expected bool) error {
 	result, ok := obj.(*object.Boolean)
 	if !ok {
-		return fmt.Errorf("object is not Boolean. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Boolean. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. want=%t, got=%t", expected, result.Value)
+		return fmt.Errorf("object has wrong value. want %t, got %t", expected, result.Value)
 	}
 	return nil
 }
 
 func testNullObject(obj object.Object) error {
 	if obj != object.NULL {
-		return fmt.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not NULL. got %T (%+v)", obj, obj)
 	}
 	return nil
 }
@@ -923,10 +938,10 @@ func testNullObject(obj object.Object) error {
 func testErrorObject(obj object.Object, expectedMsg string) error {
 	result, ok := obj.(*object.Error)
 	if !ok {
-		return fmt.Errorf("object is not Error. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Error. got %T (%+v)", obj, obj)
 	}
 	if result.Msg != expectedMsg {
-		return fmt.Errorf("wrong error message. want=%q, got=%q", expectedMsg, result.Msg)
+		return fmt.Errorf("wrong error message. want %q, got %q", expectedMsg, result.Msg)
 	}
 	return nil
 }

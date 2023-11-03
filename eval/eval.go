@@ -311,21 +311,33 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 
 		case *object.Range:
-			if iter.Start <= iter.End {
-				for i := iter.Start; i <= iter.End; i++ {
-					extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
-					result = Eval(node.Body, extendedEnv)
-					if isErrorOrReturn(result) {
-						return result
-					}
+			incr := int64(1)
+			if iter.Start > iter.End {
+				incr = -1
+			}
+
+			for i := iter.Start; i != iter.End+incr; i += incr {
+				extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
+				result = Eval(node.Body, extendedEnv)
+				if isErrorOrReturn(result) {
+					return result
 				}
-			} else {
-				for i := iter.Start; i >= iter.End; i-- {
-					extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
-					result = Eval(node.Body, extendedEnv)
-					if isErrorOrReturn(result) {
-						return result
-					}
+			}
+
+		case *object.Integer:
+			start := int64(0)
+			end := iter.Value
+
+			if iter.Value < 0 {
+				start = iter.Value
+				end = 0
+			}
+
+			for i := start; i <= end; i++ {
+				extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
+				result = Eval(node.Body, extendedEnv)
+				if isErrorOrReturn(result) {
+					return result
 				}
 			}
 
