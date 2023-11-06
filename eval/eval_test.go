@@ -426,6 +426,7 @@ func TestYallExpressions(t *testing.T) {
 		{`my_str := "swag"; yall my_str { yt }`, "g"},
 
 		{`yall 0..5 { yt }`, 5},
+		{`arr := []; yall 0..5 { arr << yt }; arr`, []int64{0, 1, 2, 3, 4, 5}},
 		{`yall 4..4 { yt }`, 4},
 		{`sum := 0; yall 1..4 { sum += yt }; sum`, 10},
 		{`yall i: 0..5 { i }`, 5},
@@ -509,7 +510,7 @@ func TestAssignExpressions(t *testing.T) {
 		{"x := 8; x /= 2; x", 4},
 		{"x := 8; x %= 5; x", 3},
 
-		{"x = 8", errmsg{"identifier not found: x"}},
+		{"x = 8", errmsg{"identifier not found: x (to declare a variable use := operator)"}},
 		{"x += 8", errmsg{"identifier not found: x"}},
 
 		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},

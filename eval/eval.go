@@ -49,7 +49,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				env.Set(node.Value, val)
 				return val
 			}
-			return newError(node.Pos(), "identifier not found: "+node.Value)
+			return newError(
+				node.Pos(),
+				"identifier not found: %s (to declare a variable use := operator)",
+				node.Value)
 
 		case *ast.IndexExpression:
 			left := Eval(node.Left, env)
@@ -435,6 +438,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return hashmap
 
+	// if there was a parsing error, we shouldn't get here anyway
+	case *ast.BadExpression:
+		return newError(node.Pos(), "couldn't parse %s", node.TokenLiteral())
+
+	// if there was a parsing error, we shouldn't get here anyway
 	case nil:
 		return newErrorWithoutPos("unexpected error: something went wrong somewhere (that's all we know).")
 

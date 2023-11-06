@@ -230,7 +230,7 @@ func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
 		p.errorAtCurrent("unexpected token '%s'", p.curToken.Literal)
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	leftExp := prefix()
@@ -267,7 +267,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	val, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
 		p.errorAtCurrent("could not parse %s as integer", p.peekToken.Literal)
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return &ast.IntegerLiteral{Token: p.curToken, Value: val}
@@ -277,7 +277,7 @@ func (p *Parser) parseNumberLiteral() ast.Expression {
 	val, err := strconv.ParseFloat(p.curToken.Literal, 64)
 	if err != nil {
 		p.errorAtCurrent("could not parse %s as float", p.peekToken.Literal)
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return &ast.NumberLiteral{Token: p.curToken, Value: val}
@@ -342,7 +342,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 
 	expr := p.parseExpression(LOWEST)
 	if !p.eat(token.RPAREN, "missing closing ')' in grouped expression") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return expr
@@ -367,7 +367,7 @@ func (p *Parser) parseYifExpression() ast.Expression {
 	yifExpr.Condition = p.parseExpression(LOWEST)
 
 	if !p.eat(token.LBRACE, "missing opening '{' after 'yif' condition") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	yifExpr.Consequence = p.parseBlockExpression()
@@ -391,7 +391,7 @@ func (p *Parser) parseYifExpression() ast.Expression {
 			yifExpr.Alternative = alternativeBlock
 		} else {
 			p.errorAtCurrent("expected yif statement or block after 'yels', found '%s'", p.peekToken.Literal)
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 	}
 
@@ -402,7 +402,7 @@ func (p *Parser) parseYoloExpression() ast.Expression {
 	yoloExpr := &ast.YoloExpression{Token: p.curToken}
 
 	if !p.eat(token.LBRACE, "missing opening '{' after 'yolo'") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	yoloExpr.Body = p.parseBlockExpression()
@@ -417,7 +417,7 @@ func (p *Parser) parseYoyoExpression() ast.Expression {
 	yoyoExpr.Condition = p.parseExpression(LOWEST)
 
 	if !p.eat(token.LBRACE, "missing opening '{' after 'yoyo'") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	yoyoExpr.Body = p.parseBlockExpression()
@@ -439,7 +439,7 @@ func (p *Parser) parseYallExpression() ast.Expression {
 	yallExpr.Iterable = p.parseExpression(LOWEST)
 
 	if !p.eat(token.LBRACE, "missing opening '{' after 'yall'") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	yallExpr.Body = p.parseBlockExpression()
@@ -459,12 +459,12 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 			p.advance()
 		} else if !p.peekIs(token.RBRACKET) {
 			p.errorAtPeek(token.COMMA, "missing comma after element in array literal")
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 	}
 
 	if !p.eat(token.RBRACKET, "missing closing ']' in array literal") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return arr
@@ -482,7 +482,7 @@ func (p *Parser) parseHashmapLiteral() ast.Expression {
 		key := p.parseExpression(LOWEST)
 
 		if !p.eat(token.COLON, "missing ':' in hashmap literal after a key") {
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 
 		p.advance()
@@ -494,12 +494,12 @@ func (p *Parser) parseHashmapLiteral() ast.Expression {
 			p.advance()
 		} else if !p.peekIs(token.RBRACE) {
 			p.errorAtPeek(token.COMMA, "missing comma after key-value pair in hashmap literal")
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 	}
 
 	if !p.eat(token.RBRACE, "missing closing '}' in hashmap literal") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return hashmap
@@ -516,7 +516,7 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 			fn.Parameters = append(fn.Parameters, param)
 		} else {
 			p.errorAtCurrent("expected a parameter in lambda declaration, found " + p.curToken.Literal)
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 
 		if p.peekIs(token.COMMA) { // comma is optional
@@ -525,7 +525,7 @@ func (p *Parser) parseLambdaLiteral() ast.Expression {
 	}
 
 	if !p.eat(token.LBRACE, "missing opening '{' before lambda body") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	fn.Body = p.parseBlockExpression()
@@ -544,7 +544,7 @@ func (p *Parser) parseMacroLiteral() ast.Expression {
 			fn.Parameters = append(fn.Parameters, param)
 		} else {
 			p.errorAtCurrent("expected a parameter in macro declaration, found " + p.curToken.Literal)
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 
 		if p.peekIs(token.COMMA) { // comma is optional
@@ -553,7 +553,7 @@ func (p *Parser) parseMacroLiteral() ast.Expression {
 	}
 
 	if !p.eat(token.LBRACE, "missing opening '{' before lambda body") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	fn.Body = p.parseBlockExpression()
@@ -605,7 +605,7 @@ func (p *Parser) parseDeclareExpression(maybeIdent ast.Expression) ast.Expressio
 	ident, ok := maybeIdent.(*ast.Identifier)
 	if !ok {
 		p.errorAtCurrent("expected a name when declaring a variable (got '%s')", maybeIdent.TokenLiteral())
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	declExpr := &ast.DeclareExpression{
@@ -627,7 +627,7 @@ func (p *Parser) parseAssignExpression(left ast.Expression) ast.Expression {
 		assExpr.Left = left
 	default:
 		p.errorAtCurrent("expected a variable name or index expression when assigning a value (got '%s')", left.TokenLiteral())
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	p.advance()
@@ -641,7 +641,8 @@ func (p *Parser) parseAssignExpression(left ast.Expression) ast.Expression {
 			Right:    assExpr.Value,
 			Operator: string(assExpr.Token.Literal[0]),
 		}
-		assExpr.Token = token.Token{Type: token.ASSIGN, Literal: "="}
+		assExpr.Token.Type = token.ASSIGN
+		assExpr.Token.Literal = "="
 	}
 
 	return assExpr
@@ -669,7 +670,7 @@ func (p *Parser) parseIndexExpression(array ast.Expression) ast.Expression {
 	indexExpr.Index = p.parseExpression(LOWEST)
 
 	if !p.eat(token.RBRACKET, "missing closing ']' when indexing an array") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return indexExpr
@@ -690,12 +691,12 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 			p.advance()
 		} else if !p.peekIs(token.RPAREN) {
 			p.errorAtPeek(token.COMMA, "missing comma after an argument in call expression")
-			return nil
+			return &ast.BadExpression{Token: p.curToken}
 		}
 	}
 
 	if !p.eat(token.RPAREN, "missing closing ')' in call expression") {
-		return nil
+		return &ast.BadExpression{Token: p.curToken}
 	}
 
 	return callExpr

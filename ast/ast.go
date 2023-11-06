@@ -458,3 +458,12 @@ func (ce *CallExpression) String() string {
 
 	return b.String()
 }
+
+type BadExpression struct {
+	Token token.Token // the token.IDENT token
+}
+
+func (i *BadExpression) expressionNode()      {}
+func (i *BadExpression) Pos() int             { return i.Token.Offset }
+func (i *BadExpression) TokenLiteral() string { return i.Token.Literal }
+func (i *BadExpression) String() string       { return fmt.Sprintf("BAD_EXPR(%s)", i.Token.Literal) }
