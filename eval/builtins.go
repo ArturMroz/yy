@@ -152,8 +152,21 @@ var builtins = map[string]*object.Builtin{
 				arg.Value = arg.Value[:pos] + arg.Value[pos+1:]
 				return &object.String{Value: string(elt)}
 
+			case *object.Integer:
+				temp := arg.Value
+				arg.Value = 0 // zero the value after yoinking from it
+				return &object.Integer{Value: temp}
+
+			case *object.Number:
+				temp := arg.Value
+				arg.Value = 0 // zero the value after yoinking from it
+				return &object.Number{Value: temp}
+
+			case *object.Null:
+				return object.NULL
+
 			default:
-				// TODO support more types
+				// TODO support hashmap, range, bool
 				return newErrorWithoutPos("cannot yoink from %s", args[0].Type())
 
 			}
