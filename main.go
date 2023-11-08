@@ -54,6 +54,7 @@ func runFile(f string) {
 	result := eval.Eval(program, env)
 	if evalError, ok := result.(*object.Error); ok {
 		fmt.Println(yikes.PrettyError(src, evalError.Pos, evalError.Msg))
+		os.Exit(1)
 	}
 }
 
