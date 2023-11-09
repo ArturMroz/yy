@@ -24,8 +24,8 @@ type Parser struct {
 	errors    []yikes.YYError
 	panicMode bool
 
-	prefixParseFns map[token.TokenType]prefixParseFn
-	infixParseFns  map[token.TokenType]infixParseFn
+	prefixParseFns map[token.Type]prefixParseFn
+	infixParseFns  map[token.Type]infixParseFn
 }
 
 func (p *Parser) Errors() []yikes.YYError {
@@ -40,15 +40,15 @@ func (p *Parser) advance() {
 	}
 }
 
-func (p *Parser) curIs(t token.TokenType) bool {
+func (p *Parser) curIs(t token.Type) bool {
 	return p.curToken.Type == t
 }
 
-func (p *Parser) peekIs(t token.TokenType) bool {
+func (p *Parser) peekIs(t token.Type) bool {
 	return p.peekToken.Type == t
 }
 
-func (p *Parser) eat(t token.TokenType, errMsg string) bool {
+func (p *Parser) eat(t token.Type, errMsg string) bool {
 	if p.peekIs(t) {
 		p.advance()
 		return true
@@ -75,7 +75,7 @@ const (
 	INDEX       // array[idx]
 )
 
-var precedences = map[token.TokenType]Precedence{
+var precedences = map[token.Type]Precedence{
 	token.ASSIGN:     ASSIGNMENT,
 	token.WALRUS:     ASSIGNMENT,
 	token.ADD_ASSIGN: ASSIGNMENT,
@@ -112,7 +112,7 @@ func getPrecedence(tok token.Token) Precedence {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l}
 
-	p.prefixParseFns = map[token.TokenType]prefixParseFn{
+	p.prefixParseFns = map[token.Type]prefixParseFn{
 		token.IDENT:     p.parseIdentifier,
 		token.INT:       p.parseIntegerLiteral,
 		token.NUMBER:    p.parseNumberLiteral,
@@ -134,7 +134,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.MACRO:     p.parseMacroLiteral,
 	}
 
-	p.infixParseFns = map[token.TokenType]infixParseFn{
+	p.infixParseFns = map[token.Type]infixParseFn{
 		token.OR:         p.parseOrExpression,
 		token.AND:        p.parseAndExpression,
 		token.PLUS:       p.parseInfixExpression,
@@ -375,10 +375,12 @@ func (p *Parser) parseYifExpression() ast.Expression {
 	if p.peekIs(token.YELS) {
 		p.advance()
 
-		if p.peekIs(token.LBRACE) {
+		switch p.peekToken.Type {
+		case token.LBRACE:
 			p.advance()
 			yifExpr.Alternative = p.parseBlockExpression()
-		} else if p.peekIs(token.YIF) {
+
+		case token.YIF:
 			p.advance()
 
 			// this is a bit long-winded, but the other option would be to set Alternative's type to
@@ -389,7 +391,8 @@ func (p *Parser) parseYifExpression() ast.Expression {
 				},
 			}
 			yifExpr.Alternative = alternativeBlock
-		} else {
+
+		default:
 			p.errorAtCurrent("expected yif statement or block after 'yels', found '%s'", p.peekToken.Literal)
 			return &ast.BadExpression{Token: p.curToken}
 		}
@@ -715,7 +718,7 @@ func (p *Parser) newError(msg string, offset int) {
 	p.errors = append(p.errors, yikes.YYError{Msg: msg, Offset: offset})
 }
 
-func (p *Parser) errorAtPeek(expected token.TokenType, errMsg string) {
+func (p *Parser) errorAtPeek(expected token.Type, errMsg string) {
 	msg := fmt.Sprintf("%s (expected '%s', found '%s')", errMsg, expected, p.peekToken.Literal)
 	p.newError(msg, p.peekToken.Offset)
 }
@@ -725,7 +728,7 @@ func (p *Parser) errorAtCurrent(format string, args ...any) {
 	p.newError(msg, p.curToken.Offset)
 }
 
-// sync recovers from panic mode by fastforwarding to the next expr/stmt
+// sync recovers from panic mode by fastforwarding to the next expr/stmt.
 func (p *Parser) sync() {
 	p.panicMode = false
 

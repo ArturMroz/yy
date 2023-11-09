@@ -1,8 +1,9 @@
-package lexer
+package lexer_test
 
 import (
 	"testing"
 
+	"yy/lexer"
 	"yy/token"
 )
 
@@ -98,7 +99,7 @@ func TestNextToken(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		l := New(tc.input)
+		l := lexer.New(tc.input)
 
 		for i, exp := range tc.expected {
 			tok := l.NextToken()

@@ -1,26 +1,26 @@
 package token
 
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 	Offset  int
 }
 
-type TokenType int
+type Type int
 
 const (
-	ILLEGAL TokenType = iota
+	ILLEGAL Type = iota
 	EOF
 	ERROR
 
-	// Identifiers + literals
+	// Identifiers + literals.
 
 	IDENT
 	INT
 	NUMBER
 	STRING
 
-	// Operators
+	// Operators.
 
 	PLUS
 	MINUS
@@ -53,7 +53,7 @@ const (
 	MACRO
 	HASHMAP
 
-	// Delimiters
+	// Delimiters.
 
 	COMMA
 	SEMICOLON
@@ -65,7 +65,7 @@ const (
 	LBRACKET
 	RBRACKET
 
-	// Keywords
+	// Keywords.
 
 	TRUE
 	FALSE
@@ -150,11 +150,11 @@ var tokens = [...]string{
 	YET:   "YET",
 }
 
-func (tok TokenType) String() string {
+func (tok Type) String() string {
 	return tokens[tok]
 }
 
-var keywords = map[string]TokenType{
+var keywords = map[string]Type{
 	"true":  TRUE,
 	"false": FALSE,
 	"null":  NULL,
@@ -166,7 +166,7 @@ var keywords = map[string]TokenType{
 	"yall":  YALL,
 }
 
-func LookupIdent(ident string) TokenType {
+func LookupIdent(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}

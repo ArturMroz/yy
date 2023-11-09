@@ -1,12 +1,16 @@
-package object
+package object_test
 
-import "testing"
+import (
+	"testing"
+
+	"yy/object"
+)
 
 func TestStringHashKey(t *testing.T) {
-	hello1 := &String{Value: "Hello World"}
-	hello2 := &String{Value: "Hello World"}
-	diff1 := &String{Value: "Do you like bananans"}
-	diff2 := &String{Value: "Do you like bananans"}
+	hello1 := &object.String{Value: "Hello World"}
+	hello2 := &object.String{Value: "Hello World"}
+	diff1 := &object.String{Value: "Do you like bananans"}
+	diff2 := &object.String{Value: "Do you like bananans"}
 
 	if hello1.HashKey() != hello2.HashKey() {
 		t.Errorf("strings with same content have different hash keys")

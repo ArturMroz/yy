@@ -1,4 +1,4 @@
-package eval
+package eval_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"yy/eval"
 	"yy/lexer"
 	"yy/object"
 	"yy/parser"
@@ -746,7 +747,7 @@ func BenchmarkEval(b *testing.B) {
 
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
-				_ = Eval(program, env)
+				_ = eval.Eval(program, env)
 			}
 		})
 	}
@@ -838,7 +839,7 @@ func testEval(t *testing.T, input string) object.Object {
 
 	env := object.NewEnvironment()
 
-	return Eval(program, env)
+	return eval.Eval(program, env)
 }
 
 func testIntegerObject(obj object.Object, expected int64) error {

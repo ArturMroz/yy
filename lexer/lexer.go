@@ -113,15 +113,15 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
-func (l *Lexer) newToken(tokenType token.TokenType) token.Token {
+func (l *Lexer) newToken(tokenType token.Type) token.Token {
 	return l.newTokenWithLiteral(tokenType, tokenType.String())
 }
 
-func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) token.Token {
+func (l *Lexer) newTokenWithLiteral(tokenType token.Type, literal string) token.Token {
 	return token.Token{Type: tokenType, Literal: literal, Offset: l.position - len(literal) + 1}
 }
 
-func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
+func (l *Lexer) switch2(tok1, tok2 token.Type, expected byte) token.Token {
 	if l.peek() == expected {
 		l.advance()
 		return l.newToken(tok2)
@@ -129,7 +129,7 @@ func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
 	return l.newToken(tok1)
 }
 
-func (l *Lexer) switchEq(tok1, tok2 token.TokenType) token.Token {
+func (l *Lexer) switchEq(tok1, tok2 token.Type) token.Token {
 	return l.switch2(tok1, tok2, '=')
 }
 
@@ -174,9 +174,9 @@ func (l *Lexer) number() token.Token {
 		}
 
 		return token.Token{Type: token.NUMBER, Literal: l.Input[start:l.position], Offset: start}
-	} else {
-		return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
 	}
+
+	return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
 }
 
 func (l *Lexer) string() token.Token {

@@ -32,9 +32,8 @@ func (p *Program) Pos() int { return 0 }
 func (p *Program) TokenLiteral() string {
 	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
-	} else {
-		return ""
 	}
+	return ""
 }
 
 func (p *Program) String() string {
@@ -105,7 +104,7 @@ type ExpressionStatement struct {
 }
 
 func (es *ExpressionStatement) statementNode()       {}
-func (de *ExpressionStatement) Pos() int             { return de.Token.Offset }
+func (es *ExpressionStatement) Pos() int             { return es.Token.Offset }
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
@@ -295,8 +294,8 @@ type OrExpression struct {
 	Right Expression
 }
 
-func (ae *OrExpression) expressionNode()      {}
-func (de *OrExpression) Pos() int             { return de.Token.Offset }
+func (oe *OrExpression) expressionNode()      {}
+func (oe *OrExpression) Pos() int             { return oe.Token.Offset }
 func (oe *OrExpression) TokenLiteral() string { return oe.Token.Literal }
 func (oe *OrExpression) String() string {
 	return fmt.Sprintf("(%s || %s)", oe.Left.String(), oe.Right.String())
@@ -341,7 +340,7 @@ type YoyoExpression struct {
 }
 
 func (ye *YoyoExpression) expressionNode()      {}
-func (de *YoyoExpression) Pos() int             { return de.Token.Offset }
+func (ye *YoyoExpression) Pos() int             { return ye.Token.Offset }
 func (ye *YoyoExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YoyoExpression) String() string {
 	return fmt.Sprintf("yoyo %s { %s }", ye.Condition.String(), ye.Body.String())

@@ -172,7 +172,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 				return object.NULL
 			}
 			return pair.Value
-
 		}
 		return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
 
@@ -261,11 +260,12 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return condition
 		}
 
-		if isTruthy(condition) {
+		switch {
+		case isTruthy(condition):
 			return Eval(node.Consequence, env)
-		} else if node.Alternative != nil {
+		case node.Alternative != nil:
 			return Eval(node.Alternative, env)
-		} else {
+		default:
 			return object.NULL
 		}
 
@@ -273,6 +273,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		extendedEnv := object.NewEnclosedEnvironment(env)
 
 		var result object.Object
+
 		for {
 			condition := Eval(node.Condition, extendedEnv)
 			if isError(condition) {
@@ -491,7 +492,7 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 		return fn
 	}
 
-	var args []object.Object
+	args := make([]object.Object, 0, len(callExpr.Arguments))
 	for _, a := range callExpr.Arguments {
 		evaluated := Eval(a, env)
 		if isError(evaluated) {

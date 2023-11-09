@@ -1,13 +1,15 @@
-package parser
+package parser_test
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"yy/ast"
 	"yy/lexer"
+	"yy/parser"
 )
 
 func TestDeclareExpression(t *testing.T) {
@@ -327,7 +329,7 @@ func TestParsingHashLiteralsWithExpressions(t *testing.T) {
 }
 
 func TestParsingIndexExpressions(t *testing.T) {
-	// TOOD add more test cases
+	// TODO add more test cases
 	input := "myArray[1 + 1]"
 	stmt := parseSingleExprStmt(t, input)
 	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
@@ -973,7 +975,7 @@ z := 2;`,
 	}
 
 	for _, tt := range tests {
-		parser := New(lexer.New(tt))
+		parser := parser.New(lexer.New(tt))
 		_ = parser.ParseProgram()
 		errors := parser.Errors()
 
@@ -996,13 +998,13 @@ func parse(t *testing.T, input string) *ast.Program {
 	t.Helper()
 
 	l := lexer.New(input)
-	parser := New(l)
+	parser := parser.New(l)
 	program := parser.ParseProgram()
 	checkParserErrors(t, parser)
 	return program
 }
 
-func checkParserErrors(t *testing.T, p *Parser) {
+func checkParserErrors(t *testing.T, p *parser.Parser) {
 	t.Helper()
 
 	errors := p.Errors()
@@ -1018,6 +1020,8 @@ func checkParserErrors(t *testing.T, p *Parser) {
 }
 
 func parseSingleExprStmt(t *testing.T, input string) *ast.ExpressionStatement {
+	t.Helper()
+
 	program := parse(t, input)
 	if len(program.Statements) != 1 {
 		t.Fatalf("program.Statements does not contain a single statement. got=%d\n", len(program.Statements))
@@ -1052,7 +1056,7 @@ func testIntegerLiteral(expr ast.Expression, value int64) error {
 	if integ.Value != value {
 		return fmt.Errorf("integ.Value not %d. got=%d", value, integ.Value)
 	}
-	if integ.TokenLiteral() != fmt.Sprintf("%d", value) {
+	if integ.TokenLiteral() != strconv.FormatInt(value, 10) {
 		return fmt.Errorf("integ.TokenLiteral not %d. got=%s", value, integ.TokenLiteral())
 	}
 	return nil
@@ -1094,7 +1098,7 @@ func testBooleanLiteral(expr ast.Expression, value bool) error {
 	if b.Value != value {
 		return fmt.Errorf("bool value not %t. got=%t", value, b.Value)
 	}
-	if b.TokenLiteral() != fmt.Sprintf("%t", value) {
+	if b.TokenLiteral() != strconv.FormatBool(value) {
 		return fmt.Errorf("bool TokenLiteral not %t. got=%s", value, b.TokenLiteral())
 	}
 	return nil
@@ -1171,7 +1175,7 @@ func BenchmarkParse(b *testing.B) {
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
 				l := lexer.New(sSrc)
-				parser := New(l)
+				parser := parser.New(l)
 				_ = parser.ParseProgram()
 			}
 		})

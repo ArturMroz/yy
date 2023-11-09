@@ -1,29 +1,30 @@
-package ast
+package ast_test
 
 import (
 	"testing"
 
+	"yy/ast"
 	"yy/token"
 )
 
 func TestString(t *testing.T) {
-	program := &Program{
-		Statements: []Statement{
-			&ExpressionStatement{
+	program := &ast.Program{
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{
 				Token: token.Token{Type: token.WALRUS, Literal: ":="},
-				Expression: &DeclareExpression{
+				Expression: &ast.DeclareExpression{
 					Token: token.Token{Type: token.WALRUS, Literal: ":="},
-					Name: &Identifier{
+					Name: &ast.Identifier{
 						Token: token.Token{Type: token.IDENT, Literal: "myVar"},
 						Value: "myVar",
 					},
-					Value: &InfixExpression{
+					Value: &ast.InfixExpression{
 						Token: token.Token{Type: token.PLUS, Literal: "+"},
-						Left: &IntegerLiteral{
+						Left: &ast.IntegerLiteral{
 							Token: token.Token{Type: token.INT, Literal: "5"},
 							Value: 5,
 						},
-						Right: &IntegerLiteral{
+						Right: &ast.IntegerLiteral{
 							Token: token.Token{Type: token.INT, Literal: "18"},
 							Value: 18,
 						},

@@ -76,6 +76,9 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 				Body:       newBody,
 			}
 		}
+
+	case "!":
+		// TODO handle
 	}
 
 	// catch all: convert to string
@@ -300,15 +303,15 @@ func bakeArgs(fn *object.Function, right object.Object) *object.Function {
 		}
 
 	case *object.Array:
-		num_set := 0
+		numSet := 0
 		for i, v := range right.Elements {
 			if i >= len(fn.Parameters) {
 				break
 			}
 			extendedEnv.Set(fn.Parameters[i].Value, v)
-			num_set++
+			numSet++
 		}
-		newParams = fn.Parameters[num_set:]
+		newParams = fn.Parameters[numSet:]
 
 	case *object.Null:
 		return fn
