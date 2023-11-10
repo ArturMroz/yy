@@ -581,7 +581,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		case "/":
 			return &object.Number{Value: left.Value / rVal}
 		case "%":
-			return &object.Number{Value: float64(int64(left.Value) % int64(right.Value))}
+			return &object.Number{Value: float64(int64(left.Value) % right.Value)}
 		case "<":
 			return toYeetBool(left.Value < rVal)
 		case ">":

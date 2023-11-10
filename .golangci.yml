@@ -22,11 +22,11 @@ linters:
     #   - errname
     #   - errorlint
     #   - execinquery
-    #   - exhaustive
+    - exhaustive
     #   - exhaustivestruct
-    #   - exhaustruct
+    - exhaustruct
     #   - exportloopref
-    #   - forbidigo
+    # - forbidigo
     #   - forcetypeassert
     #   - funlen
     #   - gci
@@ -75,7 +75,7 @@ linters:
     #   - nestif
     #   - nilerr
     #   - nilnil
-    #   - nlreturn
+    # - nlreturn
     #   - noctx
     #   - nolintlint
     #   - nonamedreturns
@@ -111,30 +111,40 @@ linters:
     #   - usestdlibvars
     #   - varcheck
     - varnamelen
-  #   - wastedassign
-  #   - whitespace
-  #   - wrapcheck
-  #   - wsl
-  #   - zerologlint
+    #   - wastedassign
+    #   - whitespace
+    #   - wrapcheck
+    #   - wsl
+    #   - zerologlint
 
   presets:
-    # - bugs
+    - bugs
     - comment
     # - complexity
-    # - error
+    - error
     # - format
-    # - import
+    - import
     - metalinter
-    # - module
+    - module
     - performance
-    - sql
+    # - sql
     # - style
-    # - test
+    - test
     - unused
-
-  # Run only fast linters from enabled linters set (first run won't be fast)
-  # Default: false
-  fast: false
 
 issues:
   fix: false
+  exclude-rules:
+    - path: '(.+)_test\.go'
+      linters:
+        - goerr113
+        - funlen
+    - path: token/token.go|object/object.go
+      text: "var-naming: don't use ALL_CAPS in Go names; use CamelCase"
+    - path: main.go
+      text: "Error return value of `io.WriteString` is not checked"
+
+linters-settings:
+  gosec:
+    excludes:
+      - G404 # Use of weak random number generator (math/rand instead of crypto/rand)

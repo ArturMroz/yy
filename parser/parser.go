@@ -188,12 +188,10 @@ func (p *Parser) ParseProgram() *ast.Program {
 //
 
 func (p *Parser) parseStatement() ast.Statement {
-	switch p.curToken.Type {
-	case token.YEET:
+	if p.curToken.Type == token.YEET {
 		return p.parseYeetStatement()
-	default:
-		return p.parseExpressionStatement()
 	}
+	return p.parseExpressionStatement()
 }
 
 func (p *Parser) parseYeetStatement() *ast.YeetStatement {
