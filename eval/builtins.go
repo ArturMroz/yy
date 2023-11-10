@@ -264,11 +264,13 @@ var builtins = map[string]*object.Builtin{
 			switch arg := args[0].(type) {
 			case *object.Integer:
 				return &object.String{Value: string(rune(arg.Value))}
+
 			case *object.String:
 				if len(arg.Value) == 0 {
 					return object.NULL
 				}
 				return &object.String{Value: string(arg.Value[0])}
+
 			default:
 				return newErrorWithoutPos("unsupported argument type for chr, got %s", arg.Type())
 			}
@@ -284,20 +286,24 @@ var builtins = map[string]*object.Builtin{
 			switch arg := args[0].(type) {
 			case *object.Integer:
 				return arg
+
 			case *object.Number:
 				return &object.Integer{Value: int64(arg.Value)}
+
 			case *object.Boolean:
 				v := 0
 				if arg.Value {
 					v = 1
 				}
 				return &object.Integer{Value: int64(v)}
+
 			case *object.String:
 				val, err := strconv.ParseInt(arg.Value, 0, 64)
 				if err != nil {
 					return newErrorWithoutPos("could not parse %s as integer", arg.Value)
 				}
 				return &object.Integer{Value: val}
+
 			default:
 				return newErrorWithoutPos("unsupported argument type for int, got %s", arg.Type())
 			}

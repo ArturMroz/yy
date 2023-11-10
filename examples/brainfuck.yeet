@@ -1,0 +1,62 @@
+// An interpreter for the Brainfuck programming language, written in the YY programming language.
+// An interpreter within an interpreter. Interpreter Inception. Interpreception. Interception?
+// 
+// *BWOOOONNNNGNGGGG* <- Inception's horn sound effect
+// -_-                <- DiCaprio's face
+
+// this is an actual "Hello World!" program in Brainfuck
+code := "
+++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>
+---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
+"
+
+// our very own Brainfuck Virtual Machine
+ip  := 0  // instruction pointer
+dp  := 0  // data pointer
+mem := [] // memory
+
+// initialise memory
+yall 0..100 { mem << 0 }
+
+// loop through the code and execute each instruction
+yoyo ip < len(code) {
+    ins := code[ip]
+    yif ins == "+" {        // increment the value in memory at the data pointer
+        mem[dp] += 1
+    } yels yif ins == "-" { // decrement the value in memory at the data pointer
+        mem[dp] -= 1
+    } yels yif ins == ">" { // move the data pointer to the right
+        dp += 1
+    } yels yif ins == "<" { // move the data pointer to the left
+        dp -= 1
+    } yels yif ins == "." { // print the ASCII character for the value in memory at the data pointer
+        yelp(chr(mem[dp]))
+    } yels yif ins == "[" { // if the memory at the data pointer is 0, jump to the corresponding "]" char
+        yif mem[dp] == 0 {
+            depth := 1
+            yoyo depth != 0 {
+                ip += 1
+                yif code[ip] == "[" {
+                    depth += 1
+                } yels yif code[ip] == "]" {
+                    depth -= 1
+                }
+            }
+        }
+    } yels yif ins == "]" { // if the memory at the data pointer isn't 0, jump back to the corresponding "[" char
+        yif mem[dp] != 0 {
+            depth := 1
+            yoyo depth != 0 {
+                ip -= 1
+                yif code[ip] == "[" {
+                    depth -= 1
+                } yels yif code[ip] == "]" {
+                    depth += 1
+                }
+            }
+        }
+    }
+
+    // move to the next instruction
+    ip += 1
+}

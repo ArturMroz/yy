@@ -34,6 +34,11 @@ func TestBuiltinCastingFunctions(t *testing.T) {
 		{`yarn(0..2)`, "0..2"},
 		{`yarn("test")`, "test"},
 
+		{`chr(5)`, "\x05"},
+		{`chr(15)`, "\x0f"},
+		{`chr("5")`, "5"},
+		{`chr("15")`, "1"},
+
 		{`int(5)`, 5},
 		{`int(5.0)`, 5},
 		{`int(true)`, 1},

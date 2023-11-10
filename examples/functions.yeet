@@ -19,6 +19,7 @@ max := \x y {
 
 a := 3
 b := 18
+
 yassert(max(a, b) == b)
 yassert_eq(max(a, b), b)
 
