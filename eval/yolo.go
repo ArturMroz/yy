@@ -313,9 +313,6 @@ func bakeArgs(fn *object.Function, right object.Object) *object.Function {
 		}
 		newParams = fn.Parameters[numSet:]
 
-	case *object.Null:
-		return fn
-
 	default:
 		if len(fn.Parameters) > 0 {
 			extendedEnv.Set(fn.Parameters[0].Value, right)

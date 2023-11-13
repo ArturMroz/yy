@@ -192,6 +192,27 @@ func TestYoloFunctionAdding(t *testing.T) {
 		},
 		{
 			`
+			add3 := \a { a + 3 }
+			mul5 := \a { a * 5 }
+			sub2 := \a { a - 2 }
+			yolo {
+				add_mul_sub := add3 + mul5 + sub2
+				add_mul_sub(4) == (add3 + mul5 + sub2)(4) 
+			}`,
+			true,
+		},
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \a { a * 5 }
+			sub2 := \a { a - 2 }
+			yolo {
+				sub2(mul5(add3(4))) == (add3 + mul5 + sub2)(4) 
+			}`,
+			true,
+		},
+		{
+			`
 			add  := \a, b { a + b }
 			mul5 := \x { x * 5 }
 			yolo {
@@ -344,27 +365,27 @@ func TestYoloArgumentsBaking(t *testing.T) {
 			6,
 		},
 		{
-			`yolo {
-				add     := \a b c { a + b + c }
-				add_all := [1, 2, 3] + add
-				add_all()
-			}`,
+			`
+			add     := \a b c { a + b + c }
+			add_all := yolo { [1, 2, 3] + add }
+			add_all()
+			`,
 			6,
 		},
 		{
-			`yolo {
-				add     := \a b c { a + b + c }
-				add_all := [1, 2, 3, 4, 5] + add // surplus is ignored
-				add_all()
-			}`,
+			`
+			add     := \a b c { a + b + c }
+			add_all := yolo { [1, 2, 3, 4, 5] + add } // surplus is ignored
+			add_all()
+			`,
 			6,
 		},
 		{
-			`yolo {
-				add     := \a b c { a + b + c }
-				add_all := [1, 2] + add
-				add_all(3)
-			}`,
+			`
+			add     := \a b c { a + b + c }
+			add_all := yolo { [1, 2] + add }
+			add_all(3)
+			`,
 			6,
 		},
 
@@ -373,9 +394,17 @@ func TestYoloArgumentsBaking(t *testing.T) {
 			`yolo {
 				add      := \a, b { a + b }
 				add_null := add + null
-				add_null(5, 6)
+				add_null(6)
 			}`,
-			11,
+			"null6",
+		},
+		{
+			`
+			add      := \a, b { a + b }
+			add_null := yolo { add + null }
+			add_null(6)
+			`,
+			errmsg{"type mismatch: NULL + INTEGER"},
 		},
 	})
 }
