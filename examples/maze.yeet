@@ -1,0 +1,100 @@
+// Have you ever got lost in a supermarket as a child? Perfect!
+// We'll recreate that traumatic event by building a maze solver in YY.
+
+maze := [
+    "@S@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+    "@     @   @ @         @       @",
+    "@@@@@ @@@ @ @ @@@@@ @@@@@ @@@ @",
+    "@   @ @   @ @   @ @     @   @ @",
+    "@ @ @ @ @ @ @ @@@ @@@@@@@@@@@ @",
+    "@ @     @ @     @ @           @",
+    "@@@@@@@@@ @@@ @@@ @@@ @@@ @@@@@",
+    "@       @       @       @   @ @",
+    "@@@ @ @@@ @@@@@ @@@ @@@@@ @ @ @",
+    "@   @     @          @    @   @",
+    "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@E@",
+]
+
+// locate the starting position by searching for the 'S' character
+find_start := \maze {
+    yall row: len(maze)-1 {
+        yall col: len(maze[row])-1 {
+            yif maze[row][col] == "S" {
+                yeet [row, col]
+            }
+        }
+    }
+    yikes("invalid maze: no starting position found")
+}
+
+solve := \maze {
+    start := find_start(maze)
+    queue := [start]
+
+    // YY doesn't support sets, so we'll use a hashmap instead
+    // syntax for hashmaps in YY is `%{ }` (so it can be told apart from a block `{ }` )
+    seen := %{ start: true }
+
+    // keep track of the path to reconstruct our way through the maze
+    path := %{ start: null }
+
+    // run until the queue is empty or we found a way out
+    yoyo queue {
+        // since we're using depth-first seach, we'll get the next position by taking
+        // the last element from the queue (we're using queue as a stack)
+        cur := yoink(queue)
+
+        // we could change this algorithm to breadth-first search by taking the first element like so
+        // cur := yoink(queue, 0)
+
+        // check if we have reached the end
+        yif maze[cur[0]][cur[1]] == "E" {
+            // backtrack to find and mark the path
+            yoyo cur != start {
+                maze[cur[0]][cur[1]] = "."
+                cur = path[cur]
+            }
+
+            maze[cur[0]][cur[1]] = "."
+
+            // exit early, we're done here
+            yeet true
+        }
+
+        // get neighbours of the current position
+        neighbours := []
+        yif cur[0] > 0 {
+            neighbours << [cur[0]-1, cur[1]]
+        }
+        yif cur[0] < len(maze)-1 {
+            neighbours << [cur[0]+1, cur[1]]
+        }
+        yif cur[1] > 0 {
+            neighbours << [cur[0], cur[1]-1]
+        }
+        yif cur[1] < len(maze[0])-1 {
+            neighbours << [cur[0], cur[1]+1]
+        }
+
+        // add unseen neighbours to the queue
+        yall neighbours {
+            yif !seen[yt] && maze[yt[0]][yt[1]] != "@" {
+                seen[yt] = true
+                path[yt] = cur
+                queue << yt
+            }
+        }
+    }
+}
+
+yif solve(maze) {
+    // print out the maze with our path
+    yall row: maze {
+        yall col: row {
+            yelp(col)
+        }
+        yap()
+    }
+} yels {
+    yap("there's no way out :(")
+}

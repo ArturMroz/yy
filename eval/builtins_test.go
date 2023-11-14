@@ -36,8 +36,14 @@ func TestBuiltinCastingFunctions(t *testing.T) {
 
 		{`chr(5)`, "\x05"},
 		{`chr(15)`, "\x0f"},
+		{`chr(60)`, "<"},
+		{`chr(65)`, "A"},
+		{`chr(90)`, "Z"},
+		{`chr(97)`, "a"},
+		{`chr(122)`, "z"},
+		{`chr(322)`, "ł"},
 		{`chr("5")`, "5"},
-		{`chr("15")`, "1"},
+		{`chr("24")`, "2"},
 
 		{`int(5)`, 5},
 		{`int(5.0)`, 5},

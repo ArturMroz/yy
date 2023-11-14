@@ -706,6 +706,9 @@ func TestExampleFiles(t *testing.T) {
 
 	for _, f := range testFiles {
 		t.Run(f.Name(), func(t *testing.T) {
+			f := f
+			t.Parallel()
+
 			filename := filepath.Join(examplesDir, f.Name())
 			src, err := os.ReadFile(filename)
 			if err != nil {

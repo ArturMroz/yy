@@ -2,10 +2,10 @@
 // interviews. But fear not, YY is here to help you slay this beast. And rather than printing
 // the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead. 
 
-yall 1..100 {
-    // implicitly defined variable 'yt' represents the current number in the loop
-    // 'yt' is short for 'yeeterator'
+// This example illustartes the use of implicitly defined 'yt' variable
+// 'yt' is short for 'yeeterator' and it's created autmatically inside a yall loop
 
+yall 1..100 {
     yif yt % 3 == 0 && yt % 5 == 0 {
         yap("YeetYoink")      // print "YeetYoink" if divisible by both 3 and 5
     } yels yif yt % 3 == 0 {
