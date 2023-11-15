@@ -96,6 +96,19 @@ func TestNextToken(t *testing.T) {
 				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
+		{
+			"`interpolate { 1 + 2 } right now { foo } please`",
+			[]token.Token{
+				{Type: token.TEMPL_STRING, Literal: "interpolate "},
+				{Type: token.INT, Literal: "1"},
+				{Type: token.PLUS, Literal: "+"},
+				{Type: token.INT, Literal: "2"},
+				{Type: token.TEMPL_STRING, Literal: " right now "},
+				{Type: token.IDENT, Literal: "foo"},
+				{Type: token.STRING, Literal: " please"},
+				{Type: token.EOF, Literal: "EOF"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

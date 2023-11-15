@@ -113,25 +113,26 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l}
 
 	p.prefixParseFns = map[token.Type]prefixParseFn{
-		token.IDENT:     p.parseIdentifier,
-		token.INT:       p.parseIntegerLiteral,
-		token.NUMBER:    p.parseNumberLiteral,
-		token.STRING:    p.parseStringLiteral,
-		token.MINUS:     p.parsePrefixExpression,
-		token.BANG:      p.parsePrefixExpression,
-		token.TRUE:      p.parseBoolean,
-		token.FALSE:     p.parseBoolean,
-		token.NULL:      p.parseNull,
-		token.HASHMAP:   p.parseHashmapLiteral,
-		token.LPAREN:    p.parseGroupedExpression,
-		token.LBRACKET:  p.parseArrayLiteral,
-		token.LBRACE:    func() ast.Expression { return p.parseBlockExpression() },
-		token.YIF:       p.parseYifExpression,
-		token.YOLO:      p.parseYoloExpression,
-		token.YALL:      p.parseYallExpression,
-		token.YOYO:      p.parseYoyoExpression,
-		token.BACKSLASH: p.parseLambdaLiteral,
-		token.MACRO:     p.parseMacroLiteral,
+		token.IDENT:        p.parseIdentifier,
+		token.INT:          p.parseIntegerLiteral,
+		token.NUMBER:       p.parseNumberLiteral,
+		token.STRING:       p.parseStringLiteral,
+		token.TEMPL_STRING: p.parseTemplatedStringLiteral,
+		token.MINUS:        p.parsePrefixExpression,
+		token.BANG:         p.parsePrefixExpression,
+		token.TRUE:         p.parseBoolean,
+		token.FALSE:        p.parseBoolean,
+		token.NULL:         p.parseNull,
+		token.HASHMAP:      p.parseHashmapLiteral,
+		token.LPAREN:       p.parseGroupedExpression,
+		token.LBRACKET:     p.parseArrayLiteral,
+		token.LBRACE:       func() ast.Expression { return p.parseBlockExpression() },
+		token.YIF:          p.parseYifExpression,
+		token.YOLO:         p.parseYoloExpression,
+		token.YALL:         p.parseYallExpression,
+		token.YOYO:         p.parseYoyoExpression,
+		token.BACKSLASH:    p.parseLambdaLiteral,
+		token.MACRO:        p.parseMacroLiteral,
 	}
 
 	p.infixParseFns = map[token.Type]infixParseFn{
@@ -281,6 +282,32 @@ func (p *Parser) parseNumberLiteral() ast.Expression {
 	return &ast.NumberLiteral{Token: p.curToken, Value: val}
 }
 
+func (p *Parser) parseTemplatedStringLiteral() ast.Expression {
+	lit := p.curToken.Literal
+
+	template := lit
+	values := []ast.Expression{}
+
+	for p.curIs(token.TEMPL_STRING) {
+		p.advance()
+
+		exp := p.parseExpression(LOWEST)
+		values = append(values, exp)
+
+		template += "%s"
+
+		p.advance()
+
+		template += p.parseStringLiteral().TokenLiteral()
+	}
+
+	return &ast.TemplateStringLiteral{
+		Token:    p.curToken,
+		Template: template,
+		Values:   values,
+	}
+}
+
 func (p *Parser) parseStringLiteral() ast.Expression {
 	lit := p.curToken.Literal
 	matches := []string{}
@@ -298,7 +325,8 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 			} else if lexer.IsLetter(lit[i]) {
 				// replace template expression $var with %s
 				start := i
-				for i+1 < len(lit) && (lexer.IsLetter(lit[i+1]) || lexer.IsDigit(lit[i+1])) {
+				for i+1 < len(lit) &&
+					(lexer.IsLetter(lit[i+1]) || lexer.IsDigit(lit[i+1])) {
 					i++
 				}
 				matches = append(matches, lit[start:i+1])

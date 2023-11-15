@@ -60,6 +60,19 @@ func TestStringLiteral(t *testing.T) {
 	})
 }
 
+func TestTemplateStringLiteral2(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"age := 69; `i'm {age} yr old`", "i'm 69 yr old"},
+		{"age := 69; `i'm { age + 2 } yr old`", "i'm 71 yr old"},
+		{"`i'm { 8 + 2 * 3 } yr old`", "i'm 14 yr old"},
+		{
+			"age := 69; `i'm { age + 2 } yr old and have { 2 * 3 } dogs`",
+			"i'm 71 yr old and have 6 dogs",
+		},
+		// {"`apples := 1; kiwis := 2; mangos := 3; `{apples}{kiwis}{mangos}`", "123"},
+	})
+}
+
 func TestTemplateStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`age := 69; "i'm $age yr old"`, "i'm 69 yr old"},

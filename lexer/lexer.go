@@ -7,6 +7,7 @@ type Lexer struct {
 	position     int  // current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
 	ch           byte // current char under examination
+	numIterpol   int  // depth of string interpolation
 }
 
 func New(input string) *Lexer {
@@ -29,16 +30,25 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.RPAREN)
 	case ',':
 		tok = l.newToken(token.COMMA)
-	case '{':
-		tok = l.newToken(token.LBRACE)
-	case '}':
-		tok = l.newToken(token.RBRACE)
 	case '[':
 		tok = l.newToken(token.LBRACKET)
 	case ']':
 		tok = l.newToken(token.RBRACKET)
 	case '\\':
 		tok = l.newToken(token.BACKSLASH)
+
+	case '{':
+		if l.numIterpol > 0 {
+			l.numIterpol++
+		}
+		tok = l.newToken(token.LBRACE)
+	case '}':
+		if l.numIterpol > 0 {
+			l.numIterpol--
+			tok = l.templString()
+			break
+		}
+		tok = l.newToken(token.RBRACE)
 
 	case '+':
 		tok = l.switchEq(token.PLUS, token.ADD_ASSIGN)
@@ -92,6 +102,8 @@ func (l *Lexer) NextToken() token.Token {
 
 	case '"':
 		tok = l.string()
+	case '`':
+		tok = l.templString()
 
 	case 0:
 		tok = l.newToken(token.EOF)
@@ -179,6 +191,42 @@ func (l *Lexer) number() token.Token {
 	return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
 }
 
+func (l *Lexer) templString() token.Token {
+	l.advance() // consume opening '`'
+
+	start := l.position
+
+	for {
+		switch l.ch {
+		case 0:
+			l.advance()
+			return token.Token{
+				Type:    token.ERROR,
+				Literal: "unterminated templated string",
+				Offset:  start,
+			}
+
+		case '`':
+			return token.Token{
+				Type:    token.STRING,
+				Literal: l.Input[start:l.position],
+				Offset:  start,
+			}
+
+		case '{':
+			l.numIterpol++
+			return token.Token{
+				Type:    token.TEMPL_STRING,
+				Literal: l.Input[start:l.position],
+				Offset:  start,
+			}
+
+		default:
+			l.advance()
+		}
+	}
+}
+
 func (l *Lexer) string() token.Token {
 	l.advance() // consume opening '"'
 
@@ -188,10 +236,18 @@ func (l *Lexer) string() token.Token {
 	}
 
 	if l.ch == 0 {
-		return token.Token{Type: token.ERROR, Literal: "unterminated string", Offset: start}
+		return token.Token{
+			Type:    token.ERROR,
+			Literal: "unterminated string",
+			Offset:  start,
+		}
 	}
 
-	return token.Token{Type: token.STRING, Literal: l.Input[start:l.position], Offset: start}
+	return token.Token{
+		Type:    token.STRING,
+		Literal: l.Input[start:l.position],
+		Offset:  start,
+	}
 }
 
 func (l *Lexer) skipWhitespace() {

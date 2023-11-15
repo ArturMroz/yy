@@ -19,6 +19,7 @@ const (
 	INT
 	NUMBER
 	STRING
+	TEMPL_STRING
 
 	// Operators.
 
@@ -86,10 +87,11 @@ var tokens = [...]string{
 
 	// Identifiers + literals
 
-	IDENT:  "IDENT",
-	INT:    "INT",
-	NUMBER: "NUMBER",
-	STRING: "STRING",
+	IDENT:        "IDENT",
+	INT:          "INT",
+	NUMBER:       "NUMBER",
+	STRING:       "STRING",
+	TEMPL_STRING: "TEMPL_STRING",
 
 	// Operators
 

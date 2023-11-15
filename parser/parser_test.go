@@ -161,6 +161,73 @@ func TestTemplStringLiteralExpression(t *testing.T) {
 	}
 }
 
+func TestTemplString2LiteralExpression(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+		templ    string
+	}{
+		{
+			"`i'm {age} years old`",
+			"i'm {age} years old",
+			"i'm %s years old",
+		},
+	}
+
+	for _, tt := range testCases {
+		stmt := parseSingleExprStmt(t, tt.input)
+
+		literal, ok := stmt.Expression.(*ast.TemplateStringLiteral)
+		if !ok {
+			t.Fatalf("exp not *ast.TemplateStringLiteral. got=%T", stmt.Expression)
+		}
+
+		if literal.Template != tt.templ {
+			t.Errorf("literal.Template not %q. got=%q", tt.templ, literal.Template)
+		}
+
+		ident, ok := literal.Values[0].(*ast.Identifier)
+		if !ok {
+			t.Fatalf("templated value not *ast.Identifier. got=%T", stmt.Expression)
+		}
+		if ident.Value != "age" {
+			t.Fatalf("wrong ident.Value. got: %s, want: %s", ident.Value, "age")
+		}
+	}
+}
+
+// TODO: merge templated string tests
+func TestTemplString3LiteralExpression(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+		templ    string
+	}{
+		{
+			"`i'm { 1 + 2 } years old`",
+			"i'm { 1 + 2 } years old",
+			"i'm %s years old",
+		},
+	}
+
+	for _, tt := range testCases {
+		stmt := parseSingleExprStmt(t, tt.input)
+
+		literal, ok := stmt.Expression.(*ast.TemplateStringLiteral)
+		if !ok {
+			t.Fatalf("exp not *ast.TemplateStringLiteral. got=%T", stmt.Expression)
+		}
+
+		if literal.Template != tt.templ {
+			t.Errorf("literal.Template not %q. got=%q", tt.templ, literal.Template)
+		}
+
+		if err := testInfixExpression(literal.Values[0], 1, "+", 2); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 func TestParsingArrayLiterals(t *testing.T) {
 	input := "[1, 2 * 2, 3 + 3]"
 
