@@ -1,13 +1,17 @@
 package lexer
 
-import "yy/token"
+import (
+	"strings"
+
+	"yy/token"
+)
 
 type Lexer struct {
-	Input        string
-	position     int  // current position in input (points to current char)
-	readPosition int  // current reading position in input (after current char)
-	ch           byte // current char under examination
-	numIterpol   int  // depth of string interpolation
+	Input         string
+	position      int  // current position in input (points to current char)
+	readPosition  int  // current reading position in input (after current char)
+	ch            byte // current char under examination
+	interpolDepth int  // depth of string interpolation
 }
 
 func New(input string) *Lexer {
@@ -38,13 +42,14 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.BACKSLASH)
 
 	case '{':
-		if l.numIterpol > 0 {
-			l.numIterpol++
+		if l.interpolDepth > 0 {
+			l.interpolDepth++
 		}
 		tok = l.newToken(token.LBRACE)
+
 	case '}':
-		if l.numIterpol > 0 {
-			l.numIterpol--
+		if l.interpolDepth > 0 {
+			l.interpolDepth--
 			tok = l.templString()
 			break
 		}
@@ -199,7 +204,6 @@ func (l *Lexer) templString() token.Token {
 	for {
 		switch l.ch {
 		case 0:
-			l.advance()
 			return token.Token{
 				Type:    token.ERROR,
 				Literal: "unterminated templated string",
@@ -209,15 +213,22 @@ func (l *Lexer) templString() token.Token {
 		case '`':
 			return token.Token{
 				Type:    token.STRING,
-				Literal: l.Input[start:l.position],
+				Literal: escapeBrackets(l.Input[start:l.position]),
 				Offset:  start,
 			}
 
 		case '{':
-			l.numIterpol++
+			// double brackets is an escape sequence, ie {{name}}
+			if l.peek() == '{' {
+				l.advance()
+				l.advance()
+				break
+			}
+
+			l.interpolDepth++
 			return token.Token{
 				Type:    token.TEMPL_STRING,
-				Literal: l.Input[start:l.position],
+				Literal: escapeBrackets(l.Input[start:l.position]),
 				Offset:  start,
 			}
 
@@ -225,6 +236,10 @@ func (l *Lexer) templString() token.Token {
 			l.advance()
 		}
 	}
+}
+
+func escapeBrackets(input string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(input, "{{", "{"), "}}", "}")
 }
 
 func (l *Lexer) string() token.Token {

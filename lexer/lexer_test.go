@@ -55,9 +55,9 @@ func TestNextToken(t *testing.T) {
 			},
 		},
 		{
-			`{"key": "value"}`, // hash map
+			`%{"key": "value"}`, // hash map
 			[]token.Token{
-				{Type: token.LBRACE, Literal: "{"},
+				{Type: token.HASHMAP, Literal: "%{"},
 				{Type: token.STRING, Literal: "key"},
 				{Type: token.COLON, Literal: ":"},
 				{Type: token.STRING, Literal: "value"},
@@ -106,6 +106,37 @@ func TestNextToken(t *testing.T) {
 				{Type: token.TEMPL_STRING, Literal: " right now "},
 				{Type: token.IDENT, Literal: "foo"},
 				{Type: token.STRING, Literal: " please"},
+				{Type: token.EOF, Literal: "EOF"},
+			},
+		},
+		{
+			"`{ 1 + 2 } { foo }{banana}`",
+			[]token.Token{
+				{Type: token.TEMPL_STRING, Literal: ""},
+				{Type: token.INT, Literal: "1"},
+				{Type: token.PLUS, Literal: "+"},
+				{Type: token.INT, Literal: "2"},
+				{Type: token.TEMPL_STRING, Literal: " "},
+				{Type: token.IDENT, Literal: "foo"},
+				{Type: token.TEMPL_STRING, Literal: ""},
+				{Type: token.IDENT, Literal: "banana"},
+				{Type: token.STRING, Literal: ""},
+				{Type: token.EOF, Literal: "EOF"},
+			},
+		},
+		{
+			"`i'm {{age}} yr old`",
+			[]token.Token{
+				{Type: token.STRING, Literal: "i'm {age} yr old"},
+				{Type: token.EOF, Literal: "EOF"},
+			},
+		},
+		{
+			"`var {{age}} = {age}. And that's a bracket }}.`",
+			[]token.Token{
+				{Type: token.TEMPL_STRING, Literal: "var {age} = "},
+				{Type: token.IDENT, Literal: "age"},
+				{Type: token.STRING, Literal: ". And that's a bracket }."},
 				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
