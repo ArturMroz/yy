@@ -77,6 +77,14 @@ func TestTemplateStringLiteral2(t *testing.T) {
 		{"`i'm {{age}} yr old`", "i'm {age} yr old"},
 		{"age := 69; `var {{age}} = {age}.`", "var {age} = 69."},
 		{"age := 69; `var age}} = {age}.`", "var age} = 69."},
+		{"age := 69; `var {{age = {age}.`", "var {age = 69."},
+
+		// nesting expressions
+		{"age := 69; `i'm { { 1 + 2; 60 + 9 } } yr old`", "i'm 69 yr old"},
+		{"`i'm { yif 5 > 8 { 5 } yels { 8 } } yr old`", "i'm 8 yr old"},
+
+		// TODO: parsing errors
+		// {"age := 69; `i'm { 1 + 2; 60 + 9 } yr old`", errmsg{"i'm 69 yr old"}},
 	})
 }
 
@@ -550,6 +558,7 @@ func TestBlockExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"{ 5 }", 5},
 		{"{ a := 6; b := 9; a + b }", 15},
+		{"{ { 5 } }", 5},
 		{"x := { 5 }; x", 5},
 		{"x := { a := 6; b := 9; a + b }; x", 15},
 
@@ -709,12 +718,14 @@ yif (10 > 1) {
 }
 
 //
-// PROGRAMS FROM EXAMPLES/
+// PROGRAMS FROM EXAMPLES DIR
 //
 
 const examplesDir = "../examples"
 
 func TestExampleFiles(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping testing files in short mode")
 	}

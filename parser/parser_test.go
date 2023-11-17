@@ -123,7 +123,8 @@ func TestStringLiteralExpression(t *testing.T) {
 	}
 }
 
-func TestTemplStringLiteralExpression(t *testing.T) {
+// TODO: remove once transitioned to new interpolation syntax
+func TestTemplStringLiteralExpressionOld(t *testing.T) {
 	testCases := []struct {
 		input    string
 		expected string
@@ -161,7 +162,7 @@ func TestTemplStringLiteralExpression(t *testing.T) {
 	}
 }
 
-func TestTemplString2LiteralExpression(t *testing.T) {
+func TestTemplStringLiteralExpression(t *testing.T) {
 	testCases := []struct {
 		input string
 		templ string

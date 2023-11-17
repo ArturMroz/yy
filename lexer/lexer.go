@@ -7,11 +7,12 @@ import (
 )
 
 type Lexer struct {
-	Input         string
-	position      int  // current position in input (points to current char)
-	readPosition  int  // current reading position in input (after current char)
-	ch            byte // current char under examination
-	interpolDepth int  // depth of string interpolation
+	Input        string
+	position     int    // current position in input (points to current char)
+	readPosition int    // current reading position in input (after current char)
+	ch           byte   // current char under examination
+	numBrackets  int    // depth of string interpolation
+	brackets     [5]int // stack of interpolations
 }
 
 func New(input string) *Lexer {
@@ -42,17 +43,23 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.BACKSLASH)
 
 	case '{':
-		if l.interpolDepth > 0 {
-			l.interpolDepth++
+		if l.numBrackets > 0 {
+			l.brackets[l.numBrackets-1]++
 		}
+
 		tok = l.newToken(token.LBRACE)
 
 	case '}':
-		if l.interpolDepth > 0 {
-			l.interpolDepth--
-			tok = l.templString()
-			break
+		if l.numBrackets > 0 {
+			l.brackets[l.numBrackets-1]--
+
+			if l.brackets[l.numBrackets-1] == 0 {
+				l.numBrackets--
+				tok = l.templString()
+				break
+			}
 		}
+
 		tok = l.newToken(token.RBRACE)
 
 	case '+':
@@ -225,7 +232,9 @@ func (l *Lexer) templString() token.Token {
 				break
 			}
 
-			l.interpolDepth++
+			l.brackets[l.numBrackets] = 1
+			l.numBrackets++
+
 			return token.Token{
 				Type:    token.TEMPL_STRING,
 				Literal: escapeBrackets(l.Input[start:l.position]),

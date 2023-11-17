@@ -283,9 +283,7 @@ func (p *Parser) parseNumberLiteral() ast.Expression {
 }
 
 func (p *Parser) parseTemplatedStringLiteral() ast.Expression {
-	lit := p.curToken.Literal
-
-	template := lit
+	template := p.curToken.Literal
 	values := []ast.Expression{}
 
 	for p.curIs(token.TEMPL_STRING) {
@@ -296,9 +294,14 @@ func (p *Parser) parseTemplatedStringLiteral() ast.Expression {
 
 		template += "%s"
 
+		if !p.peekIs(token.STRING) && !p.peekIs(token.TEMPL_STRING) {
+			p.errorAtPeek(token.STRING, "only a single expression is allowed inside a string interpolation")
+			return &ast.BadExpression{Token: p.curToken}
+		}
+
 		p.advance()
 
-		template += p.parseStringLiteral().TokenLiteral()
+		template += p.curToken.Literal
 	}
 
 	return &ast.TemplateStringLiteral{
