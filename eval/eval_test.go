@@ -60,35 +60,41 @@ func TestStringLiteral(t *testing.T) {
 	})
 }
 
-func TestTemplateStringLiteral2(t *testing.T) {
+func TestTemplateStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{"age := 69; `i'm {age} yr old`", "i'm 69 yr old"},
-		{"name := \"Yakub\"; age := 69; `i'm {name} and i'm {age} yr old`", "i'm Yakub and i'm 69 yr old"},
-		{"age := 69; `i'm { age + 2 } yr old`", "i'm 71 yr old"},
-		{"`i'm { 8 + 2 * 3 } yr old`", "i'm 14 yr old"},
-		{"john := %{ \"age\": 69 }; `i'm {john[\"age\"]} yr old`", "i'm 69 yr old"},
-		{"apples := 1; kiwis := 2; mangos := 3; `{apples}{kiwis}{mangos}`", "123"},
+		{`age := 69; "i'm {age} yr old"`, `i'm 69 yr old`},
+
+		{`age := 69; "i'm {age} yr old"`, `i'm 69 yr old`},
+		{`name := "Yakub"; age := 69; "i'm {name} and i'm {age} yr old"`, `i'm Yakub and i'm 69 yr old`},
+		{`age := 69; "i'm { age + 2 } yr old"`, `i'm 71 yr old`},
+		{`"i'm { 8 + 2 * 3 } yr old"`, `i'm 14 yr old`},
+		{`john := %{ "age": 69 }; "i'm {john["age"]} yr old"`, `i'm 69 yr old`},
+		{`apples := 1; kiwis := 2; mangos := 3; "{apples}{kiwis}{mangos}"`, `123`},
 		{
-			"age := 69; `i'm { age + 2 } yr old and have { 2 * 3 } dogs`",
-			"i'm 71 yr old and have 6 dogs",
+			`age := 69; "i'm { age + 2 } yr old and have { 2 * 3 } dogs"`,
+			`i'm 71 yr old and have 6 dogs`,
+		},
+		{
+			`age := 69; "i'm Żółć ∈ 陽子 ようこ 陽 {age} 陽 yr old"`,
+			"i'm Żółć ∈ 陽子 ようこ 陽 69 陽 yr old",
 		},
 
 		// escaping
-		{"`i'm {{age}} yr old`", "i'm {age} yr old"},
-		{"age := 69; `var {{age}} = {age}.`", "var {age} = 69."},
-		{"age := 69; `var age}} = {age}.`", "var age} = 69."},
-		{"age := 69; `var {{age = {age}.`", "var {age = 69."},
+		{`"i'm {{age}} yr old"`, `i'm {age} yr old`},
+		{`age := 69; "var {{age}} = {age}."`, `var {age} = 69.`},
+		{`age := 69; "var age}} = {age}."`, `var age} = 69.`},
+		{`age := 69; "var {{age = {age}."`, `var {age = 69.`},
 
 		// nesting expressions
-		{"age := 69; `i'm { { 1 + 2; 60 + 9 } } yr old`", "i'm 69 yr old"},
-		{"`i'm { yif 5 > 8 { 5 } yels { 8 } } yr old`", "i'm 8 yr old"},
+		{`age := 69; "i'm { { 1 + 2; 60 + 9 } } yr old"`, `i'm 69 yr old`},
+		{`"i'm { yif 5 > 8 { 5 } yels { 8 } } yr old"`, `i'm 8 yr old`},
 
 		// TODO: parsing errors
 		// {"age := 69; `i'm { 1 + 2; 60 + 9 } yr old`", errmsg{"i'm 69 yr old"}},
 	})
 }
 
-func TestTemplateStringLiteral(t *testing.T) {
+func TestTemplateStringLiteralOld(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`age := 69; "i'm $age yr old"`, "i'm 69 yr old"},
 		{`age := 69; "i'm $age! yr old"`, "i'm 69! yr old"},

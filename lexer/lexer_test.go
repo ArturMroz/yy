@@ -126,7 +126,7 @@ func TestLexingYifExpression(t *testing.T) {
 func TestLexingInterpolatedStrings(t *testing.T) {
 	runLexerTests(t, []lexerTestCase{
 		{
-			"`interpolate { 1 + 2 } right now { foo } please`",
+			`"interpolate { 1 + 2 } right now { foo } please"`,
 			[]token.Token{
 				{Type: token.TEMPL_STRING, Literal: "interpolate "},
 				{Type: token.INT, Literal: "1"},
@@ -139,7 +139,7 @@ func TestLexingInterpolatedStrings(t *testing.T) {
 			},
 		},
 		{
-			"`{ 1 + 2 } { foo }{banana}`",
+			`"{ 1 + 2 } { foo }{banana}"`,
 			[]token.Token{
 				{Type: token.TEMPL_STRING, Literal: ""},
 				{Type: token.INT, Literal: "1"},
@@ -154,14 +154,14 @@ func TestLexingInterpolatedStrings(t *testing.T) {
 			},
 		},
 		{
-			"`i'm {{age}} yr old`",
+			`"i'm {{age}} yr old"`,
 			[]token.Token{
 				{Type: token.STRING, Literal: "i'm {age} yr old"},
 				{Type: token.EOF, Literal: "EOF"},
 			},
 		},
 		{
-			"`var {{age}} = {age}. And that's a bracket }}.`",
+			`"var {{age}} = {age}. And that's a bracket }}."`,
 			[]token.Token{
 				{Type: token.TEMPL_STRING, Literal: "var {age} = "},
 				{Type: token.IDENT, Literal: "age"},
@@ -170,7 +170,7 @@ func TestLexingInterpolatedStrings(t *testing.T) {
 			},
 		},
 		{
-			"`i'm { yif 5 > 8 { 5 } yels { 8 } } yr old`",
+			`"i'm { yif 5 > 8 { 5 } yels { 8 } } yr old"`,
 			[]token.Token{
 				{Type: token.TEMPL_STRING, Literal: "i'm "},
 				{Type: token.YIF, Literal: "yif"},

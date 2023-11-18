@@ -55,7 +55,7 @@ func (l *Lexer) NextToken() token.Token {
 
 			if l.brackets[l.numBrackets-1] == 0 {
 				l.numBrackets--
-				tok = l.templString()
+				tok = l.readString()
 				break
 			}
 		}
@@ -113,9 +113,7 @@ func (l *Lexer) NextToken() token.Token {
 		}
 
 	case '"':
-		tok = l.string()
-	case '`':
-		tok = l.templString()
+		tok = l.readString()
 
 	case 0:
 		tok = l.newToken(token.EOF)
@@ -123,10 +121,10 @@ func (l *Lexer) NextToken() token.Token {
 	default:
 		switch {
 		case IsLetter(l.ch):
-			return l.identifier()
+			return l.readIdentifier()
 
 		case IsDigit(l.ch):
-			return l.number()
+			return l.readNumber()
 
 		default:
 			tok = l.newTokenWithLiteral(token.ILLEGAL, string(l.ch))
@@ -175,7 +173,7 @@ func (l *Lexer) peek() byte {
 	return l.Input[l.readPosition]
 }
 
-func (l *Lexer) identifier() token.Token {
+func (l *Lexer) readIdentifier() token.Token {
 	start := l.position
 	for IsLetter(l.ch) || IsDigit(l.ch) {
 		l.advance()
@@ -185,7 +183,7 @@ func (l *Lexer) identifier() token.Token {
 	return token.Token{Type: token.LookupIdent(ident), Literal: ident, Offset: start}
 }
 
-func (l *Lexer) number() token.Token {
+func (l *Lexer) readNumber() token.Token {
 	start := l.position
 	for IsDigit(l.ch) {
 		l.advance()
@@ -203,7 +201,7 @@ func (l *Lexer) number() token.Token {
 	return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
 }
 
-func (l *Lexer) templString() token.Token {
+func (l *Lexer) readString() token.Token {
 	l.advance() // consume opening '`'
 
 	start := l.position
@@ -213,11 +211,11 @@ func (l *Lexer) templString() token.Token {
 		case 0:
 			return token.Token{
 				Type:    token.ERROR,
-				Literal: "unterminated templated string",
+				Literal: "unterminated string",
 				Offset:  start,
 			}
 
-		case '`':
+		case '"':
 			return token.Token{
 				Type:    token.STRING,
 				Literal: escapeBrackets(l.Input[start:l.position]),
@@ -249,29 +247,6 @@ func (l *Lexer) templString() token.Token {
 
 func escapeBrackets(input string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(input, "{{", "{"), "}}", "}")
-}
-
-func (l *Lexer) string() token.Token {
-	l.advance() // consume opening '"'
-
-	start := l.position
-	for l.ch != '"' && l.ch != 0 {
-		l.advance()
-	}
-
-	if l.ch == 0 {
-		return token.Token{
-			Type:    token.ERROR,
-			Literal: "unterminated string",
-			Offset:  start,
-		}
-	}
-
-	return token.Token{
-		Type:    token.STRING,
-		Literal: l.Input[start:l.position],
-		Offset:  start,
-	}
 }
 
 func (l *Lexer) skipWhitespace() {

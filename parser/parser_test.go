@@ -163,12 +163,13 @@ func TestTemplStringLiteralExpressionOld(t *testing.T) {
 }
 
 func TestTemplStringLiteralExpression(t *testing.T) {
+	// TODO: either add more test cases or collapse
 	testCases := []struct {
 		input string
 		templ string
 	}{
 		{
-			"`i'm {name} and i'm { 30 + 5 } years old`",
+			`"i'm {name} and i'm { 30 + 5 } years old"`,
 			"i'm %s and i'm %s years old",
 		},
 	}
