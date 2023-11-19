@@ -13,7 +13,7 @@
 // search for regex anywhere in text
 match := \regex, text {
     yif regex && regex[0] == "^" {
-        yeet match_here(rest(regex), text)
+        yeet match_here(regex[1..-1], text)
     }
     yoyo {
         yif match_here(regex, text) {
@@ -22,7 +22,7 @@ match := \regex, text {
         yif !text {
             yeet false
         }
-        text = rest(text)
+        text = text[1..-1]
     }
 }
 
@@ -35,10 +35,10 @@ match_here := \regex, text {
         yeet text == ""
     }
     yif len(regex) > 1 && regex[1] == "*" {
-        yeet match_star(regex[0], rest(rest(regex)), text)
+        yeet match_star(regex[0], regex[2..-1], text)
     }
     yif text && (regex[0] == "." || regex[0] == text[0]) {
-        yeet match_here(rest(regex), rest(text))
+        yeet match_here(regex[1..-1], text[1..-1])
     }
     yeet false
 }
@@ -52,7 +52,7 @@ match_star := \c, regex, text {
         yif !text || (text[0] != c && c != ".") {
             yeet false
         }
-        text = rest(text)
+        text = text[1..-1]
     }
 }
 

@@ -89,9 +89,9 @@ new_adder := \x {
 add_two := new_adder(2)
 yassert(add_two(5) == 7)
 
-new_generator := \ {
+new_generator := \{
     n := 0
-    \ { n = n + 2 }
+    \{ n = n + 2 }
 }
 
 gen := new_generator()
@@ -115,7 +115,7 @@ map := \arr f {
     iter(arr, [])
 }
 
-my_arr      := [1, 2, 3, 4]
+my_arr := [1, 2, 3, 4]
 double := \x { x * 2 }
 yassert(map(my_arr, double) == [2, 4, 6, 8])
 yassert(map(my_arr, \x { x * 3 }) == [3, 6, 9, 12])

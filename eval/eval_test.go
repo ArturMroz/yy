@@ -347,33 +347,47 @@ func TestArrayIndexExpressions(t *testing.T) {
 		{"[1, 2, 3][0]", 1},
 		{"[1, 2, 3][1]", 2},
 		{"[1, 2, 3][2]", 3},
-		{"[1, 2, 3,][2]", 3},
+		{"[1, 2, 3][2]", 3},
+		{"[1, 2, 3][-1]", 3},
+		{"[1, 2, 3][-2]", 2},
 		{"i := 0; [1][i];", 1},
 		{"[1, 2, 3][1 + 1];", 3},
 		{
-			"myArray := [1, 2, 3]; myArray[2];",
+			"arr := [1, 2, 3]; arr[2]",
 			3,
 		},
 		{
-			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			"arr := [1, 2, 3]; arr[0] + arr[1] + arr[2]",
 			6,
 		},
 		{
-			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
+			"arr := [1, 2, 3]; i := arr[0]; arr[i]",
 			2,
 		},
 
-		{"a := [1, 2, 3]; a[0..len(a)]", []int64{1, 2, 3}},
-		{"[1, 2, 3][0..999]", []int64{1, 2, 3}},
-		{"[1, 2, 3][0..2]", []int64{1, 2}},
-		{"[1, 2, 3][1..2]", []int64{2}},
-		{"[1, 2, 3][-10..2]", []int64{1, 2}},
-		{"a := [1, 2, 3]; b := a[0..len(a)]; a[2] == b[2]", true},
-		{"a := [1, 2, 3]; b := a[0..len(a)]; b[2] = 9; a[2] == b[2]", false},
-
 		// out of bounds access returns nil
 		{"[1, 2, 3][3]", nil},
-		{"[1, 2, 3][-1]", nil},
+		{"[1, 2, 3][-8]", nil},
+
+		// ranges
+		{"[1, 2, 3][0..2]", []int64{1, 2}},
+		{"[1, 2, 3][1..2]", []int64{2}},
+		{"[1, 2, 3][2..2]", []int64{}},
+		{"[1, 2, 3][0..3]", []int64{1, 2, 3}},
+		{"[1, 2, 3][3..3]", []int64{}},
+		{"[1, 2, 3][999..3]", []int64{}},
+		{"[1, 2, 3][0..999]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[0..-1]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[-1..-1]", []int64{}},
+		{"a := [1, 2, 3]; a[-2..-1]", []int64{3}},
+		{"a := [1, 2, 3]; a[-3..-1]", []int64{2, 3}},
+		{"a := [1, 2, 3]; a[-4..-1]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[-5..-1]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[0..-10]", []int64{}},
+		{"[1, 2, 3][-10..2]", []int64{1, 2}},
+
+		{"a := [1, 2, 3]; b := a[0..-1]; a[2] == b[2]", true},
+		{"a := [1, 2, 3]; b := a[0..-1]; b[2] = 9; a[2] == b[2]", false},
 
 		{"arr[-1]", errmsg{"identifier not found: arr"}},
 		{"arr := [2]; arr[idx]", errmsg{"identifier not found: idx"}},
@@ -384,17 +398,20 @@ func TestArrayIndexExpressions(t *testing.T) {
 func TestStringIndexExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`"Yolo McYoloface"[2]`, "l"},
+		{`"Yolo McYoloface"[-2]`, "c"},
 		{`"Yarn"[1 + 1]`, "r"},
 		{`y := "Yarn"; y[1 + 1]`, "r"},
 		{`"Yolo McYoloface"[0..4]`, "Yolo"},
 		{`"Yolo McYoloface"[5..11]`, "McYolo"},
 		{`s := "Yolo McYoloface"; s[5..len(s)]`, "McYoloface"},
-		{`s := "Yolo McYoloface"; s[-5..len(s)+5]`, "Yolo McYoloface"},
+		{`s := "Yolo McYoloface"; s[5..-1]`, "McYoloface"},
+		{`s := "Yolo McYoloface"; s[-5..-1]`, "face"},
 		{`"Yolo McYoloface"[69]`, nil},
 
 		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; len(s1) == len(s2)`, true},
-		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; s1[1] == s2[1]`, true},
-		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; s2[1] = "X"; s1[1] == s2[1]`, false},
+		{`s1 := "Yolo McYoloface"; s2 := s1[0..-1]; len(s1) == len(s2)`, true},
+		{`s1 := "Yolo McYoloface"; s2 := s1[0..-1]; s1[1] == s2[1]`, true},
+		{`s1 := "Yolo McYoloface"; s2 := s1[0..-1]; s2[1] = "X"; s1[1] == s2[1]`, false},
 	})
 }
 
@@ -551,6 +568,7 @@ func TestAssignExpressions(t *testing.T) {
 		{"x += 8", errmsg{"identifier not found: x"}},
 
 		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
+		{"a := [1, 2, 3]; a[-1] = 69; a", []int64{1, 2, 69}},
 		{"a := [1, 2, 3]; a[8] = 69", errmsg{"attempted to assign out of bounds for array 'a'"}},
 
 		{`h := %{ "a": 1 }; h["a"] = 2; h["a"]`, 2},
@@ -558,6 +576,7 @@ func TestAssignExpressions(t *testing.T) {
 		{`h := %{ "a": 1 }; h[[]] = 2`, 2},
 
 		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
+		{`s := "yeet"; s[-1] = "z"; s`, "yeez"},
 		{`s := "yeet"; s[69] = "z"`, errmsg{"attempted to assign out of bounds for string 's'"}},
 	})
 }

@@ -35,145 +35,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return val
 
 	case *ast.AssignExpression:
-		val := Eval(node.Value, env)
-		if isError(val) {
-			return val
-		}
-
-		switch node := node.Left.(type) {
-		case *ast.Identifier:
-			if ok := env.Update(node.Value, val); ok {
-				return val
-			}
-			if env.IsYoloMode() {
-				env.Set(node.Value, val)
-				return val
-			}
-			return newError(
-				node.Pos(),
-				"identifier not found: %s (to declare a variable use := operator)",
-				node.Value)
-
-		case *ast.IndexExpression:
-			left := Eval(node.Left, env)
-			if isError(left) {
-				return left
-			}
-			idx := Eval(node.Index, env)
-			if isError(idx) {
-				return idx
-			}
-
-			switch {
-			case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
-				i := idx.(*object.Integer).Value
-				arr := left.(*object.Array)
-				if i < 0 || i >= int64(len(arr.Elements)) {
-					return newError(
-						node.Left.Pos(),
-						"attempted to assign out of bounds for array '%s'",
-						node.Left.(*ast.Identifier).Value)
-				}
-				arr.Elements[i] = val
-				return val
-
-			case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
-				i := idx.(*object.Integer).Value
-				str := left.(*object.String)
-				if i < 0 || i >= int64(len(str.Value)) {
-					return newError(
-						node.Left.Pos(),
-						"attempted to assign out of bounds for string '%s'",
-						node.Left.(*ast.Identifier).Value)
-				}
-				str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
-				return val
-
-			case left.Type() == object.HASHMAP_OBJ:
-				hashmap := left.(*object.Hashmap)
-				key, ok := idx.(object.Hashable)
-				if !ok {
-					return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
-				}
-
-				hashmap.Pairs[key.HashKey()] = object.HashPair{Key: idx, Value: val}
-				return val
-
-			default:
-				return newError(node.Index.Pos(), "index operator not supported: %s, type of %s", idx.String(), idx.Type())
-			}
-		}
-
-		return newError(node.Left.Pos(), "identifier not found: "+node.Left.String())
+		return evalAssignExpression(node, env)
 
 	case *ast.IndexExpression:
-		left := Eval(node.Left, env)
-		if isError(left) {
-			return left
-		}
-		idx := Eval(node.Index, env)
-		if isError(idx) {
-			return idx
-		}
-
-		switch left := left.(type) {
-		case *object.Array:
-			switch idx := idx.(type) {
-			case *object.Integer:
-				i := idx.Value
-				if i < 0 || i >= int64(len(left.Elements)) {
-					return object.NULL
-				}
-				return left.Elements[i]
-
-			case *object.Range:
-				start := idx.Start
-				end := idx.End
-				if start < 0 {
-					start = 0
-				}
-				if end > int64(len(left.Elements)) {
-					end = int64(len(left.Elements))
-				}
-
-				// copy the array so modyfing a value in the original array doesn't affect copied array
-				return &object.Array{Elements: append([]object.Object{}, left.Elements[start:end]...)}
-			}
-
-		case *object.String:
-			switch idx := idx.(type) {
-			case *object.Integer:
-				i := idx.Value
-				if i < 0 || i >= int64(len(left.Value)) {
-					return object.NULL
-				}
-				return &object.String{Value: string(left.Value[i])}
-
-			case *object.Range:
-				start := idx.Start
-				end := idx.End
-				if start < 0 {
-					start = 0
-				}
-				if end > int64(len(left.Value)) {
-					end = int64(len(left.Value))
-				}
-				return &object.String{Value: left.Value[start:end]}
-			}
-
-		case *object.Hashmap:
-			key, ok := idx.(object.Hashable)
-			if !ok {
-				return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
-			}
-
-			pair, ok := left.Pairs[key.HashKey()]
-			if !ok {
-				return object.NULL
-			}
-			return pair.Value
-		}
-		return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
+		return evalIndexExpression(node, env)
 
 	case *ast.Identifier:
 		if val, ok := env.Get(node.Value); ok {
@@ -533,6 +398,164 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 	default:
 		return newError(callExpr.Pos(), "not a function: %s", fn.Type())
 	}
+}
+
+func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) object.Object {
+	val := Eval(node.Value, env)
+	if isError(val) {
+		return val
+	}
+
+	switch node := node.Left.(type) {
+	case *ast.Identifier:
+		if ok := env.Update(node.Value, val); ok {
+			return val
+		}
+		if env.IsYoloMode() {
+			env.Set(node.Value, val)
+			return val
+		}
+		return newError(
+			node.Pos(),
+			"identifier not found: %s (to declare a variable use := operator)",
+			node.Value)
+
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		idx := Eval(node.Index, env)
+		if isError(idx) {
+			return idx
+		}
+
+		switch {
+		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			arr := left.(*object.Array)
+			if i < 0 {
+				i += int64(len(arr.Elements))
+			}
+			if i < 0 || i >= int64(len(arr.Elements)) {
+				return newError(
+					node.Left.Pos(),
+					"attempted to assign out of bounds for array '%s'",
+					node.Left.(*ast.Identifier).Value)
+			}
+			arr.Elements[i] = val
+			return val
+
+		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			str := left.(*object.String)
+			if i < 0 {
+				i += int64(len(str.Value))
+			}
+			if i < 0 || i >= int64(len(str.Value)) {
+				return newError(
+					node.Left.Pos(),
+					"attempted to assign out of bounds for string '%s'",
+					node.Left.(*ast.Identifier).Value)
+			}
+			str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
+			return val
+
+		case left.Type() == object.HASHMAP_OBJ:
+			hashmap := left.(*object.Hashmap)
+			key, ok := idx.(object.Hashable)
+			if !ok {
+				return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
+			}
+
+			hashmap.Pairs[key.HashKey()] = object.HashPair{Key: idx, Value: val}
+			return val
+
+		default:
+			return newError(node.Index.Pos(), "index operator not supported: %s, type of %s", idx.String(), idx.Type())
+		}
+	}
+
+	return newError(node.Left.Pos(), "identifier not found: "+node.Left.String())
+}
+
+func evalIndexExpression(node *ast.IndexExpression, env *object.Environment) object.Object {
+	left := Eval(node.Left, env)
+	if isError(left) {
+		return left
+	}
+	idx := Eval(node.Index, env)
+	if isError(idx) {
+		return idx
+	}
+
+	switch left := left.(type) {
+	case *object.Array:
+		switch idx := idx.(type) {
+		case *object.Integer:
+			i := idx.Value
+			if i < 0 {
+				i += int64(len(left.Elements))
+			}
+			if i < 0 || i >= int64(len(left.Elements)) {
+				return object.NULL
+			}
+			return left.Elements[i]
+
+		case *object.Range:
+			start, end := adjustIndices(idx.Start, idx.End, int64(len(left.Elements)))
+
+			// copy the array so modyfing a value in the original array doesn't affect copied array
+			return &object.Array{Elements: append([]object.Object{}, left.Elements[start:end]...)}
+		}
+
+	case *object.String:
+		switch idx := idx.(type) {
+		case *object.Integer:
+			i := idx.Value
+			if i < 0 {
+				i += int64(len(left.Value))
+			}
+			if i < 0 || i >= int64(len(left.Value)) {
+				return object.NULL
+			}
+			return &object.String{Value: string(left.Value[i])}
+
+		case *object.Range:
+			start, end := adjustIndices(idx.Start, idx.End, int64(len(left.Value)))
+			return &object.String{Value: left.Value[start:end]}
+		}
+
+	case *object.Hashmap:
+		key, ok := idx.(object.Hashable)
+		if !ok {
+			return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
+		}
+
+		pair, ok := left.Pairs[key.HashKey()]
+		if !ok {
+			return object.NULL
+		}
+		return pair.Value
+	}
+
+	return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
+}
+
+func adjustIndices(start, end, length int64) (int64, int64) {
+	// if index is negative, count from the end of array
+	if start < 0 {
+		start += length + 1
+	}
+	if end < 0 {
+		end += length + 1
+	}
+
+	// clamp values to avoid panics
+	start = max(0, min(start, length))
+	end = max(0, min(end, length))
+
+	return start, end
 }
 
 func evalPrefixExpression(op string, right object.Object, yoloOK bool) object.Object {
