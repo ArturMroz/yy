@@ -15,7 +15,7 @@ match := \regex, text {
     yif regex && regex[0] == "^" {
         yeet match_here(rest(regex), text)
     }
-    yoyo true {
+    yoyo {
         yif match_here(regex, text) {
             yeet true
         }
@@ -45,7 +45,7 @@ match_here := \regex, text {
 
 // search for c*regex at beginning of text
 match_star := \c, regex, text {
-    yoyo true {
+    yoyo {
         yif match_here(regex, text) {
             yeet true
         }

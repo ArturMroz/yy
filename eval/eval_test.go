@@ -63,8 +63,6 @@ func TestStringLiteral(t *testing.T) {
 func TestTemplateStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`age := 69; "i'm {age} yr old"`, `i'm 69 yr old`},
-
-		{`age := 69; "i'm {age} yr old"`, `i'm 69 yr old`},
 		{`name := "Yakub"; age := 69; "i'm {name} and i'm {age} yr old"`, `i'm Yakub and i'm 69 yr old`},
 		{`age := 69; "i'm { age + 2 } yr old"`, `i'm 71 yr old`},
 		{`"i'm { 8 + 2 * 3 } yr old"`, `i'm 14 yr old`},
@@ -88,6 +86,9 @@ func TestTemplateStringLiteral(t *testing.T) {
 		// nesting expressions
 		{`age := 69; "i'm { { 1 + 2; 60 + 9 } } yr old"`, `i'm 69 yr old`},
 		{`"i'm { yif 5 > 8 { 5 } yels { 8 } } yr old"`, `i'm 8 yr old`},
+
+		// interploated strings inside interpolated strings
+		{`"outside { "inside { 5 + 4 }" } outside"`, `outside inside 9 outside`},
 
 		// TODO: parsing errors
 		// {"age := 69; `i'm { 1 + 2; 60 + 9 } yr old`", errmsg{"i'm 69 yr old"}},
@@ -445,6 +446,7 @@ func TestYoyoExpressions(t *testing.T) {
 		{"sum := 0; i := 1; yoyo i < 5 { sum += i; i += 1 }; sum", 10},
 		{"i := 1; yoyo false { i = 69 }; i", 1},
 		{"i := 0; yoyo i < 5 { i += 1; yif i == 2 { yeet 69 }; -1 }", 69},
+		{"i := 1; yoyo { i += 1; yif i > 5 { yeet 5 } }; i", 5},
 	})
 }
 

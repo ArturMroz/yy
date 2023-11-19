@@ -446,10 +446,14 @@ func (p *Parser) parseYoyoExpression() ast.Expression {
 	yoyoExpr := &ast.YoyoExpression{Token: p.curToken}
 	p.advance()
 
-	yoyoExpr.Condition = p.parseExpression(LOWEST)
+	if p.curIs(token.LBRACE) {
+		yoyoExpr.Condition = &ast.BooleanLiteral{Token: p.curToken, Value: true}
+	} else {
+		yoyoExpr.Condition = p.parseExpression(LOWEST)
 
-	if !p.eat(token.LBRACE, "missing opening '{' after 'yoyo'") {
-		return &ast.BadExpression{Token: p.curToken}
+		if !p.eat(token.LBRACE, "missing opening '{' after 'yoyo'") {
+			return &ast.BadExpression{Token: p.curToken}
+		}
 	}
 
 	yoyoExpr.Body = p.parseBlockExpression()
