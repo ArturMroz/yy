@@ -127,7 +127,7 @@ func (l *Lexer) NextToken() token.Token {
 			return l.readNumber()
 
 		default:
-			tok = l.newTokenWithLiteral(token.ILLEGAL, string(l.ch))
+			tok = l.newTokenWithLiteral(token.ERROR, "unexpected character: "+string(l.ch))
 		}
 	}
 

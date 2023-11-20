@@ -56,8 +56,8 @@ match_star := \c, regex, text {
     }
 }
 
-regexes := [ "cat", "^cat", "cat$", "c.*t", "^c.*t$" ]
-words   := [ "cat", "cult", "concat", "category", "concatenation" ]
+regexes := ["cat", "^cat", "cat$", "c.*t", "^c.*t$"]
+words   := ["cat", "cult", "concat", "category", "concatenation"]
 
 yap("all words:", words)
 

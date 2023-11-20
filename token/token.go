@@ -9,7 +9,7 @@ type Token struct {
 type Type int
 
 const (
-	ILLEGAL Type = iota
+	_ Type = iota
 	EOF
 	ERROR
 
@@ -81,9 +81,8 @@ const (
 )
 
 var tokens = [...]string{
-	ILLEGAL: "ILLEGAL",
-	EOF:     "EOF",
-	ERROR:   "ERROR",
+	EOF:   "EOF",
+	ERROR: "ERROR",
 
 	// Identifiers + literals
 
