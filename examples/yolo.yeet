@@ -33,7 +33,7 @@ yolo {
 // functions in yolo mode
 yolo {
     // baking in variables
-    greet := \name { "Hello, $name!" }
+    greet := \name { "Hello, {name}!" }
     yassert(greet("Yosef") == "Hello, Yosef!") 
     
     greet_yan := greet + "Yan"; // baking in args 

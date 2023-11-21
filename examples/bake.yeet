@@ -9,7 +9,7 @@
 
 // Exhibit A
 greet := \name, message {
-    "Hello $name! $message"
+    "Hello {name}! {message}"
 }
 
 greet_alice := yolo { greet + "Alice" }
@@ -25,7 +25,7 @@ yap(rude_greet("Bob"))
 // Exhibit B
 converter := \symbol, factor, offset, input {
     result := (offset + input) * factor
-    "$result $symbol"
+    "{result} {symbol}"
 }
 
 // To bake multiple arguments, add an array.

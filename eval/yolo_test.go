@@ -292,16 +292,16 @@ func TestYoloArgumentsBaking(t *testing.T) {
 		},
 		{
 			`yolo {
-				greet     := \name { "Hello, $name!" }
-				greet_yan := greet + "Yan"; // baking arg "Yan" into function 
+				greet     := \name { "Hello, {name}!" }
+				greet_yan := greet + "Yan"; // baking arg "Yan" into function
 				greet_yan()
 			}`,
 			"Hello, Yan!",
 		},
 		{
 			`yolo {
-				greet     := \name { "Hello, $name!" }
-				greet_yan := "Yan" + greet 
+				greet     := \name { "Hello, {name}!" }
+				greet_yan := "Yan" + greet
 				greet_yan()
 			}`,
 			"Hello, Yan!",

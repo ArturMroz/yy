@@ -312,50 +312,7 @@ func (p *Parser) parseTemplatedStringLiteral() ast.Expression {
 }
 
 func (p *Parser) parseStringLiteral() ast.Expression {
-	lit := p.curToken.Literal
-	matches := []string{}
-	result := ""
-	lastIdx := 0
-
-	// scan the string to see if it contains any template expressions
-	for i := 0; i < len(lit); i++ {
-		if lit[i] == '$' && i+1 < len(lit) {
-			i++
-			if lit[i] == '$' {
-				// replace $$ with $
-				result += lit[lastIdx : i-1]
-				lastIdx = i
-			} else if lexer.IsLetter(lit[i]) {
-				// replace template expression $var with %s
-				start := i
-				for i+1 < len(lit) &&
-					(lexer.IsLetter(lit[i+1]) || lexer.IsDigit(lit[i+1])) {
-					i++
-				}
-				matches = append(matches, lit[start:i+1])
-				result += lit[lastIdx:start-1] + "%s"
-				lastIdx = i + 1
-			}
-		}
-	}
-
-	if lastIdx == 0 {
-		// there were no template expressions, return regular string literal
-		return &ast.StringLiteral{Token: p.curToken, Value: lit}
-	}
-
-	result += lit[lastIdx:]
-
-	idents := make([]ast.Expression, 0, len(matches))
-	for _, v := range matches {
-		idents = append(idents, &ast.Identifier{Value: v})
-	}
-
-	return &ast.TemplateStringLiteral{
-		Token:    p.curToken,
-		Template: result,
-		Values:   idents,
-	}
+	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parseBoolean() ast.Expression {

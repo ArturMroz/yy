@@ -24,10 +24,10 @@ For more details, check out [examples](examples) directory or [live playground](
 ```c
 // print with yap()
 name := "Yennefer"
-yap("Hello, $name!") // "Hello, Yennefer!"
+yap("Hello, {name}!") // "Hello, Yennefer!"
 
 // or yowl() if urgent
-yowl("Hello, $name!") // "HELLO, YENNEFER!"
+yowl("Hello, {name}!") // "HELLO, YENNEFER!"
 ```
 
 ## Variables
@@ -102,7 +102,7 @@ my_hashmap := %{
     42:      "integer key works too",
 }
 
-yap(my_hashmap["name"], "is", my_hashmap["age"], "years old.") // "Yakub the Yak is 2 years old."
+yap("{my_hashmap["name"]} is {my_hashmap["age"]} years old.") // "Yakub the Yak is 2 years old."
 ```
 
 ## Functions
@@ -180,7 +180,7 @@ yolo {
     new_var = 5
 
     // variables can be baked into a function
-    greet     := \name { "Hello, $name!" }
+    greet     := \name { "Hello, {name}!" }
     greet_yan := greet + "Yan"
     greet_yan() // "Hello, Yan!"
 

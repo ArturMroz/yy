@@ -161,11 +161,18 @@ func TestLexingInterpolatedStrings(t *testing.T) {
 			},
 		},
 		{
-			`"var {{age}} = {age}. And that's a bracket }}."`,
+			`"{{"`,
+			[]token.Token{
+				{Type: token.STRING, Literal: "{"},
+				{Type: token.EOF, Literal: "EOF"},
+			},
+		},
+		{
+			`"var {{age}} = {age}. And that's a bracket }}. Another one {{."`,
 			[]token.Token{
 				{Type: token.TEMPL_STRING, Literal: "var {age} = "},
 				{Type: token.IDENT, Literal: "age"},
-				{Type: token.STRING, Literal: ". And that's a bracket }."},
+				{Type: token.STRING, Literal: ". And that's a bracket }. Another one {."},
 				{Type: token.EOF, Literal: "EOF"},
 			},
 		},

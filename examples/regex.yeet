@@ -66,5 +66,5 @@ yall re: regexes {
     yall words {
         yif match(re, yt) { result << yt }
     }
-    yap("words matching /$re/: $result")
+    yap("words matching /{re}/: {result}")
 }

@@ -123,45 +123,6 @@ func TestStringLiteralExpression(t *testing.T) {
 	}
 }
 
-// TODO: remove once transitioned to new interpolation syntax
-func TestTemplStringLiteralExpressionOld(t *testing.T) {
-	testCases := []struct {
-		input    string
-		expected string
-		templ    string
-	}{
-		{
-			`"i'm $age years old"`,
-			"i'm $age years old",
-			"i'm %s years old",
-		},
-		{
-			`"i have $apples apples and $carrots carrots"`,
-			"i have $apples apples and $carrots carrots",
-			"i have %s apples and %s carrots",
-		},
-		{
-			`"i have fruit: $apples $carrots $kiwi."`,
-			"i have fruit: $apples $carrots $kiwi.",
-			"i have fruit: %s %s %s.",
-		},
-	}
-
-	for _, tt := range testCases {
-		stmt := parseSingleExprStmt(t, tt.input)
-		literal, ok := stmt.Expression.(*ast.TemplateStringLiteral)
-		if !ok {
-			t.Fatalf("exp not *ast.TemplateStringLiteral. got=%T", stmt.Expression)
-		}
-		if literal.Token.Literal != tt.expected {
-			t.Errorf("literal.Value not %q. got=%q", tt.expected, literal.Token.Literal)
-		}
-		if literal.Template != tt.templ {
-			t.Errorf("literal.Template not %q. got=%q", tt.templ, literal.Template)
-		}
-	}
-}
-
 func TestTemplStringLiteralExpression(t *testing.T) {
 	// TODO: either add more test cases or collapse
 	testCases := []struct {
@@ -1173,6 +1134,10 @@ func testPrefixExpression(expr ast.Expression, expectedRight any, operator strin
 const examplesDir = "../examples"
 
 func TestParseFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	testFiles, err := os.ReadDir(examplesDir)
 	if err != nil {
 		t.Fatalf("couldn't read example files dir: %s", err)
