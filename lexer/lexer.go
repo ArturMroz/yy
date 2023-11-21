@@ -1,8 +1,6 @@
 package lexer
 
 import (
-	"strings"
-
 	"yy/token"
 )
 
@@ -120,10 +118,10 @@ func (l *Lexer) NextToken() token.Token {
 
 	default:
 		switch {
-		case IsLetter(l.ch):
+		case isLetter(l.ch):
 			return l.readIdentifier()
 
-		case IsDigit(l.ch):
+		case isDigit(l.ch):
 			return l.readNumber()
 
 		default:
@@ -175,7 +173,7 @@ func (l *Lexer) peek() byte {
 
 func (l *Lexer) readIdentifier() token.Token {
 	start := l.position
-	for IsLetter(l.ch) || IsDigit(l.ch) {
+	for isLetter(l.ch) || isDigit(l.ch) {
 		l.advance()
 	}
 
@@ -185,13 +183,13 @@ func (l *Lexer) readIdentifier() token.Token {
 
 func (l *Lexer) readNumber() token.Token {
 	start := l.position
-	for IsDigit(l.ch) {
+	for isDigit(l.ch) {
 		l.advance()
 	}
 
-	if l.ch == '.' && IsDigit(l.peek()) {
+	if l.ch == '.' && isDigit(l.peek()) {
 		l.advance() // dot
-		for IsDigit(l.ch) {
+		for isDigit(l.ch) {
 			l.advance()
 		}
 
@@ -202,9 +200,10 @@ func (l *Lexer) readNumber() token.Token {
 }
 
 func (l *Lexer) readString() token.Token {
-	l.advance() // consume opening '`'
+	l.advance() // consume opening '"' or '}'
 
 	start := l.position
+	escapePositions := []int{}
 
 	for {
 		switch l.ch {
@@ -217,9 +216,18 @@ func (l *Lexer) readString() token.Token {
 
 		case '"':
 			return token.Token{
-				Type:    token.STRING,
-				Literal: escapeBrackets(l.Input[start:l.position]),
+				Type: token.STRING,
+				// Literal: escapeBrackets(l.Input[start:l.position]),
+				Literal: l.escapeString(start, escapePositions),
 				Offset:  start,
+			}
+
+		case '}':
+			// double brackets is an escape sequence, ie {{name}}
+			if l.peek() == '}' {
+				l.advance()
+				l.advance()
+				escapePositions = append(escapePositions, l.position)
 			}
 
 		case '{':
@@ -227,6 +235,7 @@ func (l *Lexer) readString() token.Token {
 			if l.peek() == '{' {
 				l.advance()
 				l.advance()
+				escapePositions = append(escapePositions, l.position)
 				break
 			}
 
@@ -235,7 +244,7 @@ func (l *Lexer) readString() token.Token {
 
 			return token.Token{
 				Type:    token.TEMPL_STRING,
-				Literal: escapeBrackets(l.Input[start:l.position]),
+				Literal: l.escapeString(start, escapePositions),
 				Offset:  start,
 			}
 
@@ -245,17 +254,29 @@ func (l *Lexer) readString() token.Token {
 	}
 }
 
-func escapeBrackets(input string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(input, "{{", "{"), "}}", "}")
+func (l *Lexer) escapeString(start int, escapePositions []int) string {
+	if len(escapePositions) == 0 {
+		return l.Input[start:l.position]
+	}
+
+	// TODO: profile and see if string builder should be used here instead
+	result := make([]byte, 0, l.position-start-len(escapePositions))
+	lastIdx := start
+
+	for _, v := range escapePositions {
+		result = append(result, l.Input[lastIdx:v-1]...)
+		lastIdx = v
+	}
+
+	result = append(result, l.Input[lastIdx:l.position]...)
+
+	return string(result)
 }
 
 func (l *Lexer) skipWhitespace() {
 	for {
 		switch l.ch {
-		case ' ', '\t', '\r':
-			l.advance()
-
-		case '\n':
+		case ' ', '\t', '\r', '\n':
 			l.advance()
 
 		case '/':
@@ -276,10 +297,10 @@ func (l *Lexer) skipWhitespace() {
 
 // utils
 
-func IsLetter(ch byte) bool {
+func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
-func IsDigit(ch byte) bool {
+func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }
