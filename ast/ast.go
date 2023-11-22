@@ -7,38 +7,28 @@ import (
 	"yy/token"
 )
 
-type Node interface {
+type Expression interface {
 	Pos() int
 	TokenLiteral() string
 	String() string
 }
 
-type Statement interface {
-	Node
-	statementNode()
-}
-
-type Expression interface {
-	Node
-	expressionNode()
-}
-
 type Program struct {
-	Statements []Statement
+	Expressions []Expression
 }
 
 func (p *Program) Pos() int { return 0 }
 
 func (p *Program) TokenLiteral() string {
-	if len(p.Statements) > 0 {
-		return p.Statements[0].TokenLiteral()
+	if len(p.Expressions) > 0 {
+		return p.Expressions[0].TokenLiteral()
 	}
 	return ""
 }
 
 func (p *Program) String() string {
 	var b strings.Builder
-	for _, s := range p.Statements {
+	for _, s := range p.Expressions {
 		b.WriteString(s.String() + ";")
 	}
 	return b.String()
@@ -50,7 +40,6 @@ type DeclareExpression struct {
 	Value Expression
 }
 
-func (de *DeclareExpression) expressionNode()      {}
 func (de *DeclareExpression) Pos() int             { return de.Token.Offset }
 func (de *DeclareExpression) TokenLiteral() string { return de.Token.Literal }
 func (de *DeclareExpression) String() string {
@@ -63,32 +52,20 @@ type AssignExpression struct {
 	Value Expression
 }
 
-func (ae *AssignExpression) expressionNode()      {}
 func (ae *AssignExpression) Pos() int             { return ae.Token.Offset }
 func (ae *AssignExpression) TokenLiteral() string { return ae.Token.Literal }
 func (ae *AssignExpression) String() string {
 	return fmt.Sprintf("(%s = %s)", ae.Left.String(), ae.Value.String())
 }
 
-type Identifier struct {
-	Token token.Token // the token.IDENT token
-	Value string
-}
-
-func (i *Identifier) expressionNode()      {}
-func (i *Identifier) Pos() int             { return i.Token.Offset }
-func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string       { return i.Value }
-
-type YeetStatement struct {
+type YeetExpression struct {
 	Token       token.Token // the 'yeet' token
 	ReturnValue Expression
 }
 
-func (ys *YeetStatement) statementNode()       {}
-func (ys *YeetStatement) Pos() int             { return ys.Token.Offset }
-func (ys *YeetStatement) TokenLiteral() string { return ys.Token.Literal }
-func (ys *YeetStatement) String() string {
+func (ys *YeetExpression) Pos() int             { return ys.Token.Offset }
+func (ys *YeetExpression) TokenLiteral() string { return ys.Token.Literal }
+func (ys *YeetExpression) String() string {
 	var b strings.Builder
 	b.WriteString(ys.TokenLiteral() + " ")
 	if ys.ReturnValue != nil {
@@ -98,27 +75,20 @@ func (ys *YeetStatement) String() string {
 	return b.String()
 }
 
-type ExpressionStatement struct {
-	Token      token.Token // the first token of the expression
-	Expression Expression
+type Identifier struct {
+	Token token.Token // the token.IDENT token
+	Value string
 }
 
-func (es *ExpressionStatement) statementNode()       {}
-func (es *ExpressionStatement) Pos() int             { return es.Token.Offset }
-func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
-func (es *ExpressionStatement) String() string {
-	if es.Expression != nil {
-		return es.Expression.String()
-	}
-	return ""
-}
+func (i *Identifier) Pos() int             { return i.Token.Offset }
+func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
 
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64
 }
 
-func (i *IntegerLiteral) expressionNode()      {}
 func (i *IntegerLiteral) Pos() int             { return i.Token.Offset }
 func (i *IntegerLiteral) TokenLiteral() string { return i.Token.Literal }
 func (i *IntegerLiteral) String() string       { return i.Token.Literal }
@@ -128,7 +98,6 @@ type NumberLiteral struct {
 	Value float64
 }
 
-func (n *NumberLiteral) expressionNode()      {}
 func (n *NumberLiteral) Pos() int             { return n.Token.Offset }
 func (n *NumberLiteral) TokenLiteral() string { return n.Token.Literal }
 func (n *NumberLiteral) String() string       { return n.Token.Literal }
@@ -138,7 +107,6 @@ type BooleanLiteral struct {
 	Value bool
 }
 
-func (b *BooleanLiteral) expressionNode()      {}
 func (b *BooleanLiteral) Pos() int             { return b.Token.Offset }
 func (b *BooleanLiteral) TokenLiteral() string { return b.Token.Literal }
 func (b *BooleanLiteral) String() string       { return b.Token.Literal }
@@ -147,7 +115,6 @@ type NullLiteral struct {
 	Token token.Token
 }
 
-func (n *NullLiteral) expressionNode()      {}
 func (n *NullLiteral) Pos() int             { return n.Token.Offset }
 func (n *NullLiteral) TokenLiteral() string { return n.Token.Literal }
 func (n *NullLiteral) String() string       { return n.Token.Literal }
@@ -157,7 +124,6 @@ type StringLiteral struct {
 	Value string
 }
 
-func (s *StringLiteral) expressionNode()      {}
 func (s *StringLiteral) Pos() int             { return s.Token.Offset }
 func (s *StringLiteral) TokenLiteral() string { return s.Token.Literal }
 func (s *StringLiteral) String() string       { return `"` + s.Token.Literal + `"` }
@@ -168,7 +134,6 @@ type TemplateStringLiteral struct {
 	Values   []Expression
 }
 
-func (ts *TemplateStringLiteral) expressionNode()      {}
 func (ts *TemplateStringLiteral) Pos() int             { return ts.Token.Offset }
 func (ts *TemplateStringLiteral) TokenLiteral() string { return ts.Token.Literal }
 func (ts *TemplateStringLiteral) String() string       { return `"` + ts.Token.Literal + `"` }
@@ -178,7 +143,6 @@ type ArrayLiteral struct {
 	Elements []Expression
 }
 
-func (a *ArrayLiteral) expressionNode()      {}
 func (a *ArrayLiteral) Pos() int             { return a.Token.Offset }
 func (a *ArrayLiteral) TokenLiteral() string { return a.Token.Literal }
 func (a *ArrayLiteral) String() string {
@@ -201,7 +165,6 @@ type RangeLiteral struct {
 	End   Expression
 }
 
-func (rl *RangeLiteral) expressionNode()      {}
 func (rl *RangeLiteral) Pos() int             { return rl.Token.Offset }
 func (rl *RangeLiteral) TokenLiteral() string { return rl.Token.Literal }
 func (rl *RangeLiteral) String() string {
@@ -213,7 +176,6 @@ type HashmapLiteral struct {
 	Pairs map[Expression]Expression
 }
 
-func (hl *HashmapLiteral) expressionNode()      {}
 func (hl *HashmapLiteral) Pos() int             { return hl.Token.Offset }
 func (hl *HashmapLiteral) TokenLiteral() string { return hl.Token.Literal }
 func (hl *HashmapLiteral) String() string {
@@ -235,7 +197,6 @@ type IndexExpression struct {
 	Index Expression
 }
 
-func (ie *IndexExpression) expressionNode()      {}
 func (ie *IndexExpression) Pos() int             { return ie.Left.Pos() }
 func (ie *IndexExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *IndexExpression) String() string {
@@ -254,7 +215,6 @@ type PrefixExpression struct {
 	Right    Expression
 }
 
-func (pe *PrefixExpression) expressionNode()      {}
 func (pe *PrefixExpression) Pos() int             { return pe.Token.Offset }
 func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
 func (pe *PrefixExpression) String() string {
@@ -268,7 +228,6 @@ type InfixExpression struct {
 	Right    Expression
 }
 
-func (ie *InfixExpression) expressionNode()      {}
 func (ie *InfixExpression) Pos() int             { return ie.Token.Offset }
 func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *InfixExpression) String() string {
@@ -281,7 +240,6 @@ type AndExpression struct {
 	Right Expression
 }
 
-func (ae *AndExpression) expressionNode()      {}
 func (ae *AndExpression) Pos() int             { return ae.Token.Offset }
 func (ae *AndExpression) TokenLiteral() string { return ae.Token.Literal }
 func (ae *AndExpression) String() string {
@@ -294,7 +252,6 @@ type OrExpression struct {
 	Right Expression
 }
 
-func (oe *OrExpression) expressionNode()      {}
 func (oe *OrExpression) Pos() int             { return oe.Token.Offset }
 func (oe *OrExpression) TokenLiteral() string { return oe.Token.Literal }
 func (oe *OrExpression) String() string {
@@ -308,7 +265,6 @@ type YifExpression struct {
 	Alternative *BlockExpression
 }
 
-func (ye *YifExpression) expressionNode()      {}
 func (ye *YifExpression) Pos() int             { return ye.Token.Offset }
 func (ye *YifExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YifExpression) String() string {
@@ -326,7 +282,6 @@ type YoloExpression struct {
 	Body  *BlockExpression
 }
 
-func (ye *YoloExpression) expressionNode()      {}
 func (ye *YoloExpression) Pos() int             { return ye.Token.Offset }
 func (ye *YoloExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YoloExpression) String() string {
@@ -339,7 +294,6 @@ type YoyoExpression struct {
 	Body      *BlockExpression
 }
 
-func (ye *YoyoExpression) expressionNode()      {}
 func (ye *YoyoExpression) Pos() int             { return ye.Token.Offset }
 func (ye *YoyoExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YoyoExpression) String() string {
@@ -353,7 +307,6 @@ type YallExpression struct {
 	Body     *BlockExpression
 }
 
-func (ye *YallExpression) expressionNode()      {}
 func (ye *YallExpression) Pos() int             { return ye.Token.Offset }
 func (ye *YallExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YallExpression) String() string {
@@ -361,22 +314,21 @@ func (ye *YallExpression) String() string {
 }
 
 type BlockExpression struct {
-	Token      token.Token // the { token
-	Statements []Statement
+	Token       token.Token // the { token
+	Expressions []Expression
 }
 
-func (be *BlockExpression) expressionNode()      {}
 func (be *BlockExpression) Pos() int             { return be.Token.Offset }
 func (be *BlockExpression) TokenLiteral() string { return be.Token.Literal }
 func (be *BlockExpression) String() string {
-	stmts := []string{}
-	for _, p := range be.Statements {
-		stmts = append(stmts, p.String())
+	exprs := []string{}
+	for _, p := range be.Expressions {
+		exprs = append(exprs, p.String())
 	}
 
 	var b strings.Builder
 	b.WriteString("{ ")
-	b.WriteString(strings.Join(stmts, "; "))
+	b.WriteString(strings.Join(exprs, "; "))
 	b.WriteString(" }")
 	return b.String()
 }
@@ -387,7 +339,6 @@ type FunctionLiteral struct {
 	Body       *BlockExpression
 }
 
-func (fl *FunctionLiteral) expressionNode()      {}
 func (fl *FunctionLiteral) Pos() int             { return fl.Token.Offset }
 func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
 func (fl *FunctionLiteral) String() string {
@@ -413,7 +364,6 @@ type MacroLiteral struct {
 	Body       *BlockExpression
 }
 
-func (ml *MacroLiteral) expressionNode()      {}
 func (ml *MacroLiteral) Pos() int             { return ml.Token.Offset }
 func (ml *MacroLiteral) TokenLiteral() string { return ml.Token.Literal }
 func (ml *MacroLiteral) String() string {
@@ -439,7 +389,6 @@ type CallExpression struct {
 	Arguments []Expression
 }
 
-func (ce *CallExpression) expressionNode()      {}
 func (ce *CallExpression) Pos() int             { return ce.Token.Offset }
 func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
 func (ce *CallExpression) String() string {
@@ -462,7 +411,6 @@ type BadExpression struct {
 	Token token.Token // the token.IDENT token
 }
 
-func (i *BadExpression) expressionNode()      {}
 func (i *BadExpression) Pos() int             { return i.Token.Offset }
 func (i *BadExpression) TokenLiteral() string { return i.Token.Literal }
 func (i *BadExpression) String() string       { return fmt.Sprintf("BAD_EXPR(%s)", i.Token.Literal) }

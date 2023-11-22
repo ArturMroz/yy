@@ -60,12 +60,10 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 
 		case *object.Function:
 			newBody := &ast.BlockExpression{
-				Statements: []ast.Statement{
-					&ast.ExpressionStatement{
-						Expression: &ast.PrefixExpression{
-							Operator: op,
-							Right:    right.Body,
-						},
+				Expressions: []ast.Expression{
+					&ast.PrefixExpression{
+						Operator: op,
+						Right:    right.Body,
 					},
 				},
 			}
@@ -210,16 +208,12 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 		right := right.(*object.Function)
 
 		newBody := &ast.BlockExpression{
-			Statements: []ast.Statement{
-				&ast.ExpressionStatement{
-					Expression: &ast.DeclareExpression{
-						Name:  right.Parameters[0],
-						Value: fn.Body,
-					},
+			Expressions: []ast.Expression{
+				&ast.DeclareExpression{
+					Name:  right.Parameters[0],
+					Value: fn.Body,
 				},
-				&ast.ExpressionStatement{
-					Expression: right.Body,
-				},
+				right.Body,
 			},
 		}
 
@@ -245,13 +239,11 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	case left.Type() == object.FUNCTION_OBJ:
 		fn := left.(*object.Function)
 		newBody := &ast.BlockExpression{
-			Statements: []ast.Statement{
-				&ast.ExpressionStatement{
-					Expression: &ast.InfixExpression{
-						Left:     fn.Body,
-						Operator: op,
-						Right:    objectToAST(right).(ast.Expression),
-					},
+			Expressions: []ast.Expression{
+				&ast.InfixExpression{
+					Left:     fn.Body,
+					Operator: op,
+					Right:    objectToAST(right),
 				},
 			},
 		}
@@ -265,13 +257,11 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	case right.Type() == object.FUNCTION_OBJ:
 		fn := right.(*object.Function)
 		newBody := &ast.BlockExpression{
-			Statements: []ast.Statement{
-				&ast.ExpressionStatement{
-					Expression: &ast.InfixExpression{
-						Left:     objectToAST(left).(ast.Expression),
-						Operator: op,
-						Right:    fn.Body,
-					},
+			Expressions: []ast.Expression{
+				&ast.InfixExpression{
+					Left:     objectToAST(left),
+					Operator: op,
+					Right:    fn.Body,
 				},
 			},
 		}
@@ -337,7 +327,7 @@ func rot13(ch rune) rune {
 	return ch
 }
 
-func objectToAST(obj object.Object) ast.Node {
+func objectToAST(obj object.Object) ast.Expression {
 	switch obj := obj.(type) {
 	case *object.Integer:
 		tok := token.Token{

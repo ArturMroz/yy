@@ -274,7 +274,7 @@ func (b *Builtin) Type() Type     { return BUILTIN_OBJ }
 func (b *Builtin) String() string { return "builtin function" }
 
 type Quote struct {
-	Node ast.Node
+	Node ast.Expression
 }
 
 func (q *Quote) Type() Type     { return QUOTE_OBJ }

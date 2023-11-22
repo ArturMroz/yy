@@ -127,6 +127,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.LPAREN:       p.parseGroupedExpression,
 		token.LBRACKET:     p.parseArrayLiteral,
 		token.LBRACE:       func() ast.Expression { return p.parseBlockExpression() },
+		token.YEET:         p.parseYeetExpression,
 		token.YIF:          p.parseYifExpression,
 		token.YOLO:         p.parseYoloExpression,
 		token.YALL:         p.parseYallExpression,
@@ -173,8 +174,13 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 
 	for p.curToken.Type != token.EOF {
-		stmt := p.parseStatement()
-		program.Statements = append(program.Statements, stmt)
+		expr := p.parseExpression(LOWEST)
+
+		if p.peekIs(token.SEMICOLON) { // optional semicolon
+			p.advance()
+		}
+
+		program.Expressions = append(program.Expressions, expr)
 		if p.panicMode {
 			p.sync()
 		}
@@ -185,18 +191,11 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 //
-// STATEMENTS
+// EXPRESSIONS
 //
 
-func (p *Parser) parseStatement() ast.Statement {
-	if p.curToken.Type == token.YEET {
-		return p.parseYeetStatement()
-	}
-	return p.parseExpressionStatement()
-}
-
-func (p *Parser) parseYeetStatement() *ast.YeetStatement {
-	yeetStmt := &ast.YeetStatement{Token: p.curToken}
+func (p *Parser) parseYeetExpression() ast.Expression {
+	yeetStmt := &ast.YeetExpression{Token: p.curToken}
 	p.advance()
 
 	yeetStmt.ReturnValue = p.parseExpression(LOWEST)
@@ -207,23 +206,6 @@ func (p *Parser) parseYeetStatement() *ast.YeetStatement {
 
 	return yeetStmt
 }
-
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	exprStmt := &ast.ExpressionStatement{
-		Token:      p.curToken,
-		Expression: p.parseExpression(LOWEST),
-	}
-
-	if p.peekIs(token.SEMICOLON) { // optional semicolon
-		p.advance()
-	}
-
-	return exprStmt
-}
-
-//
-// EXPRESSIONS
-//
 
 func (p *Parser) parseExpression(precedence Precedence) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
@@ -335,12 +317,17 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 }
 
 func (p *Parser) parseBlockExpression() *ast.BlockExpression {
-	block := &ast.BlockExpression{Token: p.curToken, Statements: []ast.Statement{}}
+	block := &ast.BlockExpression{Token: p.curToken, Expressions: []ast.Expression{}}
 
 	p.advance()
 	for !p.curIs(token.RBRACE) && !p.curIs(token.EOF) {
-		stmt := p.parseStatement()
-		block.Statements = append(block.Statements, stmt)
+		stmt := p.parseExpression(LOWEST)
+
+		if p.peekIs(token.SEMICOLON) { // optional semicolon
+			p.advance()
+		}
+
+		block.Expressions = append(block.Expressions, stmt)
 		p.advance()
 	}
 	return block
@@ -369,12 +356,8 @@ func (p *Parser) parseYifExpression() ast.Expression {
 		case token.YIF:
 			p.advance()
 
-			// this is a bit long-winded, but the other option would be to set Alternative's type to
-			// just ast.Expression instead of *ast.BlockExpression
 			alternativeBlock := &ast.BlockExpression{
-				Statements: []ast.Statement{
-					&ast.ExpressionStatement{Expression: p.parseYifExpression()},
-				},
+				Expressions: []ast.Expression{p.parseYifExpression()},
 			}
 			yifExpr.Alternative = alternativeBlock
 

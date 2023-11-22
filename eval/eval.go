@@ -8,15 +8,15 @@ import (
 	"yy/object"
 )
 
-func Eval(node ast.Node, env *object.Environment) object.Object {
+func Eval(node ast.Expression, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalProgram(node.Statements, env)
+		return evalProgram(node.Expressions, env)
 
 	case *ast.BlockExpression:
-		return evalBlockExpression(node.Statements, env)
+		return evalBlockExpression(node.Expressions, env)
 
-	case *ast.YeetStatement:
+	case *ast.YeetExpression:
 		val := Eval(node.ReturnValue, env)
 		if isError(val) {
 			return val
@@ -48,9 +48,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return builtin
 		}
 		return newError(node.Pos(), "identifier not found: "+node.Value)
-
-	case *ast.ExpressionStatement:
-		return Eval(node.Expression, env)
 
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
@@ -317,9 +314,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	}
 }
 
-func evalProgram(statements []ast.Statement, env *object.Environment) object.Object {
+func evalProgram(expressions []ast.Expression, env *object.Environment) object.Object {
 	var result object.Object
-	for _, stmt := range statements {
+	for _, stmt := range expressions {
 		result = Eval(stmt, env)
 
 		switch result := result.(type) {
@@ -333,11 +330,11 @@ func evalProgram(statements []ast.Statement, env *object.Environment) object.Obj
 	return result
 }
 
-func evalBlockExpression(statements []ast.Statement, env *object.Environment) object.Object {
+func evalBlockExpression(exprs []ast.Expression, env *object.Environment) object.Object {
 	var result object.Object
 	extendedEnv := object.NewEnclosedEnvironment(env)
-	for _, stmt := range statements {
-		result = Eval(stmt, extendedEnv)
+	for _, expr := range exprs {
+		result = Eval(expr, extendedEnv)
 
 		if result != nil {
 			rtype := result.Type()
