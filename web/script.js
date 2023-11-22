@@ -1,5 +1,5 @@
 function run() {
-    if (!source.value) return;
+    if (!source.value) return
 
     output.innerText = ''
 
@@ -11,7 +11,7 @@ function run() {
 }
 
 function captureLog(msg) {
-    const li = document.createElement("li")
+    const li = document.createElement('li')
     li.innerText = msg
     output.appendChild(li)
 }
@@ -26,7 +26,7 @@ window.addEventListener('keydown', (e) => {
 source.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
         document.execCommand('insertText', false, '    ') // tab is 4 spaces
-        e.preventDefault(); // prevent tabbing out from textarea
+        e.preventDefault() // prevent tabbing out from textarea
     }
 })
 
@@ -49,37 +49,35 @@ function setSample(sampleName) {
 }
 
 const samples = {
-    'hello world':
-        `// You can edit this code, or select a sample from the dropdown on the right.
+    'hello world': `// You can edit this code, or select a sample from the dropdown on the right.
 //
 // To run the code press Ctrl+Enter or click 'Run' button.
 
 name := "Yennefer"
-yap("Yo, $name!")`,
+yap("Yo, {name}!")`,
 
-    "fizzbuzz":
-        `// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
+    fizzbuzz: `// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
 // interviews. But fear not, YY is here to help you slay this beast. And rather than printing
 // the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead. 
 
-yall 1..100 {
-    // implicitly defined variable 'yt' represents the current number in the loop
-    // 'yt' is short for 'yeeterator'
+// This example illustartes the use of implicitly defined 'yt' variable.
+// 'yt' is short for 'yeeterator' and it's created autmatically inside a yall loop.
 
-    yif yt % 3 == 0 && yt % 5 == 0 {
-        yap("YeetYoink")      // print "YeetYoink" if divisible by both 3 and 5
-    } yels yif yt % 3 == 0 {
-        yap("Yeet")           // print "Yeet" if divisible by 3
-    } yels yif yt % 5 == 0 {
-        yap("Yoink")          // print "Yoink" if divisible by 5
+yall 1..100 {
+    result := ""
+
+    yif yt % 3 == 0 { result += "Yeet" }  // append "Yeet" if the current number is divisible by 3
+    yif yt % 5 == 0 { result += "Yoink" } // append "Yoink" if the current number is divisible by 5
+
+    yif result {    // check if the result isn't empty 
+        yap(result) // if so, print the result (Yeet, Yoink, or YeetYoink)
     } yels {
-        yap(yt)               // print the number itself if not divisible by 3 or 5
+        yap(yt)     // print the current number instead
     }
 }
 `,
 
-    'fibonacci':
-        `// Implementation of Fibbonacci numbers using two ways: recursion and closure. Just like choosing
+    fibonacci: `// Implementation of Fibbonacci numbers using two ways: recursion and closure. Just like choosing
 // between pizza and spaghetti, there is no right or wrong way to do it, both are equally satisfying.
 // And while these methods may not be the fastest, they add some spicy flavor to this demo.
 
@@ -110,10 +108,9 @@ fib_gen := \\{
 
 f := fib_gen() // create a closure instance 'f' for generating Fibonacci numbers
 yap("consecutive Fibonacci numbers:", f(), f(), f(), f(), f())
-` ,
+`,
 
-    'map et al':
-        `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together
+    'map et al': `// Map, filter, and reduce are The Three Musketeers of functional programming, banding together
 // to process and transform collections with finesse and style.
 
 // Map transforms all elements and returns a shiny new list.
@@ -157,8 +154,7 @@ smol := \\x { x < avg }
 yap("smaller than average:", filter(tripled, smol))
 `,
 
-    'yolo':
-        `// Yolo Mode allows you to do things that would make other self-respecting languages blush.
+    yolo: `// Yolo Mode allows you to do things that would make other self-respecting languages blush.
 // (Not JavaScript though. JavaScript wouldn't bat an eye.)
 //
 // Types can be mismatched, strings can be negated, variables don't have to be declared before use.
@@ -181,7 +177,7 @@ yolo {
 
     // you can do useful stuff too, like bake an argument into a function
     // (check out 'bake' example for more details)
-    greet     := \\name { yap("Hello, $name!") }
+    greet     := \\name { yap("Hello, {name}!") }
     greet_yan := greet + "Yan"
     greet_yan() // look ma, no args!
 
@@ -189,8 +185,7 @@ yolo {
     yap("division by zero:", "weee" / 0)
 }`,
 
-    'bake':
-        `// Brace yourselves, we're about to go into YOLO mode! We'll be adding numbers, arrays, and hashmaps
+    bake: `// Brace yourselves, we're about to go into YOLO mode! We'll be adding numbers, arrays, and hashmaps
 // to a function like a mad scientist adding ingredients to a cauldron. This magically bakes the
 // arguments into the function, turning it into a deliciously self-contained recipe for success.
 //
@@ -201,7 +196,7 @@ yolo {
 
 // Exhibit A
 greet := \\name, message {
-    "Hello $name! $message"
+    "Hello {name}! {message}"
 }
 
 greet_alice := yolo { greet + "Alice" }
@@ -216,8 +211,7 @@ yap(rude_greet("Bob"))
 
 // Exhibit B
 converter := \\symbol, factor, offset, input {
-    result := (offset + input) * factor
-    "$result $symbol"
+    "{(offset + input) * factor} {symbol}"
 }
 
 // To bake multiple arguments, add an array.
@@ -230,8 +224,7 @@ yap(pounds_to_kg(5.5))
 yap(farenheit_to_celsius(97))
 `,
 
-    'mandelbrot':
-        `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
+    mandelbrot: `// Looking to create some fractal fun? With YY, you can easily draw your very own Mandelbrot set.
 // Perfect for impressing your math-loving friends or showing off to your imaginary ones. Just sit
 // back and let YY do the heavy lifting while you bask in the glory of your own infinite intricacies.
 
@@ -252,8 +245,8 @@ palette := "..--~~:;+=!*#%@"
 max_iter := len(palette) - 1
 
 // loop through each pixel in the output image
-yall py: 0..height {
-    yall px: 0..width {
+yall py: height {
+    yall px: width {
         // calculate the corresponding complex number for the current pixel
         real := (float(px) / width)  * (real_max - real_min) + real_min
         imag := (float(py) / height) * (imag_max - imag_min) + imag_min
@@ -279,8 +272,7 @@ yall py: 0..height {
     yap()
 }`,
 
-    'brainfuck':
-        `// An interpreter for the Brainfuck programming language, written in the YY programming language.
+    brainfuck: `// An interpreter for the Brainfuck programming language, written in the YY programming language.
 // An interpreter within an interpreter. Interpreter Inception. Interpreception. Interception?
 // 
 // *BWOOOONNNNGNGGGG* <- Inception's horn sound effect
@@ -344,8 +336,7 @@ yoyo ip < len(code) {
 }
 `,
 
-    'maze':
-        `// Have you ever got lost in a supermarket as a child? Perfect!
+    maze: `// Have you ever got lost in a supermarket as a child? Perfect!
 // We'll recreate that traumatic event by building a maze solver in YY.
 
 maze := [
@@ -364,13 +355,15 @@ maze := [
 
 // locate the starting position by searching for the 'S' character
 find_start := \\maze {
-    yall row: 0..len(maze)-1 {
-        yall col: 0..len(maze[row])-1 {
+    yall row: len(maze)-1 {
+        yall col: len(maze[row])-1 {
             yif maze[row][col] == "S" {
                 yeet [row, col]
             }
         }
     }
+
+    // 'yikes' terminates the program
     yikes("invalid maze: no starting position found")
 }
 
@@ -393,16 +386,15 @@ solve := \\maze {
         // we could change this algorithm to breadth-first search by taking the first element like so
         // cur := yoink(queue, 0)
 
-        // check if we have reached the end
+       // check if we have reached the end
         yif maze[cur[0]][cur[1]] == "E" {
-            maze[cur[0]][cur[1]] = "."
-
             // backtrack to find and mark the path
             yoyo cur != start {
-                prev := path[cur]
-                maze[prev[0]][prev[1]] = "."
-                cur := prev
+                maze[cur[0]][cur[1]] = "."
+                cur = path[cur]
             }
+
+            maze[cur[0]][cur[1]] = "."
 
             // exit early, we're done here
             yeet true
@@ -446,8 +438,7 @@ yif solve(maze) {
     yap("there's no way out :(")
 }`,
 
-    'regex':
-        `//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'.
+    regex: `//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'.
 //   Now they have two problems.”
 //                           -- Jamie Zawinski
 //
@@ -462,16 +453,16 @@ yif solve(maze) {
 // search for regex anywhere in text
 match := \\regex, text {
     yif regex && regex[0] == "^" {
-        yeet match_here(rest(regex), text)
+        yeet match_here(regex[1..-1], text)
     }
-    yoyo true {
+    yoyo {
         yif match_here(regex, text) {
             yeet true
         }
         yif !text {
             yeet false
         }
-        text = rest(text)
+        text = text[1..-1]
     }
 }
 
@@ -484,24 +475,24 @@ match_here := \\regex, text {
         yeet text == ""
     }
     yif len(regex) > 1 && regex[1] == "*" {
-        yeet match_star(regex[0], rest(rest(regex)), text)
+        yeet match_star(regex[0], regex[2..-1], text)
     }
     yif text && (regex[0] == "." || regex[0] == text[0]) {
-        yeet match_here(rest(regex), rest(text))
+        yeet match_here(regex[1..-1], text[1..-1])
     }
     yeet false
 }
 
 // search for c*regex at beginning of text
 match_star := \\c, regex, text {
-    yoyo true {
+    yoyo {
         yif match_here(regex, text) {
             yeet true
         }
         yif !text || (text[0] != c && c != ".") {
             yeet false
         }
-        text = rest(text)
+        text = text[1..-1]
     }
 }
 
@@ -515,12 +506,11 @@ yall re: regexes {
     yall words {
         yif match(re, yt) { result << yt }
     }
-    yap("words matching /$re/: $result")
+    yap("words matching /{re}/: {result}")
 }
 `,
 
-    'sort':
-        `// Sorting algorithms of different sorts.
+    sort: `// Sorting algorithms of different sorts.
 
 // Bubble sort: silly name, sillier algorithm (O(n^2)). As useful as 'g' in 'lasagna'. But it is a staple.
 bubble_sort := \\arr {
@@ -625,12 +615,13 @@ swap := \\arr, i, j {
 }
 
 // copy function copies an entire array, using slicing operator
-copy := \\arr { arr[0..len(arr)] }
+copy := \\arr { arr[0..-1] }
 
 nums := [3, 6, 9, 1, 5, 4, 2, 0, 8, 7]
 yap("Original nums:", nums)
 
-// since bubble, insertion, and quick sort are an in-place algorithms, we'll pass a copy of the nums array to preserve the original
+// since bubble, insertion, and quick sort are an in-place algorithms,
+// we'll pass a copy of the nums array to preserve the original
 yap("Bubble sorted:", bubble_sort(copy(nums)))
 yap("Quick sorted: ", quick_sort(copy(nums), 0, len(nums)-1))
 yap("Insert sorted:", insertion_sort(copy(nums)))
@@ -641,8 +632,7 @@ yap("Merge sorted: ", merge_sort(nums))
 yap("original array is still a beautiful mess:", nums)
 `,
 
-    "random":
-        `// A password generator so good, it'll make even the most nefarious hackers throw in the towel.
+    random: `// A password generator so good, it'll make even the most nefarious hackers throw in the towel.
 
 alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 digits   := "0123456789"
@@ -654,7 +644,7 @@ password := ""
 
 // Builtin yahtzee, the magical randomiser, is responsible for generating all things unpredictable.
 
-yall 0..length {
+yall length {
     password += yahtzee(charset)
 }
 
@@ -666,7 +656,7 @@ yap("your first secret password:", password)
 
 password = ""
 
-yall 0..length {
+yall length {
     idx      := yahtzee(len(charset)-1)
     password += charset[idx]
 }
