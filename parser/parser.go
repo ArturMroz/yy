@@ -57,6 +57,12 @@ func (p *Parser) eat(t token.Type, errMsg string) bool {
 	return false
 }
 
+func (p *Parser) skipSemicolons() {
+	for p.peekIs(token.SEMICOLON) {
+		p.advance()
+	}
+}
+
 type Precedence int
 
 const (
@@ -176,14 +182,14 @@ func (p *Parser) ParseProgram() *ast.Program {
 	for p.curToken.Type != token.EOF {
 		expr := p.parseExpression(LOWEST)
 
-		for p.peekIs(token.SEMICOLON) { // optional semicolon
-			p.advance()
-		}
+		p.skipSemicolons()
 
 		program.Expressions = append(program.Expressions, expr)
+
 		if p.panicMode {
 			p.sync()
 		}
+
 		p.advance()
 	}
 
@@ -200,9 +206,7 @@ func (p *Parser) parseYeetExpression() ast.Expression {
 
 	yeetStmt.ReturnValue = p.parseExpression(LOWEST)
 
-	for p.peekIs(token.SEMICOLON) { // optional semicolon
-		p.advance()
-	}
+	p.skipSemicolons()
 
 	return yeetStmt
 }
@@ -323,9 +327,7 @@ func (p *Parser) parseBlockExpression() *ast.BlockExpression {
 	for !p.curIs(token.RBRACE) && !p.curIs(token.EOF) {
 		stmt := p.parseExpression(LOWEST)
 
-		for p.peekIs(token.SEMICOLON) { // optional semicolon
-			p.advance()
-		}
+		p.skipSemicolons()
 
 		block.Expressions = append(block.Expressions, stmt)
 		p.advance()
