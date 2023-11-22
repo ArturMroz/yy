@@ -1,5 +1,5 @@
-width  := 35
-height := 12
+width  := 25 
+height := 8
 
 real_min := -2.0
 real_max := 0.5
@@ -9,8 +9,8 @@ imag_max := 1.1
 palette  := ".-~:;=!*#$@"
 max_iter := len(palette) - 1
 
-yall py: 0..height {
-    yall px: 0..width {
+yall py: height {
+    yall px: width {
         real := (float(px) / width)  * (real_max - real_min) + real_min
         imag := (float(py) / height) * (imag_max - imag_min) + imag_min
 

@@ -8,15 +8,15 @@ import (
 	"yy/object"
 )
 
-func Eval(node ast.Node, env *object.Environment) object.Object {
+func Eval(node ast.Expression, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalProgram(node.Statements, env)
+		return evalProgram(node.Expressions, env)
 
-	case *ast.BlockStatement:
-		return evalBlockStatement(node.Statements, env)
+	case *ast.BlockExpression:
+		return evalBlockExpression(node.Expressions, env)
 
-	case *ast.YeetStatement:
+	case *ast.YeetExpression:
 		val := Eval(node.ReturnValue, env)
 		if isError(val) {
 			return val
@@ -35,143 +35,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return val
 
 	case *ast.AssignExpression:
-		val := Eval(node.Value, env)
-		if isError(val) {
-			return val
-		}
-
-		switch node := node.Left.(type) {
-		case *ast.Identifier:
-			if ok := env.Update(node.Value, val); ok {
-				return val
-			}
-			if env.IsYoloMode() {
-				env.Set(node.Value, val)
-				return val
-			}
-			return newError(node.Pos(), "identifier not found: "+node.Value)
-
-		case *ast.IndexExpression:
-			left := Eval(node.Left, env)
-			if isError(left) {
-				return left
-			}
-			idx := Eval(node.Index, env)
-			if isError(idx) {
-				return idx
-			}
-
-			switch {
-			case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
-				i := idx.(*object.Integer).Value
-				arr := left.(*object.Array)
-				if i < 0 || i >= int64(len(arr.Elements)) {
-					return newError(
-						node.Left.Pos(),
-						"assign out of bounds for array %s",
-						node.Left.(*ast.Identifier).Value)
-				}
-				arr.Elements[i] = val
-				return val
-
-			case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
-				i := idx.(*object.Integer).Value
-				str := left.(*object.String)
-				if i < 0 || i >= int64(len(str.Value)) {
-					return newError(
-						node.Left.Pos(),
-						"assign out of bounds for string %s",
-						node.Left.(*ast.Identifier).Value)
-				}
-				str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
-				return val
-
-			case left.Type() == object.HASHMAP_OBJ:
-				hashmap := left.(*object.Hashmap)
-				key, ok := idx.(object.Hashable)
-				if !ok {
-					return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
-				}
-
-				hashmap.Pairs[key.HashKey()] = object.HashPair{Key: idx, Value: val}
-				return val
-
-			default:
-				return newError(node.Index.Pos(), "index operator not supported: %s, type of %s", idx.String(), idx.Type())
-			}
-		}
-
-		return newError(node.Left.Pos(), "identifier not found: "+node.Left.String())
+		return evalAssignExpression(node, env)
 
 	case *ast.IndexExpression:
-		left := Eval(node.Left, env)
-		if isError(left) {
-			return left
-		}
-		idx := Eval(node.Index, env)
-		if isError(idx) {
-			return idx
-		}
-
-		switch left := left.(type) {
-		case *object.Array:
-			switch idx := idx.(type) {
-			case *object.Integer:
-				i := idx.Value
-				if i < 0 || i >= int64(len(left.Elements)) {
-					return object.NULL
-				}
-				return left.Elements[i]
-
-			case *object.Range:
-				start := idx.Start
-				end := idx.End
-				if start < 0 {
-					start = 0
-				}
-				if end > int64(len(left.Elements)) {
-					end = int64(len(left.Elements))
-				}
-
-				// copy the array so modyfing a value in the original array doesn't affect copied array
-				return &object.Array{Elements: append([]object.Object{}, left.Elements[start:end]...)}
-			}
-
-		case *object.String:
-			switch idx := idx.(type) {
-			case *object.Integer:
-				i := idx.Value
-				if i < 0 || i >= int64(len(left.Value)) {
-					return object.NULL
-				}
-				return &object.String{Value: string(left.Value[i])}
-
-			case *object.Range:
-				start := idx.Start
-				end := idx.End
-				if start < 0 {
-					start = 0
-				}
-				if end > int64(len(left.Value)) {
-					end = int64(len(left.Value))
-				}
-				return &object.String{Value: left.Value[start:end]}
-			}
-
-		case *object.Hashmap:
-			key, ok := idx.(object.Hashable)
-			if !ok {
-				return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
-			}
-
-			pair, ok := left.Pairs[key.HashKey()]
-			if !ok {
-				return object.NULL
-			}
-			return pair.Value
-
-		}
-		return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
+		return evalIndexExpression(node, env)
 
 	case *ast.Identifier:
 		if val, ok := env.Get(node.Value); ok {
@@ -181,9 +48,6 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return builtin
 		}
 		return newError(node.Pos(), "identifier not found: "+node.Value)
-
-	case *ast.ExpressionStatement:
-		return Eval(node.Expression, env)
 
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
@@ -258,11 +122,12 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return condition
 		}
 
-		if isTruthy(condition) {
+		switch {
+		case isTruthy(condition):
 			return Eval(node.Consequence, env)
-		} else if node.Alternative != nil {
+		case node.Alternative != nil:
 			return Eval(node.Alternative, env)
-		} else {
+		default:
 			return object.NULL
 		}
 
@@ -270,6 +135,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		extendedEnv := object.NewEnclosedEnvironment(env)
 
 		var result object.Object
+
 		for {
 			condition := Eval(node.Condition, extendedEnv)
 			if isError(condition) {
@@ -311,21 +177,33 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			}
 
 		case *object.Range:
-			if iter.Start <= iter.End {
-				for i := iter.Start; i <= iter.End; i++ {
-					extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
-					result = Eval(node.Body, extendedEnv)
-					if isErrorOrReturn(result) {
-						return result
-					}
+			incr := int64(1)
+			if iter.Start > iter.End {
+				incr = -1
+			}
+
+			for i := iter.Start; i != iter.End+incr; i += incr {
+				extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
+				result = Eval(node.Body, extendedEnv)
+				if isErrorOrReturn(result) {
+					return result
 				}
-			} else {
-				for i := iter.Start; i >= iter.End; i-- {
-					extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
-					result = Eval(node.Body, extendedEnv)
-					if isErrorOrReturn(result) {
-						return result
-					}
+			}
+
+		case *object.Integer:
+			start := int64(0)
+			end := iter.Value
+
+			if iter.Value < 0 {
+				start = iter.Value
+				end = 0
+			}
+
+			for i := start; i <= end; i++ {
+				extendedEnv.Set(node.KeyName, &object.Integer{Value: i})
+				result = Eval(node.Body, extendedEnv)
+				if isErrorOrReturn(result) {
+					return result
 				}
 			}
 
@@ -365,8 +243,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.BooleanLiteral:
 		return toYeetBool(node.Value)
 
-	case *ast.FunctionLiteral:
-		return &object.Function{
+	case *ast.LambdaLiteral:
+		return &object.Lambda{
 			Parameters: node.Parameters,
 			Body:       node.Body,
 			Env:        env,
@@ -423,6 +301,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return hashmap
 
+	// if there was a parsing error, we shouldn't get here anyway
+	case *ast.BadExpression:
+		return newError(node.Pos(), "couldn't parse %s", node.TokenLiteral())
+
+	// if there was a parsing error, we shouldn't get here anyway
 	case nil:
 		return newErrorWithoutPos("unexpected error: something went wrong somewhere (that's all we know).")
 
@@ -431,9 +314,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	}
 }
 
-func evalProgram(statements []ast.Statement, env *object.Environment) object.Object {
+func evalProgram(expressions []ast.Expression, env *object.Environment) object.Object {
 	var result object.Object
-	for _, stmt := range statements {
+	for _, stmt := range expressions {
 		result = Eval(stmt, env)
 
 		switch result := result.(type) {
@@ -447,15 +330,16 @@ func evalProgram(statements []ast.Statement, env *object.Environment) object.Obj
 	return result
 }
 
-func evalBlockStatement(statements []ast.Statement, env *object.Environment) object.Object {
+func evalBlockExpression(exprs []ast.Expression, env *object.Environment) object.Object {
 	var result object.Object
-	for _, stmt := range statements {
-		result = Eval(stmt, env)
+	extendedEnv := object.NewEnclosedEnvironment(env)
+	for _, expr := range exprs {
+		result = Eval(expr, extendedEnv)
 
 		if result != nil {
 			rtype := result.Type()
 			if rtype == object.RETURN_VALUE_OBJ || rtype == object.ERROR_OBJ {
-				// don't unwrap return value and let it bubble so it stops execution in outer block statement
+				// don't unwrap return value and let it bubble so it stops execution in outer block
 				return result
 			}
 		}
@@ -465,16 +349,12 @@ func evalBlockStatement(statements []ast.Statement, env *object.Environment) obj
 }
 
 func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.Object {
-	if callExpr.Function.TokenLiteral() == "quote" { // TODO this is ugly
-		return quote(callExpr.Arguments[0], env) // quote only supports 1 arg
-	}
-
 	fn := Eval(callExpr.Function, env)
 	if isError(fn) {
 		return fn
 	}
 
-	var args []object.Object
+	args := make([]object.Object, 0, len(callExpr.Arguments))
 	for _, a := range callExpr.Arguments {
 		evaluated := Eval(a, env)
 		if isError(evaluated) {
@@ -484,7 +364,7 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 	}
 
 	switch fn := fn.(type) {
-	case *object.Function:
+	case *object.Lambda:
 		if len(fn.Parameters) != len(args) {
 			return newError(
 				callExpr.Pos(),
@@ -515,6 +395,164 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 	default:
 		return newError(callExpr.Pos(), "not a function: %s", fn.Type())
 	}
+}
+
+func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) object.Object {
+	val := Eval(node.Value, env)
+	if isError(val) {
+		return val
+	}
+
+	switch node := node.Left.(type) {
+	case *ast.Identifier:
+		if ok := env.Update(node.Value, val); ok {
+			return val
+		}
+		if env.IsYoloMode() {
+			env.Set(node.Value, val)
+			return val
+		}
+		return newError(
+			node.Pos(),
+			"identifier not found: %s (to declare a variable use := operator)",
+			node.Value)
+
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		idx := Eval(node.Index, env)
+		if isError(idx) {
+			return idx
+		}
+
+		switch {
+		case left.Type() == object.ARRAY_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			arr := left.(*object.Array)
+			if i < 0 {
+				i += int64(len(arr.Elements))
+			}
+			if i < 0 || i >= int64(len(arr.Elements)) {
+				return newError(
+					node.Left.Pos(),
+					"attempted to assign out of bounds for array '%s'",
+					node.Left.(*ast.Identifier).Value)
+			}
+			arr.Elements[i] = val
+			return val
+
+		case left.Type() == object.STRING_OBJ && idx.Type() == object.INTEGER_OBJ:
+			i := idx.(*object.Integer).Value
+			str := left.(*object.String)
+			if i < 0 {
+				i += int64(len(str.Value))
+			}
+			if i < 0 || i >= int64(len(str.Value)) {
+				return newError(
+					node.Left.Pos(),
+					"attempted to assign out of bounds for string '%s'",
+					node.Left.(*ast.Identifier).Value)
+			}
+			str.Value = str.Value[:i] + val.String() + str.Value[i+1:]
+			return val
+
+		case left.Type() == object.HASHMAP_OBJ:
+			hashmap := left.(*object.Hashmap)
+			key, ok := idx.(object.Hashable)
+			if !ok {
+				return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
+			}
+
+			hashmap.Pairs[key.HashKey()] = object.HashPair{Key: idx, Value: val}
+			return val
+
+		default:
+			return newError(node.Index.Pos(), "index operator not supported: %s, type of %s", idx.String(), idx.Type())
+		}
+	}
+
+	return newError(node.Left.Pos(), "identifier not found: "+node.Left.String())
+}
+
+func evalIndexExpression(node *ast.IndexExpression, env *object.Environment) object.Object {
+	left := Eval(node.Left, env)
+	if isError(left) {
+		return left
+	}
+	idx := Eval(node.Index, env)
+	if isError(idx) {
+		return idx
+	}
+
+	switch left := left.(type) {
+	case *object.Array:
+		switch idx := idx.(type) {
+		case *object.Integer:
+			i := idx.Value
+			if i < 0 {
+				i += int64(len(left.Elements))
+			}
+			if i < 0 || i >= int64(len(left.Elements)) {
+				return object.NULL
+			}
+			return left.Elements[i]
+
+		case *object.Range:
+			start, end := adjustIndices(idx.Start, idx.End, int64(len(left.Elements)))
+
+			// copy the array so modyfing a value in the original array doesn't affect copied array
+			return &object.Array{Elements: append([]object.Object{}, left.Elements[start:end]...)}
+		}
+
+	case *object.String:
+		switch idx := idx.(type) {
+		case *object.Integer:
+			i := idx.Value
+			if i < 0 {
+				i += int64(len(left.Value))
+			}
+			if i < 0 || i >= int64(len(left.Value)) {
+				return object.NULL
+			}
+			return &object.String{Value: string(left.Value[i])}
+
+		case *object.Range:
+			start, end := adjustIndices(idx.Start, idx.End, int64(len(left.Value)))
+			return &object.String{Value: left.Value[start:end]}
+		}
+
+	case *object.Hashmap:
+		key, ok := idx.(object.Hashable)
+		if !ok {
+			return newError(node.Index.Pos(), "key not hashable: %s", idx.Type())
+		}
+
+		pair, ok := left.Pairs[key.HashKey()]
+		if !ok {
+			return object.NULL
+		}
+		return pair.Value
+	}
+
+	return newError(node.Index.Pos(), "index operator not supported: %s", idx.Type())
+}
+
+func adjustIndices(start, end, length int64) (int64, int64) {
+	// if index is negative, count from the end of array
+	if start < 0 {
+		start += length + 1
+	}
+	if end < 0 {
+		end += length + 1
+	}
+
+	// clamp values to avoid panics
+	start = max(0, min(start, length))
+	end = max(0, min(end, length))
+
+	return start, end
 }
 
 func evalPrefixExpression(op string, right object.Object, yoloOK bool) object.Object {
@@ -563,7 +601,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		case "/":
 			return &object.Number{Value: left.Value / rVal}
 		case "%":
-			return &object.Number{Value: float64(int64(left.Value) % int64(right.Value))}
+			return &object.Number{Value: float64(int64(left.Value) % right.Value)}
 		case "<":
 			return toYeetBool(left.Value < rVal)
 		case ">":
@@ -608,7 +646,7 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 			return toYeetBool(lVal != right.Value)
 		}
 
-		// mixing of all the other types is allowed only in yolo mode
+	// mixing of all the other types is allowed only in yolo mode
 	case left.Type() != right.Type():
 		switch op {
 		case "==":
@@ -724,6 +762,10 @@ func evalInfixExpression(op string, left, right object.Object, yoloOK bool) obje
 		case "!=":
 			return toYeetBool(!reflect.DeepEqual(left.Elements, right.Elements))
 		}
+	}
+
+	if yoloOK {
+		return yoloInfixExpression(op, left, right)
 	}
 
 	return newErrorWithoutPos("unknown operator: %s %s %s", left.Type(), op, right.Type())

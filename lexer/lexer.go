@@ -1,17 +1,20 @@
 package lexer
 
-import "yy/token"
+import (
+	"yy/token"
+)
 
 type Lexer struct {
 	Input        string
-	position     int  // current position in input (points to current char)
-	readPosition int  // current reading position in input (after current char)
-	line         int  // current line
-	ch           byte // current char under examination
+	position     int    // current position in input (points to current char)
+	readPosition int    // current reading position in input (after current char)
+	ch           byte   // current char under examination
+	numBrackets  int    // depth of string interpolation
+	brackets     [5]int // stack of interpolations
 }
 
 func New(input string) *Lexer {
-	l := &Lexer{Input: input, line: 1}
+	l := &Lexer{Input: input}
 	l.advance()
 	return l
 }
@@ -30,16 +33,32 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.RPAREN)
 	case ',':
 		tok = l.newToken(token.COMMA)
-	case '{':
-		tok = l.newToken(token.LBRACE)
-	case '}':
-		tok = l.newToken(token.RBRACE)
 	case '[':
 		tok = l.newToken(token.LBRACKET)
 	case ']':
 		tok = l.newToken(token.RBRACKET)
 	case '\\':
 		tok = l.newToken(token.BACKSLASH)
+
+	case '{':
+		if l.numBrackets > 0 {
+			l.brackets[l.numBrackets-1]++
+		}
+
+		tok = l.newToken(token.LBRACE)
+
+	case '}':
+		if l.numBrackets > 0 {
+			l.brackets[l.numBrackets-1]--
+
+			if l.brackets[l.numBrackets-1] == 0 {
+				l.numBrackets--
+				tok = l.readString()
+				break
+			}
+		}
+
+		tok = l.newToken(token.RBRACE)
 
 	case '+':
 		tok = l.switchEq(token.PLUS, token.ADD_ASSIGN)
@@ -92,21 +111,21 @@ func (l *Lexer) NextToken() token.Token {
 		}
 
 	case '"':
-		tok = l.string()
+		tok = l.readString()
 
 	case 0:
 		tok = l.newToken(token.EOF)
 
 	default:
 		switch {
-		case IsLetter(l.ch):
-			return l.identifier()
+		case isLetter(l.ch):
+			return l.readIdentifier()
 
-		case IsDigit(l.ch):
-			return l.number()
+		case isDigit(l.ch):
+			return l.readNumber()
 
 		default:
-			tok = l.newTokenWithLiteral(token.ILLEGAL, string(l.ch))
+			tok = l.newTokenWithLiteral(token.ERROR, "unexpected character: "+string(l.ch))
 		}
 	}
 
@@ -114,15 +133,15 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
-func (l *Lexer) newToken(tokenType token.TokenType) token.Token {
+func (l *Lexer) newToken(tokenType token.Type) token.Token {
 	return l.newTokenWithLiteral(tokenType, tokenType.String())
 }
 
-func (l *Lexer) newTokenWithLiteral(tokenType token.TokenType, literal string) token.Token {
-	return token.Token{Type: tokenType, Literal: literal, Line: l.line, Offset: l.position - len(literal) + 1}
+func (l *Lexer) newTokenWithLiteral(tokenType token.Type, literal string) token.Token {
+	return token.Token{Type: tokenType, Literal: literal, Offset: l.position - len(literal) + 1}
 }
 
-func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
+func (l *Lexer) switch2(tok1, tok2 token.Type, expected byte) token.Token {
 	if l.peek() == expected {
 		l.advance()
 		return l.newToken(tok2)
@@ -130,7 +149,7 @@ func (l *Lexer) switch2(tok1, tok2 token.TokenType, expected byte) token.Token {
 	return l.newToken(tok1)
 }
 
-func (l *Lexer) switchEq(tok1, tok2 token.TokenType) token.Token {
+func (l *Lexer) switchEq(tok1, tok2 token.Type) token.Token {
 	return l.switch2(tok1, tok2, '=')
 }
 
@@ -152,9 +171,9 @@ func (l *Lexer) peek() byte {
 	return l.Input[l.readPosition]
 }
 
-func (l *Lexer) identifier() token.Token {
+func (l *Lexer) readIdentifier() token.Token {
 	start := l.position
-	for IsLetter(l.ch) || IsDigit(l.ch) {
+	for isLetter(l.ch) || isDigit(l.ch) {
 		l.advance()
 	}
 
@@ -162,50 +181,101 @@ func (l *Lexer) identifier() token.Token {
 	return token.Token{Type: token.LookupIdent(ident), Literal: ident, Offset: start}
 }
 
-func (l *Lexer) number() token.Token {
+func (l *Lexer) readNumber() token.Token {
 	start := l.position
-	for IsDigit(l.ch) {
+	for isDigit(l.ch) {
 		l.advance()
 	}
 
-	if l.ch == '.' && IsDigit(l.peek()) {
+	if l.ch == '.' && isDigit(l.peek()) {
 		l.advance() // dot
-		for IsDigit(l.ch) {
+		for isDigit(l.ch) {
 			l.advance()
 		}
 
 		return token.Token{Type: token.NUMBER, Literal: l.Input[start:l.position], Offset: start}
-	} else {
-		return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
+	}
+
+	return token.Token{Type: token.INT, Literal: l.Input[start:l.position], Offset: start}
+}
+
+func (l *Lexer) readString() token.Token {
+	l.advance() // consume opening '"' or '}'
+
+	start := l.position
+	escapePositions := []int{}
+
+	for {
+		switch l.ch {
+		case 0:
+			return token.Token{
+				Type:    token.ERROR,
+				Literal: "unterminated string",
+				Offset:  start,
+			}
+
+		case '"':
+			return token.Token{
+				Type: token.STRING,
+				// Literal: escapeBrackets(l.Input[start:l.position]),
+				Literal: l.escapeString(start, escapePositions),
+				Offset:  start,
+			}
+
+		case '}':
+			// double brackets is an escape sequence, ie {{name}}
+			if l.peek() == '}' {
+				l.advance()
+				l.advance()
+				escapePositions = append(escapePositions, l.position)
+			}
+
+		case '{':
+			// double brackets is an escape sequence, ie {{name}}
+			if l.peek() == '{' {
+				l.advance()
+				l.advance()
+				escapePositions = append(escapePositions, l.position)
+				break
+			}
+
+			l.brackets[l.numBrackets] = 1
+			l.numBrackets++
+
+			return token.Token{
+				Type:    token.TEMPL_STRING,
+				Literal: l.escapeString(start, escapePositions),
+				Offset:  start,
+			}
+
+		default:
+			l.advance()
+		}
 	}
 }
 
-func (l *Lexer) string() token.Token {
-	l.advance() // consume opening '"'
-
-	start := l.position
-	for l.ch != '"' && l.ch != 0 {
-		if l.ch == '\n' {
-			l.line++
-		}
-		l.advance()
+func (l *Lexer) escapeString(start int, escapePositions []int) string {
+	if len(escapePositions) == 0 {
+		return l.Input[start:l.position]
 	}
 
-	if l.ch == 0 {
-		return token.Token{Type: token.ERROR, Literal: "unterminated string", Offset: start - 1}
+	result := make([]byte, 0, l.position-start-len(escapePositions))
+	lastIdx := start
+
+	for _, v := range escapePositions {
+		result = append(result, l.Input[lastIdx:v-1]...)
+		lastIdx = v
 	}
 
-	return token.Token{Type: token.STRING, Literal: l.Input[start:l.position], Offset: start}
+	result = append(result, l.Input[lastIdx:l.position]...)
+
+	return string(result)
 }
 
 func (l *Lexer) skipWhitespace() {
 	for {
 		switch l.ch {
-		case ' ', '\t', '\r':
-			l.advance()
-
-		case '\n':
-			l.line++
+		case ' ', '\t', '\r', '\n':
 			l.advance()
 
 		case '/':
@@ -226,10 +296,10 @@ func (l *Lexer) skipWhitespace() {
 
 // utils
 
-func IsLetter(ch byte) bool {
+func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
-func IsDigit(ch byte) bool {
+func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }

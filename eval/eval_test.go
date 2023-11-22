@@ -1,4 +1,4 @@
-package eval
+package eval_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"yy/eval"
 	"yy/lexer"
 	"yy/object"
 	"yy/parser"
@@ -19,11 +20,8 @@ type evalTestCase struct {
 func TestEvalIntegerExpression(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"5", 5},
-		{"10", 10},
 		{"-5", -5},
-		{"-10", -10},
 		{"5 + 5 + 5 + 5 - 10", 10},
-		{"2 * 2 * 2 * 2 * 2", 32},
 		{"-50 + 100 + -50", 0},
 		{"5 * 2 + 10", 20},
 		{"5 + 2 * 10", 25},
@@ -43,8 +41,9 @@ func TestEvalIntegerExpression(t *testing.T) {
 func TestEvalFloatExpression(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"5.0", 5.0},
-		{"10.0", 10.0},
 		{"-15.0", -15.0},
+		{"2.0 - 2", 0.0},
+		{"2 - 2.0", 0.0},
 		{"5 + 5.0 + 5 + 5 - 10", 10.0},
 		{"2 * 2 * 2.0 * 2 * 2", 32.0},
 		{"(5 + 10.0 * 2 + 15 / 3) * 2 + -10", 50.0},
@@ -63,45 +62,37 @@ func TestStringLiteral(t *testing.T) {
 
 func TestTemplateStringLiteral(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
-		{`age := 69; "i'm $age yr old"`, "i'm 69 yr old"},
-		{`age := 69; "i'm $age! yr old"`, "i'm 69! yr old"},
-		{`age := 69; "i'm $age"`, "i'm 69"},
+		{`age := 69; "i'm {age} yr old"`, `i'm 69 yr old`},
+		{`name := "Yakub"; age := 69; "i'm {name} and i'm {age} yr old"`, `i'm Yakub and i'm 69 yr old`},
+		{`age := 69; "i'm { age + 2 } yr old"`, `i'm 71 yr old`},
+		{`"i'm { 8 + 2 * 3 } yr old"`, `i'm 14 yr old`},
+		{`john := %{ "age": 69 }; "i'm {john["age"]} yr old"`, `i'm 69 yr old`},
+		{`apples := 1; kiwis := 2; mangos := 3; "{apples}{kiwis}{mangos}"`, `123`},
 		{
-			`age := 69; "i'm Żółć ∈ 陽子 ようこ 陽 $age 陽 yr old"`,
+			`age := 69; "i'm { age + 2 } yr old and have { 2 * 3 } dogs"`,
+			`i'm 71 yr old and have 6 dogs`,
+		},
+		{
+			`age := 69; "i'm Żółć ∈ 陽子 ようこ 陽 {age} 陽 yr old"`,
 			"i'm Żółć ∈ 陽子 ようこ 陽 69 陽 yr old",
 		},
-		{`name := "Yolanda"; "Hello, $name!"`, "Hello, Yolanda!"},
 		{
-			`age := 69; name := "Yolanda"; "i'm $name and i'm $age yr old"`,
-			"i'm Yolanda and i'm 69 yr old",
+			`age := 69; "i'm Żółć {{ ∈ 陽子 ようこ 陽 }} {age} 陽 yr old"`,
+			"i'm Żółć { ∈ 陽子 ようこ 陽 } 69 陽 yr old",
 		},
-		{
-			`apples := 69; pears := 8; "i've got $apples apples and $pears pears"`,
-			"i've got 69 apples and 8 pears",
-		},
-		{
-			`n1 := 69; n2 := 8; "i've got $n1 apples and $n2 pears"`,
-			"i've got 69 apples and 8 pears",
-		},
-		{
-			`n1 := 69; n2 := 8; n3 := 7; "i've got $n1 apples and $n2, $n3 other things"`,
-			"i've got 69 apples and 8, 7 other things",
-		},
-		{`apples := 1; kiwis := 2; mangos := 3; "$apples$kiwis$mangos"`, "123"},
-		{`n1 := 69; n2 := 8; n3 := 420; "$n1$n2$n3"`, "698420"},
-		{`"i'm $$age yr old"`, "i'm $age yr old"},
-		{`age := 69; "$$age = $age"`, "$age = 69"},
-		{`"i'm $"`, "i'm $"},
-		{`"$"`, "$"},
-		{`"$$"`, "$"},
-		{`"$$$"`, "$$"},
-		{`"t $$"`, "t $"},
-		{`"t $$$"`, "t $$"},
-		{`"this will be $15"`, "this will be $15"},
-		{`cost := 9; "this will be $$ $cost"`, "this will be $ 9"},
-		{`cost := 9; "this will be $$$cost"`, "this will be $9"},
-		{`"this will be 15$"`, "this will be 15$"},
-		{`cost := 9; "this will be $cost$"`, "this will be 9$"},
+
+		// escaping
+		{`"i'm {{age}} yr old"`, `i'm {age} yr old`},
+		{`age := 69; "var {{age}} = {age}."`, `var {age} = 69.`},
+		{`age := 69; "var age}} = {age}."`, `var age} = 69.`},
+		{`age := 69; "var {{age = {age}."`, `var {age = 69.`},
+
+		// nesting expressions
+		{`age := 69; "i'm { { 1 + 2; 60 + 9 } } yr old"`, `i'm 69 yr old`},
+		{`"i'm { yif 5 > 8 { 5 } yels { 8 } } yr old"`, `i'm 8 yr old`},
+
+		// interploated strings inside interpolated strings
+		{`"outside { "inside { 5 + 4 }" } outside"`, `outside inside 9 outside`},
 	})
 }
 
@@ -111,6 +102,75 @@ func TestStringConcatenation(t *testing.T) {
 		{`"" + "cat"`, "cat"},
 		{`"" + ""`, ""},
 		{`"con" + "cat" + "enation"`, "concatenation"},
+	})
+}
+
+func TestDeclareExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"a := 8", 8},
+		{"a := 8; a", 8},
+		{"a := 8 * 5 + 3 / 2 - 2 * (2 + 3) * 3", 11},
+		{"a := 8; b := a", 8},
+		{"a := 8; b := a + 2", 10},
+		{"a := 8; b := 2; c := a + b", 10},
+		{"a := 8 == 5", false},
+		{"a := 8 != 5", true},
+		{"a := 8 > 5", true},
+		{"a := 8; a = 15", 15},
+		{"a := 8; b := 2; a = b", 2},
+		{"a := b := c := 8; a + b + c", 24},
+		{"a := b", errmsg{"identifier not found: b"}},
+	})
+}
+
+func TestAssignExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"x := 8; x += 2; x", 10},
+		{"x := 8; x -= 2; x", 6},
+		{"x := 8; x *= 2; x", 16},
+		{"x := 8; x /= 2; x", 4},
+		{"x := 8; x %= 5; x", 3},
+
+		{"x = 8", errmsg{"identifier not found: x (to declare a variable use := operator)"}},
+		{"x += 8", errmsg{"identifier not found: x"}},
+
+		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
+		{"a := [1, 2, 3]; a[-1] = 69; a", []int64{1, 2, 69}},
+		{"a := [1, 2, 3]; a[8] = 69", errmsg{"attempted to assign out of bounds for array 'a'"}},
+
+		{`h := %{ "a": 1 }; h["a"] = 2; h["a"]`, 2},
+		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
+		{`h := %{ "a": 1 }; h[[]] = 2`, 2},
+
+		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
+		{`s := "yeet"; s[-1] = "z"; s`, "yeez"},
+		{`s := "yeet"; s[69] = "z"`, errmsg{"attempted to assign out of bounds for string 's'"}},
+	})
+}
+
+func TestBlockExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"{ 5 }", 5},
+		{"{ a := 6; b := 9; a + b }", 15},
+		{"{ { 5 } }", 5},
+		{"x := { 5 }; x", 5},
+		{"x := { a := 6; b := 9; a + b }; x", 15},
+
+		{"x := { a := 6; a }; a", errmsg{"identifier not found: a"}},
+	})
+}
+
+func TestOptionalSemicolons(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"a := 2; b := 3; a + b", 5},
+		{"a := 2 ; b := 3 ; a + b", 5},
+		{"a := 2;; b := 3;; a + b", 5},
+		{"a := 2;;; b := 3;;; a + b", 5},
+		{"a := 2;; ; b := 3;; ; a + b", 5},
+		{"a := 2;; ; ;b := 3;; ; ;a + b", 5},
+		{"a := 2 b := 3 a + b", 5},
+		{"a := 2 + 3 * 5; b := 3 * 2; a + b", 23},
+		{"a := 2 + 3 * 5 b := 3 * 2 a + b", 23},
 	})
 }
 
@@ -292,10 +352,10 @@ two := "two";
 	evaluated := testEval(t, input)
 	result, ok := evaluated.(*object.Hashmap)
 	if !ok {
-		t.Fatalf("Eval didn't return Hash. got=%T (%+v)", evaluated, evaluated)
+		t.Fatalf("Eval didn't return Hash. got %T (%+v)", evaluated, evaluated)
 	}
 	if len(result.Pairs) != len(expected) {
-		t.Fatalf("Hash has wrong num of pairs. got=%d", len(result.Pairs))
+		t.Fatalf("Hash has wrong num of pairs. got %d", len(result.Pairs))
 	}
 	for expectedKey, expectedValue := range expected {
 		pair, ok := result.Pairs[expectedKey]
@@ -313,48 +373,71 @@ func TestArrayIndexExpressions(t *testing.T) {
 		{"[1, 2, 3][0]", 1},
 		{"[1, 2, 3][1]", 2},
 		{"[1, 2, 3][2]", 3},
-		{"[1, 2, 3,][2]", 3},
+		{"[1, 2, 3][2]", 3},
+		{"[1, 2, 3][-1]", 3},
+		{"[1, 2, 3][-2]", 2},
 		{"i := 0; [1][i];", 1},
 		{"[1, 2, 3][1 + 1];", 3},
 		{
-			"myArray := [1, 2, 3]; myArray[2];",
+			"arr := [1, 2, 3]; arr[2]",
 			3,
 		},
 		{
-			"myArray := [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			"arr := [1, 2, 3]; arr[0] + arr[1] + arr[2]",
 			6,
 		},
 		{
-			"myArray := [1, 2, 3]; i := myArray[0]; myArray[i]",
+			"arr := [1, 2, 3]; i := arr[0]; arr[i]",
 			2,
 		},
 
-		{"a := [1, 2, 3]; a[0..len(a)]", []int64{1, 2, 3}},
-		{"[1, 2, 3][0..999]", []int64{1, 2, 3}},
-		{"[1, 2, 3][0..2]", []int64{1, 2}},
-		{"[1, 2, 3][1..2]", []int64{2}},
-		{"[1, 2, 3][-10..2]", []int64{1, 2}},
-		{"a := [1, 2, 3]; b := a[0..len(a)]; a[2] == b[2]", true},
-		{"a := [1, 2, 3]; b := a[0..len(a)]; b[2] = 9; a[2] == b[2]", false},
-
 		// out of bounds access returns nil
 		{"[1, 2, 3][3]", nil},
-		{"[1, 2, 3][-1]", nil},
+		{"[1, 2, 3][-8]", nil},
+
+		// ranges
+		{"[1, 2, 3][0..2]", []int64{1, 2}},
+		{"[1, 2, 3][1..2]", []int64{2}},
+		{"[1, 2, 3][2..2]", []int64{}},
+		{"[1, 2, 3][0..3]", []int64{1, 2, 3}},
+		{"[1, 2, 3][3..3]", []int64{}},
+		{"[1, 2, 3][999..3]", []int64{}},
+		{"[1, 2, 3][0..999]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[0..-1]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[-1..-1]", []int64{}},
+		{"a := [1, 2, 3]; a[-2..-1]", []int64{3}},
+		{"a := [1, 2, 3]; a[-3..-1]", []int64{2, 3}},
+		{"a := [1, 2, 3]; a[-4..-1]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[-5..-1]", []int64{1, 2, 3}},
+		{"a := [1, 2, 3]; a[0..-10]", []int64{}},
+		{"[1, 2, 3][-10..2]", []int64{1, 2}},
+
+		{"a := [1, 2, 3]; b := a[0..-1]; a[2] == b[2]", true},
+		{"a := [1, 2, 3]; b := a[0..-1]; b[2] = 9; a[2] == b[2]", false},
+
+		{"arr[-1]", errmsg{"identifier not found: arr"}},
+		{"arr := [2]; arr[idx]", errmsg{"identifier not found: idx"}},
+		{"arr := [2]; arr[[]]", errmsg{"index operator not supported: ARRAY"}},
 	})
 }
 
 func TestStringIndexExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`"Yolo McYoloface"[2]`, "l"},
+		{`"Yolo McYoloface"[-2]`, "c"},
 		{`"Yarn"[1 + 1]`, "r"},
 		{`y := "Yarn"; y[1 + 1]`, "r"},
 		{`"Yolo McYoloface"[0..4]`, "Yolo"},
 		{`"Yolo McYoloface"[5..11]`, "McYolo"},
 		{`s := "Yolo McYoloface"; s[5..len(s)]`, "McYoloface"},
+		{`s := "Yolo McYoloface"; s[5..-1]`, "McYoloface"},
+		{`s := "Yolo McYoloface"; s[-5..-1]`, "face"},
+		{`"Yolo McYoloface"[69]`, nil},
 
 		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; len(s1) == len(s2)`, true},
-		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; s1[1] == s2[1]`, true},
-		{`s1 := "Yolo McYoloface"; s2 := s1[0..len(s1)]; s2[1] = "X"; s1[1] == s2[1]`, false},
+		{`s1 := "Yolo McYoloface"; s2 := s1[0..-1]; len(s1) == len(s2)`, true},
+		{`s1 := "Yolo McYoloface"; s2 := s1[0..-1]; s1[1] == s2[1]`, true},
+		{`s1 := "Yolo McYoloface"; s2 := s1[0..-1]; s2[1] = "X"; s1[1] == s2[1]`, false},
 	})
 }
 
@@ -392,7 +475,10 @@ func TestYifYelsExpressions(t *testing.T) {
 		{"5 + yif null { 10 } yels { 20 }", 25},
 		{"yif null { 10 } yels { 20 } * 2", 40},
 		{"5 + yif null { 10 } yels { 20 } * 2", 45},
+		{"5 + yif null { a := 10; a } yels { 20 } * 2", 45},
 		{"result := 3 * yif null { 10 } yels { 20 } + 9; result", 69},
+		{"yif true { a := 10; a } yels { 20 }", 10},
+		{"yif true { a := 10; a } yels { 20 }; a", errmsg{"identifier not found: a"}},
 	})
 }
 
@@ -403,6 +489,7 @@ func TestYoyoExpressions(t *testing.T) {
 		{"sum := 0; i := 1; yoyo i < 5 { sum += i; i += 1 }; sum", 10},
 		{"i := 1; yoyo false { i = 69 }; i", 1},
 		{"i := 0; yoyo i < 5 { i += 1; yif i == 2 { yeet 69 }; -1 }", 69},
+		{"i := 1; yoyo { i += 1; yif i > 5 { yeet 5 } }; i", 5},
 	})
 }
 
@@ -410,23 +497,35 @@ func TestYallExpressions(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"yall [1, 2, 3] { yt }", 3},
 		{"arr := [1, 2, 3]; yall arr { yt }", 3},
-		{`yall "testme" { yt }`, "e"},
-		{`s := ""; yall "test" { s = s + yt + "-" }; s`, "t-e-s-t-"},
-		{`s := ""; yall "test" { s += yt + "-" }; s`, "t-e-s-t-"},
 		{"sum := 0; yall [1, 2, 3] { sum = sum + yt }; sum", 6},
 		{"sum := 0; yall [1, 2, 3] { sum += yt }; sum", 6},
+
+		{`s := ""; yall "test" { s = s + yt + "-" }; s`, "t-e-s-t-"},
+		{`s := ""; yall "test" { s += yt + "-" }; s`, "t-e-s-t-"},
+		{`yall "testme" { yt }`, "e"},
 		{`my_str := "swag"; yall my_str { yt }`, "g"},
+
 		{`yall 0..5 { yt }`, 5},
+		{`arr := []; yall 0..5 { arr << yt }; arr`, []int64{0, 1, 2, 3, 4, 5}},
 		{`yall 4..4 { yt }`, 4},
 		{`sum := 0; yall 1..4 { sum += yt }; sum`, 10},
 		{`yall i: 0..5 { i }`, 5},
 		{`sum := 0; yall j: 1..4 { sum += j }; sum`, 10},
 
+		{`sum := 0; yall 5 { sum += 1 }; sum`, 6},
+		{`sum := 0; yall 5 { sum += yt }; sum`, 15},
+		{`arr := []; yall 5 { arr << yt }; arr`, []int64{0, 1, 2, 3, 4, 5}},
+		{`sum := 0; yall -5 { sum += 1 }; sum`, 6},
+		{`sum := 0; yall -5 { sum += yt }; sum`, -15},
+		{`arr := []; yall -5 { arr << yt }; arr`, []int64{-5, -4, -3, -2, -1, 0}},
+
+		// early exit
 		{`yall 1..4 { yif yt == 1 { yeet 69 }; -1 }`, 69},
 		{`yall 4..1 { yif yt == 3 { yeet 69 }; -1 }`, 69},
 		{`yall [1, 2, 3] { yif yt == 1 { yeet 69 }; -1 }`, 69},
 		{`yall "testme" { yif yt == "t" { yeet 69 }; -1 }`, 69},
 
+		// scope leaking
 		{`yall 0..5 { x }`, errmsg{"identifier not found: x"}},
 		{`yall i: 0..5 { yt }`, errmsg{"identifier not found: yt"}},
 	})
@@ -462,41 +561,6 @@ func TestRangeLiterals(t *testing.T) {
 		{"a := 1; b := 8; (a+3)..(b-1)", rng{4, 7}},
 		{"a := 1; b := 8; a+3 .. b-1", rng{4, 7}},
 		{"r := 1+3 .. 9-1; r", rng{4, 8}},
-	})
-}
-
-func TestDeclareExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"a := 8", 8},
-		{"a := 8; a", 8},
-		{"a := 8 * 5 + 3 / 2 - 2 * (2 + 3) * 3", 11},
-		{"a := 8; b := a", 8},
-		{"a := 8; b := a + 2", 10},
-		{"a := 8; b := 2; c := a + b", 10},
-		{"a := 8 == 5", false},
-		{"a := 8 != 5", true},
-		{"a := 8 > 5", true},
-		{"a := 8; a = 15", 15},
-		{"a := 8; b := 2; a = b", 2},
-		{"a := b := c := 8; a + b + c", 24},
-	})
-}
-
-func TestAssignExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"x := 8; x += 2; x", 10},
-		{"x := 8; x -= 2; x", 6},
-		{"x := 8; x *= 2; x", 16},
-		{"x := 8; x /= 2; x", 4},
-		{"x := 8; x %= 5; x", 3},
-
-		{"x = 8", errmsg{"identifier not found: x"}},
-		{"x += 8", errmsg{"identifier not found: x"}},
-
-		// TODO add more tests
-		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
-		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
-		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
 	})
 }
 
@@ -652,12 +716,14 @@ yif (10 > 1) {
 }
 
 //
-// PROGRAMS FROM EXAMPLES/
+// PROGRAMS FROM EXAMPLES DIR
 //
 
 const examplesDir = "../examples"
 
 func TestExampleFiles(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping testing files in short mode")
 	}
@@ -669,6 +735,9 @@ func TestExampleFiles(t *testing.T) {
 
 	for _, f := range testFiles {
 		t.Run(f.Name(), func(t *testing.T) {
+			f := f
+			t.Parallel()
+
 			filename := filepath.Join(examplesDir, f.Name())
 			src, err := os.ReadFile(filename)
 			if err != nil {
@@ -710,7 +779,7 @@ func BenchmarkEval(b *testing.B) {
 
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
-				_ = Eval(program, env)
+				_ = eval.Eval(program, env)
 			}
 		})
 	}
@@ -781,7 +850,7 @@ func runEvalTests(t *testing.T, tests []evalTestCase) {
 			}
 
 		default:
-			t.Errorf("unexpected type, got=%T", expected)
+			t.Errorf("unexpected type, got %T", expected)
 		}
 	}
 }
@@ -801,21 +870,17 @@ func testEval(t *testing.T, input string) object.Object {
 	}
 
 	env := object.NewEnvironment()
-	macroEnv := object.NewEnvironment()
 
-	DefineMacros(program, macroEnv)
-	expanded := ExpandMacros(program, macroEnv)
-
-	return Eval(expanded, env)
+	return eval.Eval(program, env)
 }
 
 func testIntegerObject(obj object.Object, expected int64) error {
 	result, ok := obj.(*object.Integer)
 	if !ok {
-		return fmt.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Integer. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("Integer object has wrong value. got=%d, want=%d", result.Value, expected)
+		return fmt.Errorf("Integer object has wrong value. got %d, want %d", result.Value, expected)
 	}
 	return nil
 }
@@ -823,7 +888,11 @@ func testIntegerObject(obj object.Object, expected int64) error {
 func testIntegerArray(obj object.Object, expected []int64) error {
 	result, ok := obj.(*object.Array)
 	if !ok {
-		return fmt.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Array. got %T (%+v)", obj, obj)
+	}
+	if len(result.Elements) != len(expected) {
+		return fmt.Errorf("Array has wrong number of elements. got %d, want %d",
+			len(result.Elements), len(expected))
 	}
 	for i := range expected {
 		if err := testIntegerObject(result.Elements[i], expected[i]); err != nil {
@@ -836,10 +905,10 @@ func testIntegerArray(obj object.Object, expected []int64) error {
 func testNumberObject(obj object.Object, expected float64) error {
 	result, ok := obj.(*object.Number)
 	if !ok {
-		return fmt.Errorf("object is not Number. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Number. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("Number object has wrong value. got=%g, want=%g", result.Value, expected)
+		return fmt.Errorf("Number object has wrong value. got %g, want %g", result.Value, expected)
 	}
 	return nil
 }
@@ -847,7 +916,7 @@ func testNumberObject(obj object.Object, expected float64) error {
 func testNumberArray(obj object.Object, expected []float64) error {
 	result, ok := obj.(*object.Array)
 	if !ok {
-		return fmt.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Array. got %T (%+v)", obj, obj)
 	}
 	for i := range expected {
 		if err := testNumberObject(result.Elements[i], expected[i]); err != nil {
@@ -860,10 +929,10 @@ func testNumberArray(obj object.Object, expected []float64) error {
 func testStringObject(obj object.Object, expected string) error {
 	result, ok := obj.(*object.String)
 	if !ok {
-		return fmt.Errorf("object is not String. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not String. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("String has wrong value. want=%q, got=%q", expected, result.Value)
+		return fmt.Errorf("String has wrong value. want %q, got %q", expected, result.Value)
 	}
 	return nil
 }
@@ -871,13 +940,13 @@ func testStringObject(obj object.Object, expected string) error {
 func testRangeObject(obj object.Object, expectedRng rng) error {
 	result, ok := obj.(*object.Range)
 	if !ok {
-		return fmt.Errorf("object is not Range. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Range. got %T (%+v)", obj, obj)
 	}
 	if result.Start != expectedRng.start {
-		return fmt.Errorf("wrong range start. want=%d, got=%d", expectedRng.start, result.Start)
+		return fmt.Errorf("wrong range start. want %d, got %d", expectedRng.start, result.Start)
 	}
 	if result.End != expectedRng.end {
-		return fmt.Errorf("wrong range end. want=%d, got=%d", expectedRng.end, result.End)
+		return fmt.Errorf("wrong range end. want %d, got %d", expectedRng.end, result.End)
 	}
 	return nil
 }
@@ -885,17 +954,17 @@ func testRangeObject(obj object.Object, expectedRng rng) error {
 func testBooleanObject(obj object.Object, expected bool) error {
 	result, ok := obj.(*object.Boolean)
 	if !ok {
-		return fmt.Errorf("object is not Boolean. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Boolean. got %T (%+v)", obj, obj)
 	}
 	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. want=%t, got=%t", expected, result.Value)
+		return fmt.Errorf("object has wrong value. want %t, got %t", expected, result.Value)
 	}
 	return nil
 }
 
 func testNullObject(obj object.Object) error {
 	if obj != object.NULL {
-		return fmt.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not NULL. got %T (%+v)", obj, obj)
 	}
 	return nil
 }
@@ -903,10 +972,10 @@ func testNullObject(obj object.Object) error {
 func testErrorObject(obj object.Object, expectedMsg string) error {
 	result, ok := obj.(*object.Error)
 	if !ok {
-		return fmt.Errorf("object is not Error. got=%T (%+v)", obj, obj)
+		return fmt.Errorf("object is not Error. got %T (%+v)", obj, obj)
 	}
 	if result.Msg != expectedMsg {
-		return fmt.Errorf("wrong error message. want=%q, got=%q", expectedMsg, result.Msg)
+		return fmt.Errorf("wrong error message. want %q, got %q", expectedMsg, result.Msg)
 	}
 	return nil
 }

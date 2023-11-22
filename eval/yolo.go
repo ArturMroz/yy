@@ -6,6 +6,7 @@ import (
 
 	"yy/ast"
 	"yy/object"
+	"yy/token"
 )
 
 func yoloPrefixExpression(op string, right object.Object) object.Object {
@@ -57,24 +58,25 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 				End:   right.Start,
 			}
 
-		case *object.Function:
-			newBody := &ast.BlockStatement{
-				Statements: []ast.Statement{
-					&ast.ExpressionStatement{
-						Expression: &ast.PrefixExpression{
-							Operator: op,
-							Right:    right.Body,
-						},
+		case *object.Lambda:
+			newBody := &ast.BlockExpression{
+				Expressions: []ast.Expression{
+					&ast.PrefixExpression{
+						Operator: op,
+						Right:    right.Body,
 					},
 				},
 			}
 
-			return &object.Function{
+			return &object.Lambda{
 				Parameters: right.Parameters,
 				Env:        right.Env,
 				Body:       newBody,
 			}
 		}
+
+	case "!":
+		// TODO handle
 	}
 
 	// catch all: convert to string
@@ -201,49 +203,70 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			return &object.Range{Start: intVal / rng.Start, End: intVal / rng.End}
 		}
 
+	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.FUNCTION_OBJ:
+		fn := left.(*object.Lambda)
+		right := right.(*object.Lambda)
+
+		newBody := &ast.BlockExpression{
+			Expressions: []ast.Expression{
+				&ast.DeclareExpression{
+					Name:  right.Parameters[0],
+					Value: fn.Body,
+				},
+				right.Body,
+			},
+		}
+
+		extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+		for k, v := range right.Env.GetAll() {
+			extendedEnv.Set(k, v)
+		}
+
+		return &object.Lambda{
+			Parameters: fn.Parameters,
+			Env:        extendedEnv,
+			Body:       newBody,
+		}
+
 	case left.Type() == object.FUNCTION_OBJ && op == "+":
-		fn := left.(*object.Function)
+		fn := left.(*object.Lambda)
 		return bakeArgs(fn, right)
 
 	case right.Type() == object.FUNCTION_OBJ && op == "+":
-		fn := right.(*object.Function)
+		fn := right.(*object.Lambda)
 		return bakeArgs(fn, left)
 
 	case left.Type() == object.FUNCTION_OBJ:
-		fn := left.(*object.Function)
-		newBody := &ast.BlockStatement{
-			Statements: []ast.Statement{
-				&ast.ExpressionStatement{
-					Expression: &ast.InfixExpression{
-						Left:     fn.Body,
-						Operator: op,
-						Right:    objectToASTNode(right).(ast.Expression),
-					},
+		fn := left.(*object.Lambda)
+		newBody := &ast.BlockExpression{
+			Expressions: []ast.Expression{
+				&ast.InfixExpression{
+					Left:     fn.Body,
+					Operator: op,
+					Right:    objectToAST(right),
 				},
 			},
 		}
 
-		return &object.Function{
+		return &object.Lambda{
 			Parameters: fn.Parameters,
 			Env:        fn.Env,
 			Body:       newBody,
 		}
 
 	case right.Type() == object.FUNCTION_OBJ:
-		fn := right.(*object.Function)
-		newBody := &ast.BlockStatement{
-			Statements: []ast.Statement{
-				&ast.ExpressionStatement{
-					Expression: &ast.InfixExpression{
-						Left:     objectToASTNode(left).(ast.Expression),
-						Operator: op,
-						Right:    fn.Body,
-					},
+		fn := right.(*object.Lambda)
+		newBody := &ast.BlockExpression{
+			Expressions: []ast.Expression{
+				&ast.InfixExpression{
+					Left:     objectToAST(left),
+					Operator: op,
+					Right:    fn.Body,
 				},
 			},
 		}
 
-		return &object.Function{
+		return &object.Lambda{
 			Parameters: fn.Parameters,
 			Env:        fn.Env,
 			Body:       newBody,
@@ -254,7 +277,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	return &object.String{Value: left.String() + right.String()}
 }
 
-func bakeArgs(fn *object.Function, right object.Object) object.Object {
+func bakeArgs(fn *object.Lambda, right object.Object) *object.Lambda {
 	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 	newParams := []*ast.Identifier{}
 
@@ -270,22 +293,15 @@ func bakeArgs(fn *object.Function, right object.Object) object.Object {
 		}
 
 	case *object.Array:
-		num_set := 0
+		numSet := 0
 		for i, v := range right.Elements {
 			if i >= len(fn.Parameters) {
 				break
 			}
 			extendedEnv.Set(fn.Parameters[i].Value, v)
-			num_set++
+			numSet++
 		}
-		newParams = fn.Parameters[num_set:]
-
-	case *object.Null:
-		return fn
-
-	case *object.Function:
-		// TODO handle properly
-		return fn
+		newParams = fn.Parameters[numSet:]
 
 	default:
 		if len(fn.Parameters) > 0 {
@@ -294,7 +310,7 @@ func bakeArgs(fn *object.Function, right object.Object) object.Object {
 		}
 	}
 
-	return &object.Function{
+	return &object.Lambda{
 		Parameters: newParams,
 		Env:        extendedEnv,
 		Body:       fn.Body,
@@ -309,6 +325,32 @@ func rot13(ch rune) rune {
 		ch -= 13
 	}
 	return ch
+}
+
+func objectToAST(obj object.Object) ast.Expression {
+	switch obj := obj.(type) {
+	case *object.Integer:
+		tok := token.Token{
+			Type:    token.INT,
+			Literal: strconv.Itoa(int(obj.Value)),
+		}
+		return &ast.IntegerLiteral{Token: tok, Value: obj.Value}
+
+	case *object.Boolean:
+		var tok token.Token
+		if obj.Value {
+			tok = token.Token{Type: token.TRUE, Literal: "true"}
+		} else {
+			tok = token.Token{Type: token.FALSE, Literal: "false"}
+		}
+		return &ast.BooleanLiteral{Token: tok, Value: obj.Value}
+
+	case *object.Quote:
+		return obj.Node
+
+	default:
+		return nil
+	}
 }
 
 var collectiveNouns = map[string]string{

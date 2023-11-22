@@ -1,0 +1,38 @@
+// Brace yourselves, we're about to go into YOLO mode! We'll be adding numbers, arrays, and hashmaps
+// to a function like a mad scientist adding ingredients to a cauldron. This magically bakes the
+// arguments into the function, turning it into a deliciously self-contained recipe for success.
+//
+// This is a powerful technique that can make your code more concise and easier to read, especially
+// when you have functions with many arguments that are frequently used with certain fixed values.
+//
+// Some fancy folks call this 'partial function application' or 'currying', we'll just call it baking.
+
+// Exhibit A
+greet := \name, message {
+    "Hello {name}! {message}"
+}
+
+greet_alice := yolo { greet + "Alice" }
+greet_bob   := yolo { greet + "Bob" }
+
+yap(greet_bob("How are you doing?"))
+yap(greet_alice("Nice to meet you!"))
+
+// To specify which arguments you want to bake in, add a hashmap.
+rude_greet := yolo { greet + %{ "message": "I don't like your face." } }
+yap(rude_greet("Bob"))
+
+// Exhibit B
+converter := \symbol, factor, offset, input {
+    result := (offset + input) * factor
+    "{result} {symbol}"
+}
+
+// To bake multiple arguments, add an array.
+miles_to_km          := yolo { converter + ["km", 1.60936, 0] }
+pounds_to_kg         := yolo { converter + ["kg", 0.45460, 0] }
+farenheit_to_celsius := yolo { converter + ["C", 0.5556, -32] }
+
+yap(miles_to_km(15))
+yap(pounds_to_kg(5.5))
+yap(farenheit_to_celsius(97))

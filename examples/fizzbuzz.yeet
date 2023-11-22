@@ -1,0 +1,32 @@
+// Ah, FizzBuzz, the timeless test that weeds out the 10x engineers from the wannabes in programming
+// interviews. But fear not, YY is here to help you slay this beast. And rather than printing
+// the mundane FizzBuzz, we'll print out the magnificent YeetYoink instead. 
+
+// This example illustartes the use of implicitly defined 'yt' variable
+// 'yt' is short for 'yeeterator' and it's created autmatically inside a yall loop
+
+yall 1..100 {
+    yif yt % 3 == 0 && yt % 5 == 0 {
+        yap("YeetYoink")      // print "YeetYoink" if divisible by both 3 and 5
+    } yels yif yt % 3 == 0 {
+        yap("Yeet")           // print "Yeet" if divisible by 3
+    } yels yif yt % 5 == 0 {
+        yap("Yoink")          // print "Yoink" if divisible by 5
+    } yels {
+        yap(yt)               // print the number itself if not divisible by 3 or 5
+    }
+}
+
+// Another possible solution of this mighty hard problem:
+yall 1..100 {
+    result := ""
+
+    yif yt % 3 == 0 { result += "Yeet" }
+    yif yt % 5 == 0 { result += "Yoink" }
+
+    yif result {
+        yap(result)
+    } yels {
+        yap(yt)
+    }
+}

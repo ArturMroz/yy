@@ -93,4 +93,4 @@ friend := %{
 
 yassert(friend["name"] == "Jon the Zebra")
 yassert(friend["alive"] == true)
-yap(friend["name"], " is ", friend["age"], " years old.") // prints "Jon the Zebra is 2 years old."
+yap("{friend["name"]} is {friend["age"]} years old.")     // prints "Jon the Zebra is 2 years old."

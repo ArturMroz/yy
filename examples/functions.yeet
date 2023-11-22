@@ -19,6 +19,7 @@ max := \x y {
 
 a := 3
 b := 18
+
 yassert(max(a, b) == b)
 yassert_eq(max(a, b), b)
 
@@ -54,7 +55,7 @@ yassert(fib(8) == 21)
 yassert_eq(fib(8),  21)
 
 // yassert() accepts optional error message for more context
-yassert(fib(20) == 6765, "fibonacci didn't quite work")
+yassert(fib(12) == 144, "fibonacci didn't quite work")
 
 factorial := \n { 
     yif n == 0 { 1 } yels { n * factorial(n-1) }
@@ -81,19 +82,19 @@ yassert(apply_fn(sub, 10, 2) == 8)
 
 // CLOSURES
 
-newAdder := \x { 
+new_adder := \x { 
     \n { x + n } 
 }
 
-addTwo := newAdder(2)
-yassert(addTwo(5) == 7)
+add_two := new_adder(2)
+yassert(add_two(5) == 7)
 
-newGenerator := \ {
+new_generator := \{
     n := 0
-    \ { n = n + 2 }
+    \{ n = n + 2 }
 }
 
-gen := newGenerator()
+gen := new_generator()
 yap("generating:", gen(), gen(), gen()) // prints 'generating: 2 4 6'
 yassert(gen() == 8)
 
@@ -114,10 +115,10 @@ map := \arr f {
     iter(arr, [])
 }
 
-a      := [1, 2, 3, 4]
+my_arr := [1, 2, 3, 4]
 double := \x { x * 2 }
-yassert(map(a, double) == [2, 4, 6, 8])
-yassert(map(a, \x { x * 3 }) == [3, 6, 9, 12])
+yassert(map(my_arr, double) == [2, 4, 6, 8])
+yassert(map(my_arr, \x { x * 3 }) == [3, 6, 9, 12])
 
 // as an aside, if you aren't that into functional languages, you could use a yall loop instead of 
 // the shenanigans above to build map() function
@@ -128,7 +129,7 @@ map2 := \arr fn {
     }
 }
 
-yassert(map(a, double) == map2(a, double))
+yassert(map(my_arr, double) == map2(my_arr, double))
 
 
 reduce := \arr initial f {

@@ -1,4 +1,4 @@
-package eval
+package eval_test
 
 import (
 	"testing"
@@ -30,9 +30,9 @@ func TestYoloDeclarations(t *testing.T) {
 		{"yolo { a = 1; a };", 1},
 		{"a := 5; yolo { a = 69 }; a", 69},
 		// vars need to be declared before use outside of yolo
-		{"a = 1; a", errmsg{"identifier not found: a"}},
+		{"a = 1; a", errmsg{"identifier not found: a (to declare a variable use := operator)"}},
 		// yolo rules don't leak outside of yolo block
-		{"yolo {}; a = 1", errmsg{"identifier not found: a"}},
+		{"yolo {}; a = 1", errmsg{"identifier not found: a (to declare a variable use := operator)"}},
 		// what happens in yolo, stays in yolo
 		{"yolo { a := 1 }; a", errmsg{"identifier not found: a"}},
 	})
@@ -156,7 +156,107 @@ func TestYoloInfixFunctionObject(t *testing.T) {
 	})
 }
 
-func TestYoloFunctionBaking(t *testing.T) {
+func TestYoloFunctionAdding(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \b { b * 5 }
+			yolo {
+				add_mul := add3 + mul5
+				add_mul(4)
+			}`,
+			35,
+		},
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \b { b * 5 }
+			sub2 := \c { c - 2 }
+			yolo {
+				add_mul_sub := add3 + mul5 + sub2
+				add_mul_sub(4)
+			}`,
+			33,
+		},
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \a { a * 5 }
+			sub2 := \a { a - 2 }
+			yolo {
+				add_mul_sub := add3 + mul5 + sub2
+				add_mul_sub(4)
+			}`,
+			33,
+		},
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \a { a * 5 }
+			sub2 := \a { a - 2 }
+			yolo {
+				add_mul_sub := add3 + mul5 + sub2
+				add_mul_sub(4) == (add3 + mul5 + sub2)(4) 
+			}`,
+			true,
+		},
+		{
+			`
+			add3 := \a { a + 3 }
+			mul5 := \a { a * 5 }
+			sub2 := \a { a - 2 }
+			yolo {
+				sub2(mul5(add3(4))) == (add3 + mul5 + sub2)(4) 
+			}`,
+			true,
+		},
+		{
+			`
+			add  := \a, b { a + b }
+			mul5 := \x { x * 5 }
+			yolo {
+				add_mul := add + mul5
+				add_mul(1, 3)
+			}`,
+			20,
+		},
+		{
+			`
+			add := \a, b { a + b }
+			mul := \x, y  { x * y }
+			yolo {
+				add_mul := add + mul
+				add_mul(1, 3)
+			}`,
+			errmsg{"identifier not found: y"},
+		},
+		{
+			`
+			add := \a, b { a + b }
+			mul := \x, y  { x * y }
+			yolo {
+				mul5    := mul + 5
+				add_mul := add + mul5
+				add_mul(1, 3)
+			}`,
+			20,
+		},
+		{
+			`
+			add  := \a, b { a + b }
+			mul5 := \x { x * 5 }
+			yolo {
+				add3    := add + 3
+				add_mul := add3 + mul5
+				add_mul(1)
+			}`,
+			20,
+		},
+	})
+}
+
+func TestYoloArgumentsBaking(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{`5 + \x { x + 2 } `, errmsg{"type mismatch: INTEGER + FUNCTION"}},
 
@@ -192,16 +292,16 @@ func TestYoloFunctionBaking(t *testing.T) {
 		},
 		{
 			`yolo {
-				greet     := \name { "Hello, $name!" }
-				greet_yan := greet + "Yan"; // baking arg "Yan" into function 
+				greet     := \name { "Hello, {name}!" }
+				greet_yan := greet + "Yan"; // baking arg "Yan" into function
 				greet_yan()
 			}`,
 			"Hello, Yan!",
 		},
 		{
 			`yolo {
-				greet     := \name { "Hello, $name!" }
-				greet_yan := "Yan" + greet 
+				greet     := \name { "Hello, {name}!" }
+				greet_yan := "Yan" + greet
 				greet_yan()
 			}`,
 			"Hello, Yan!",
@@ -265,27 +365,27 @@ func TestYoloFunctionBaking(t *testing.T) {
 			6,
 		},
 		{
-			`yolo {
-				add     := \a b c { a + b + c }
-				add_all := [1, 2, 3] + add
-				add_all()
-			}`,
+			`
+			add     := \a b c { a + b + c }
+			add_all := yolo { [1, 2, 3] + add }
+			add_all()
+			`,
 			6,
 		},
 		{
-			`yolo {
-				add     := \a b c { a + b + c }
-				add_all := [1, 2, 3, 4, 5] + add // surplus is ignored
-				add_all()
-			}`,
+			`
+			add     := \a b c { a + b + c }
+			add_all := yolo { [1, 2, 3, 4, 5] + add } // surplus is ignored
+			add_all()
+			`,
 			6,
 		},
 		{
-			`yolo {
-				add     := \a b c { a + b + c }
-				add_all := [1, 2] + add
-				add_all(3)
-			}`,
+			`
+			add     := \a b c { a + b + c }
+			add_all := yolo { [1, 2] + add }
+			add_all(3)
+			`,
 			6,
 		},
 
@@ -294,9 +394,17 @@ func TestYoloFunctionBaking(t *testing.T) {
 			`yolo {
 				add      := \a, b { a + b }
 				add_null := add + null
-				add_null(5, 6)
+				add_null(6)
 			}`,
-			11,
+			"null6",
+		},
+		{
+			`
+			add      := \a, b { a + b }
+			add_null := yolo { add + null }
+			add_null(6)
+			`,
+			errmsg{"type mismatch: NULL + INTEGER"},
 		},
 	})
 }

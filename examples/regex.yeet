@@ -1,0 +1,70 @@
+//  “Some people, when confronted with a problem, think: 'I know, I'll use regular expressions'.
+//   Now they have two problems.”
+//                           -- Jamie Zawinski
+//
+// But we're not satisfied with just two problems - we like to live dangerously. How about using
+// regular expressions in a language that doesn't have them, so we'll have to implement them ourselves
+// from scratch? Contgratulations, now we have 3 problems.
+//
+// We'll yoink Rob Pike's beautifully simple regex matcher from 'The Practice of Programming' (1998).
+// It supports 4 special characters: '*', '^', '$' and '.', which account for 95% of real use.
+// More details: https://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html
+
+// search for regex anywhere in text
+match := \regex, text {
+    yif regex && regex[0] == "^" {
+        yeet match_here(regex[1..-1], text)
+    }
+    yoyo {
+        yif match_here(regex, text) {
+            yeet true
+        }
+        yif !text {
+            yeet false
+        }
+        text = text[1..-1]
+    }
+}
+
+// search for regex at beginning of text
+match_here := \regex, text {
+    yif !regex {
+        yeet true
+    }
+    yif regex == "$" {
+        yeet text == ""
+    }
+    yif len(regex) > 1 && regex[1] == "*" {
+        yeet match_star(regex[0], regex[2..-1], text)
+    }
+    yif text && (regex[0] == "." || regex[0] == text[0]) {
+        yeet match_here(regex[1..-1], text[1..-1])
+    }
+    yeet false
+}
+
+// search for c*regex at beginning of text
+match_star := \c, regex, text {
+    yoyo {
+        yif match_here(regex, text) {
+            yeet true
+        }
+        yif !text || (text[0] != c && c != ".") {
+            yeet false
+        }
+        text = text[1..-1]
+    }
+}
+
+regexes := ["cat", "^cat", "cat$", "c.*t", "^c.*t$"]
+words   := ["cat", "cult", "concat", "category", "concatenation"]
+
+yap("all words:", words)
+
+yall re: regexes {
+    result := []
+    yall words {
+        yif match(re, yt) { result << yt }
+    }
+    yap("words matching /{re}/: {result}")
+}

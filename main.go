@@ -55,12 +55,8 @@ func interpret(src string) error {
 	}
 
 	env := object.NewEnvironment()
-	macroEnv := object.NewEnvironment()
 
-	eval.DefineMacros(program, macroEnv)
-	expanded := eval.ExpandMacros(program, macroEnv)
-
-	result := eval.Eval(expanded, env)
+	result := eval.Eval(program, env)
 	if evalError, ok := result.(*object.Error); ok {
 		return errors.New(yikes.PrettyError([]byte(src), evalError.Pos, evalError.Msg))
 	}

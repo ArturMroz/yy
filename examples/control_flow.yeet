@@ -117,7 +117,7 @@ yoyo len(arr) < 5 {
 yassert(arr == [1, 4, 7, 10, 13])
 
 yoyo len(arr) > 0 {
-    arr = rest(arr)
+    arr = arr[1..-1]
     yap(arr)
 }
 
