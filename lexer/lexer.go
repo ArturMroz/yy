@@ -259,7 +259,6 @@ func (l *Lexer) escapeString(start int, escapePositions []int) string {
 		return l.Input[start:l.position]
 	}
 
-	// TODO: profile and see if string builder should be used here instead
 	result := make([]byte, 0, l.position-start-len(escapePositions))
 	lastIdx := start
 

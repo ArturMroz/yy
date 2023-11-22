@@ -243,8 +243,8 @@ func Eval(node ast.Expression, env *object.Environment) object.Object {
 	case *ast.BooleanLiteral:
 		return toYeetBool(node.Value)
 
-	case *ast.FunctionLiteral:
-		return &object.Function{
+	case *ast.LambdaLiteral:
+		return &object.Lambda{
 			Parameters: node.Parameters,
 			Body:       node.Body,
 			Env:        env,
@@ -364,7 +364,7 @@ func evalCallExpr(callExpr *ast.CallExpression, env *object.Environment) object.
 	}
 
 	switch fn := fn.(type) {
-	case *object.Function:
+	case *object.Lambda:
 		if len(fn.Parameters) != len(args) {
 			return newError(
 				callExpr.Pos(),

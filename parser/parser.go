@@ -176,7 +176,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	for p.curToken.Type != token.EOF {
 		expr := p.parseExpression(LOWEST)
 
-		if p.peekIs(token.SEMICOLON) { // optional semicolon
+		for p.peekIs(token.SEMICOLON) { // optional semicolon
 			p.advance()
 		}
 
@@ -200,7 +200,7 @@ func (p *Parser) parseYeetExpression() ast.Expression {
 
 	yeetStmt.ReturnValue = p.parseExpression(LOWEST)
 
-	if p.peekIs(token.SEMICOLON) { // optional semicolon
+	for p.peekIs(token.SEMICOLON) { // optional semicolon
 		p.advance()
 	}
 
@@ -323,7 +323,7 @@ func (p *Parser) parseBlockExpression() *ast.BlockExpression {
 	for !p.curIs(token.RBRACE) && !p.curIs(token.EOF) {
 		stmt := p.parseExpression(LOWEST)
 
-		if p.peekIs(token.SEMICOLON) { // optional semicolon
+		for p.peekIs(token.SEMICOLON) { // optional semicolon
 			p.advance()
 		}
 
@@ -482,7 +482,7 @@ func (p *Parser) parseHashmapLiteral() ast.Expression {
 }
 
 func (p *Parser) parseLambdaLiteral() ast.Expression {
-	fn := &ast.FunctionLiteral{Token: p.curToken}
+	fn := &ast.LambdaLiteral{Token: p.curToken}
 
 	for !p.peekIs(token.LBRACE) && !p.peekIs(token.EOF) {
 		p.advance()

@@ -58,7 +58,7 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 				End:   right.Start,
 			}
 
-		case *object.Function:
+		case *object.Lambda:
 			newBody := &ast.BlockExpression{
 				Expressions: []ast.Expression{
 					&ast.PrefixExpression{
@@ -68,7 +68,7 @@ func yoloPrefixExpression(op string, right object.Object) object.Object {
 				},
 			}
 
-			return &object.Function{
+			return &object.Lambda{
 				Parameters: right.Parameters,
 				Env:        right.Env,
 				Body:       newBody,
@@ -204,8 +204,8 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 		}
 
 	case left.Type() == object.FUNCTION_OBJ && right.Type() == object.FUNCTION_OBJ:
-		fn := left.(*object.Function)
-		right := right.(*object.Function)
+		fn := left.(*object.Lambda)
+		right := right.(*object.Lambda)
 
 		newBody := &ast.BlockExpression{
 			Expressions: []ast.Expression{
@@ -222,22 +222,22 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			extendedEnv.Set(k, v)
 		}
 
-		return &object.Function{
+		return &object.Lambda{
 			Parameters: fn.Parameters,
 			Env:        extendedEnv,
 			Body:       newBody,
 		}
 
 	case left.Type() == object.FUNCTION_OBJ && op == "+":
-		fn := left.(*object.Function)
+		fn := left.(*object.Lambda)
 		return bakeArgs(fn, right)
 
 	case right.Type() == object.FUNCTION_OBJ && op == "+":
-		fn := right.(*object.Function)
+		fn := right.(*object.Lambda)
 		return bakeArgs(fn, left)
 
 	case left.Type() == object.FUNCTION_OBJ:
-		fn := left.(*object.Function)
+		fn := left.(*object.Lambda)
 		newBody := &ast.BlockExpression{
 			Expressions: []ast.Expression{
 				&ast.InfixExpression{
@@ -248,14 +248,14 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			},
 		}
 
-		return &object.Function{
+		return &object.Lambda{
 			Parameters: fn.Parameters,
 			Env:        fn.Env,
 			Body:       newBody,
 		}
 
 	case right.Type() == object.FUNCTION_OBJ:
-		fn := right.(*object.Function)
+		fn := right.(*object.Lambda)
 		newBody := &ast.BlockExpression{
 			Expressions: []ast.Expression{
 				&ast.InfixExpression{
@@ -266,7 +266,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 			},
 		}
 
-		return &object.Function{
+		return &object.Lambda{
 			Parameters: fn.Parameters,
 			Env:        fn.Env,
 			Body:       newBody,
@@ -277,7 +277,7 @@ func yoloInfixExpression(op string, left, right object.Object) object.Object {
 	return &object.String{Value: left.String() + right.String()}
 }
 
-func bakeArgs(fn *object.Function, right object.Object) *object.Function {
+func bakeArgs(fn *object.Lambda, right object.Object) *object.Lambda {
 	extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 	newParams := []*ast.Identifier{}
 
@@ -310,7 +310,7 @@ func bakeArgs(fn *object.Function, right object.Object) *object.Function {
 		}
 	}
 
-	return &object.Function{
+	return &object.Lambda{
 		Parameters: newParams,
 		Env:        extendedEnv,
 		Body:       fn.Body,

@@ -214,14 +214,14 @@ type Error struct {
 func (e *Error) Type() Type     { return ERROR_OBJ }
 func (e *Error) String() string { return e.Msg }
 
-type Function struct {
+type Lambda struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockExpression
 	Env        *Environment
 }
 
-func (f *Function) Type() Type { return FUNCTION_OBJ }
-func (f *Function) String() string {
+func (f *Lambda) Type() Type { return FUNCTION_OBJ }
+func (f *Lambda) String() string {
 	var b strings.Builder
 
 	params := []string{}

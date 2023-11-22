@@ -810,7 +810,7 @@ func TestLambdaLiteralParsing(t *testing.T) {
 	input := `\x, y { x + y }`
 	expr := parseSingleExpr(t, input)
 
-	function, ok := expr.(*ast.FunctionLiteral)
+	function, ok := expr.(*ast.LambdaLiteral)
 	if !ok {
 		t.Fatalf("expr is not ast.FunctionLiteral. got=%T", expr)
 	}
@@ -877,7 +877,7 @@ func TestFunctionParameterParsing(t *testing.T) {
 
 	for _, tt := range tests {
 		expr := parseSingleExpr(t, tt.input)
-		fn := expr.(*ast.FunctionLiteral)
+		fn := expr.(*ast.LambdaLiteral)
 		if len(fn.Parameters) != len(tt.expectedParams) {
 			t.Errorf("length parameters wrong. want %d, got=%d\n", len(tt.expectedParams), len(fn.Parameters))
 		}

@@ -333,27 +333,27 @@ func (be *BlockExpression) String() string {
 	return b.String()
 }
 
-type FunctionLiteral struct {
+type LambdaLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
 	Body       *BlockExpression
 }
 
-func (fl *FunctionLiteral) Pos() int             { return fl.Token.Offset }
-func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
-func (fl *FunctionLiteral) String() string {
+func (ll *LambdaLiteral) Pos() int             { return ll.Token.Offset }
+func (ll *LambdaLiteral) TokenLiteral() string { return ll.Token.Literal }
+func (ll *LambdaLiteral) String() string {
 	var b strings.Builder
 
 	params := []string{}
-	for _, p := range fl.Parameters {
+	for _, p := range ll.Parameters {
 		params = append(params, p.String())
 	}
 
-	b.WriteString(fl.TokenLiteral())
+	b.WriteString(ll.TokenLiteral())
 	b.WriteString("(")
 	b.WriteString(strings.Join(params, ", "))
 	b.WriteString(") ")
-	b.WriteString(fl.Body.String())
+	b.WriteString(ll.Body.String())
 
 	return b.String()
 }

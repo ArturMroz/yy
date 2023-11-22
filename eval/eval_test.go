@@ -105,6 +105,75 @@ func TestStringConcatenation(t *testing.T) {
 	})
 }
 
+func TestDeclareExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"a := 8", 8},
+		{"a := 8; a", 8},
+		{"a := 8 * 5 + 3 / 2 - 2 * (2 + 3) * 3", 11},
+		{"a := 8; b := a", 8},
+		{"a := 8; b := a + 2", 10},
+		{"a := 8; b := 2; c := a + b", 10},
+		{"a := 8 == 5", false},
+		{"a := 8 != 5", true},
+		{"a := 8 > 5", true},
+		{"a := 8; a = 15", 15},
+		{"a := 8; b := 2; a = b", 2},
+		{"a := b := c := 8; a + b + c", 24},
+		{"a := b", errmsg{"identifier not found: b"}},
+	})
+}
+
+func TestAssignExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"x := 8; x += 2; x", 10},
+		{"x := 8; x -= 2; x", 6},
+		{"x := 8; x *= 2; x", 16},
+		{"x := 8; x /= 2; x", 4},
+		{"x := 8; x %= 5; x", 3},
+
+		{"x = 8", errmsg{"identifier not found: x (to declare a variable use := operator)"}},
+		{"x += 8", errmsg{"identifier not found: x"}},
+
+		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
+		{"a := [1, 2, 3]; a[-1] = 69; a", []int64{1, 2, 69}},
+		{"a := [1, 2, 3]; a[8] = 69", errmsg{"attempted to assign out of bounds for array 'a'"}},
+
+		{`h := %{ "a": 1 }; h["a"] = 2; h["a"]`, 2},
+		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
+		{`h := %{ "a": 1 }; h[[]] = 2`, 2},
+
+		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
+		{`s := "yeet"; s[-1] = "z"; s`, "yeez"},
+		{`s := "yeet"; s[69] = "z"`, errmsg{"attempted to assign out of bounds for string 's'"}},
+	})
+}
+
+func TestBlockExpressions(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"{ 5 }", 5},
+		{"{ a := 6; b := 9; a + b }", 15},
+		{"{ { 5 } }", 5},
+		{"x := { 5 }; x", 5},
+		{"x := { a := 6; b := 9; a + b }; x", 15},
+
+		{"x := { a := 6; a }; a", errmsg{"identifier not found: a"}},
+	})
+}
+
+func TestOptionalSemicolons(t *testing.T) {
+	runEvalTests(t, []evalTestCase{
+		{"a := 2; b := 3; a + b", 5},
+		{"a := 2 ; b := 3 ; a + b", 5},
+		{"a := 2;; b := 3;; a + b", 5},
+		{"a := 2;;; b := 3;;; a + b", 5},
+		{"a := 2;; ; b := 3;; ; a + b", 5},
+		{"a := 2;; ; ;b := 3;; ; ;a + b", 5},
+		{"a := 2 b := 3 a + b", 5},
+		{"a := 2 + 3 * 5; b := 3 * 2; a + b", 23},
+		{"a := 2 + 3 * 5 b := 3 * 2 a + b", 23},
+	})
+}
+
 func TestEvalBooleanExpression(t *testing.T) {
 	runEvalTests(t, []evalTestCase{
 		{"true", true},
@@ -492,61 +561,6 @@ func TestRangeLiterals(t *testing.T) {
 		{"a := 1; b := 8; (a+3)..(b-1)", rng{4, 7}},
 		{"a := 1; b := 8; a+3 .. b-1", rng{4, 7}},
 		{"r := 1+3 .. 9-1; r", rng{4, 8}},
-	})
-}
-
-func TestDeclareExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"a := 8", 8},
-		{"a := 8; a", 8},
-		{"a := 8 * 5 + 3 / 2 - 2 * (2 + 3) * 3", 11},
-		{"a := 8; b := a", 8},
-		{"a := 8; b := a + 2", 10},
-		{"a := 8; b := 2; c := a + b", 10},
-		{"a := 8 == 5", false},
-		{"a := 8 != 5", true},
-		{"a := 8 > 5", true},
-		{"a := 8; a = 15", 15},
-		{"a := 8; b := 2; a = b", 2},
-		{"a := b := c := 8; a + b + c", 24},
-		{"a := b", errmsg{"identifier not found: b"}},
-	})
-}
-
-func TestAssignExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"x := 8; x += 2; x", 10},
-		{"x := 8; x -= 2; x", 6},
-		{"x := 8; x *= 2; x", 16},
-		{"x := 8; x /= 2; x", 4},
-		{"x := 8; x %= 5; x", 3},
-
-		{"x = 8", errmsg{"identifier not found: x (to declare a variable use := operator)"}},
-		{"x += 8", errmsg{"identifier not found: x"}},
-
-		{"a := [1, 2, 3]; a[1] = 69; a", []int64{1, 69, 3}},
-		{"a := [1, 2, 3]; a[-1] = 69; a", []int64{1, 2, 69}},
-		{"a := [1, 2, 3]; a[8] = 69", errmsg{"attempted to assign out of bounds for array 'a'"}},
-
-		{`h := %{ "a": 1 }; h["a"] = 2; h["a"]`, 2},
-		{`h := %{ "a": 1 }; h["b"] = 2; h["b"]`, 2},
-		{`h := %{ "a": 1 }; h[[]] = 2`, 2},
-
-		{`s := "yeet"; s[1] = "z"; s`, "yzet"},
-		{`s := "yeet"; s[-1] = "z"; s`, "yeez"},
-		{`s := "yeet"; s[69] = "z"`, errmsg{"attempted to assign out of bounds for string 's'"}},
-	})
-}
-
-func TestBlockExpressions(t *testing.T) {
-	runEvalTests(t, []evalTestCase{
-		{"{ 5 }", 5},
-		{"{ a := 6; b := 9; a + b }", 15},
-		{"{ { 5 } }", 5},
-		{"x := { 5 }; x", 5},
-		{"x := { a := 6; b := 9; a + b }; x", 15},
-
-		{"x := { a := 6; a }; a", errmsg{"identifier not found: a"}},
 	})
 }
 
